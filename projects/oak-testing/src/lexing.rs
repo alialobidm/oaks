@@ -9,6 +9,7 @@ use oak_core::{
     Language, Lexer, Source, TokenType,
     errors::{OakDiagnostics, OakError},
 };
+use serde::Serialize;
 
 use std::{
     path::{Path, PathBuf},
@@ -255,8 +256,11 @@ impl LexerTester {
         else {
             use std::io::Write;
             let mut file = create_file(&expected_file)?;
-            let json_val = serde_json::to_string_pretty(&test_result).map_err(|e| OakError::custom_error(e.to_string()))?;
-            file.write_all(json_val.as_bytes()).map_err(|e| OakError::custom_error(e.to_string()))?;
+            let mut buf = Vec::new();
+            let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    "); // 4 spaces indentation
+            let mut ser = serde_json::Serializer::with_formatter(&mut buf, formatter);
+            test_result.serialize(&mut ser).map_err(|e| OakError::custom_error(e.to_string()))?;
+            file.write_all(&buf).map_err(|e| OakError::custom_error(e.to_string()))?;
             regenerated = true;
         }
 

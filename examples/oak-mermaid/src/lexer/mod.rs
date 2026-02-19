@@ -13,7 +13,7 @@ type State<'s, S> = LexerState<'s, S, MermaidLanguage>;
 /// A lexer for the Mermaid language.
 #[derive(Clone)]
 pub struct MermaidLexer<'config> {
-    config: &'config MermaidLanguage,
+    config: 'config MermaidLanguage,
 }
 
 impl<'config> Lexer<MermaidLanguage> for MermaidLexer<'config> {

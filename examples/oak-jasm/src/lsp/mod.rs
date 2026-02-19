@@ -1,5 +1,3 @@
-//! LSP service implementation for the JASM language.
-
 #![doc = include_str!("readme.md")]
 #[cfg(feature = "oak-highlight")]
 pub mod highlighter;

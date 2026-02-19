@@ -47,6 +47,12 @@ crossterm = "0.29.0"
 unicode-width = "0.2.2"
 clap = { version = "4.5.59", features = ["derive"] }
 axum = "0.8.8"
+arcstr = { version = "1.2", features = ["serde"] }
+indexmap = { version = "2.7", features = ["serde"] }
+im-rc = "15.1"
+num = "0.4"
+bigdecimal = "0.4"
+twox-hash = "1.6"
 
 # Internal project dependencies
 oak-core = { version = "0.0.4", path = "projects/oak-core" }

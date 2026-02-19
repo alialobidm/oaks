@@ -11,7 +11,7 @@ use oak_core::{
 
 #[derive(Clone, Debug)]
 pub struct ClojureLexer<'config> {
-    pub(crate) _config: &'config ClojureLanguage,
+    pub(crate) config: &'config ClojureLanguage,
 }
 
 pub(crate) type State<'a, S> = LexerState<'a, S, ClojureLanguage>;
@@ -29,7 +29,7 @@ impl<'config> Lexer<ClojureLanguage> for ClojureLexer<'config> {
 
 impl<'config> ClojureLexer<'config> {
     pub fn new(config: &'config ClojureLanguage) -> Self {
-        Self { _config: config }
+        Self { config }
     }
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {

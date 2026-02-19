@@ -207,29 +207,51 @@ pub enum HlslElementType {
     LeftParen,
     RightParen,
     LeftBracket,
+    /// `]`
     RightBracket,
+    /// `{`
     LeftBrace,
+    /// `}`
     RightBrace,
+    /// `;`
     Semicolon,
+    /// `,`
     Comma,
+    /// `:`
     Colon,
+    /// `::`
     DoubleColon,
+    /// `?`
     Question,
+    /// `#`
     Hash,
+    /// `@`
     At,
+    /// `\`
     Backslash,
 
     // Special tokens
+    /// End of file
     Eof,
+    /// Root node
     Root,
+    /// Function declaration
     FunctionDeclaration,
+    /// Struct declaration
     StructDeclaration,
+    /// Variable declaration
     VariableDeclaration,
+    /// Parameter list
     ParameterList,
+    /// Parameter
     Parameter,
+    /// Code block
     Block,
+    /// Statement
     Statement,
+    /// Expression
     Expression,
+    /// Error node
     Error,
 }
 

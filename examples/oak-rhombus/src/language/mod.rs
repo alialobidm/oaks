@@ -17,5 +17,5 @@ impl Language for RhombusLanguage {
 
     type TokenType = crate::lexer::token_type::RhombusTokenType;
     type ElementType = crate::parser::element_type::RhombusElementType;
-    type TypedRoot = ();
+    type TypedRoot = crate::ast::RhombusRoot;
 }

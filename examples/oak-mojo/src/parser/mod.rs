@@ -90,7 +90,7 @@ impl<'config> MojoParser<'config> {
             state.expect(MojoTokenType::Identifier)?;
             self.skip_trivia(state);
             state.expect(MojoTokenType::LeftParen)?;
-            // TODO: Parameters
+            self.parse_param_list(state)?;
             state.expect(MojoTokenType::RightParen)?;
             self.skip_trivia(state);
             if state.eat(MojoTokenType::Arrow) {
@@ -100,6 +100,25 @@ impl<'config> MojoParser<'config> {
             }
             state.expect(MojoTokenType::Colon)?;
             self.parse_block(state)
+        })
+    }
+
+    fn parse_param_list<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+        state.incremental_node(MojoElementType::ParamList.into(), |state| {
+            while state.not_at_end() && !state.at(MojoTokenType::RightParen) {
+                self.skip_trivia(state);
+                state.expect(MojoTokenType::Identifier)?;
+                self.skip_trivia(state);
+                if state.eat(MojoTokenType::Colon) {
+                    self.skip_trivia(state);
+                    state.expect(MojoTokenType::Identifier)?; // Param type
+                    self.skip_trivia(state);
+                }
+                if !state.eat(MojoTokenType::Comma) {
+                    break;
+                }
+            }
+            Ok(())
         })
     }
 

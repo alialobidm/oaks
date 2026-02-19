@@ -3,7 +3,6 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
-//! COBOL support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
@@ -24,7 +23,7 @@ pub mod mcp;
 /// Parser module.
 pub mod parser;
 
-pub use crate::{ast::CobolRoot, language::CobolLanguage, lexer::CobolLexer, parser::CobolParser};
+pub use crate::{ast::CobolRoot, builder::CobolBuilder, language::CobolLanguage, lexer::CobolLexer, parser::CobolParser};
 
 pub use oak_core::{ElementType, TokenType};
 

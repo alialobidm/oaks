@@ -1,139 +1,89 @@
-use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+use oak_core::language::UniversalTokenRole;
 
-pub type RacketToken = Token<RacketTokenType>;
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum TokenType {
+    // 关键字
+    For,
+    In,
+    Require,
+    Provide,
+    Struct,
+    Class,
+    Match,
+    WithHandlers,
+    Raise,
 
-impl TokenType for RacketTokenType {
+    // 标识符
+    Identifier,
+
+    // 字面量
+    Number,
+    String,
+    Boolean,
+
+    // 标点符号
+    LParen,
+    RParen,
+    LBracket,
+    RBracket,
+    LBrace,
+    RBrace,
+    Comma,
+    Dot,
+    Colon,
+    Semicolon,
+
+    // 运算符
+    Plus,
+    Minus,
+    Multiply,
+    Divide,
+    Modulo,
+    Equals,
+    NotEquals,
+    LessThan,
+    LessThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+    And,
+    Or,
+    Not,
+
+    // 其他
+    Comment,
+    Whitespace,
+    Eof,
+}
+
+impl oak_core::language::TokenType for TokenType {
     type Role = UniversalTokenRole;
-    const END_OF_STREAM: Self = Self::Eof;
 
-    fn is_ignored(&self) -> bool {
-        matches!(self, Self::Whitespace | Self::Newline | Self::Comment | Self::LineComment)
-    }
+    const END_OF_STREAM: Self = TokenType::Eof;
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Whitespace | Self::Newline => UniversalTokenRole::Whitespace,
-            Self::Comment | Self::LineComment => UniversalTokenRole::Comment,
-            Self::Error => UniversalTokenRole::Error,
-            Self::Eof => UniversalTokenRole::Eof,
-            Self::LeftParen | Self::RightParen | Self::LeftBracket | Self::RightBracket | Self::LeftBrace | Self::RightBrace => UniversalTokenRole::Punctuation,
-            Self::Dot | Self::Quote_ | Self::Quasiquote_ | Self::Unquote_ | Self::UnquoteSplicing_ => UniversalTokenRole::Operator,
-            Self::NumberLiteral => UniversalTokenRole::Literal,
-            Self::StringLiteral | Self::CharacterLiteral | Self::BooleanLiteral => UniversalTokenRole::Literal,
-            Self::Define
-            | Self::Lambda
-            | Self::If
-            | Self::Cond
-            | Self::Case
-            | Self::Let
-            | Self::LetStar
-            | Self::Letrec
-            | Self::Begin
-            | Self::Do
-            | Self::Quote
-            | Self::Quasiquote
-            | Self::Unquote
-            | Self::UnquoteSplicing
-            | Self::And
-            | Self::Or
-            | Self::Not
-            | Self::Set => UniversalTokenRole::Keyword,
-            Self::Identifier => UniversalTokenRole::Name,
-            _ => UniversalTokenRole::None,
+            TokenType::For | TokenType::In | TokenType::Require | TokenType::Provide | TokenType::Struct | TokenType::Class | TokenType::Match | TokenType::WithHandlers | TokenType::Raise => UniversalTokenRole::Keyword,
+            TokenType::Identifier => UniversalTokenRole::Name,
+            TokenType::Number | TokenType::String | TokenType::Boolean => UniversalTokenRole::Literal,
+            TokenType::LParen | TokenType::RParen | TokenType::LBracket | TokenType::RBracket | TokenType::LBrace | TokenType::RBrace | TokenType::Comma | TokenType::Dot | TokenType::Colon | TokenType::Semicolon => UniversalTokenRole::Punctuation,
+            TokenType::Plus
+            | TokenType::Minus
+            | TokenType::Multiply
+            | TokenType::Divide
+            | TokenType::Modulo
+            | TokenType::Equals
+            | TokenType::NotEquals
+            | TokenType::LessThan
+            | TokenType::LessThanOrEqual
+            | TokenType::GreaterThan
+            | TokenType::GreaterThanOrEqual
+            | TokenType::And
+            | TokenType::Or
+            | TokenType::Not => UniversalTokenRole::Operator,
+            TokenType::Comment => UniversalTokenRole::Comment,
+            TokenType::Whitespace => UniversalTokenRole::Whitespace,
+            TokenType::Eof => UniversalTokenRole::Eof,
         }
     }
-}
-
-/// Token types for the Racket language.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum RacketTokenType {
-    /// Whitespace.
-    Whitespace,
-    /// A newline.
-    Newline,
-    /// A comment.
-    Comment,
-    /// A line comment.
-    LineComment,
-    /// A numeric literal.
-    NumberLiteral,
-    /// A string literal.
-    StringLiteral,
-    /// A character literal.
-    CharacterLiteral,
-    /// A boolean literal.
-    BooleanLiteral,
-    /// An identifier.
-    Identifier,
-    /// A symbol.
-    Symbol,
-    /// A keyword.
-    Keyword,
-    /// `define` keyword.
-    Define,
-    /// `lambda` keyword.
-    Lambda,
-    /// `if` keyword.
-    If,
-    /// `cond` keyword.
-    Cond,
-    /// `case` keyword.
-    Case,
-    /// `let` keyword.
-    Let,
-    /// `let*` keyword.
-    LetStar,
-    /// `letrec` keyword.
-    Letrec,
-    /// `begin` keyword.
-    Begin,
-    /// `do` keyword.
-    Do,
-    /// `quote` keyword.
-    Quote,
-    /// `quasiquote` keyword.
-    Quasiquote,
-    /// `unquote` keyword.
-    Unquote,
-    /// `unquote-splicing` keyword.
-    UnquoteSplicing,
-    /// `and` keyword.
-    And,
-    /// `or` keyword.
-    Or,
-    /// `not` keyword.
-    Not,
-    /// `set!` keyword.
-    Set,
-    /// `(`.
-    LeftParen,
-    /// `)`.
-    RightParen,
-    /// `[`.
-    LeftBracket,
-    /// `]`.
-    RightBracket,
-    /// `{`.
-    LeftBrace,
-    /// `}`.
-    RightBrace,
-    /// `.`.
-    Dot,
-    /// `#`.
-    Hash,
-    /// `'`.
-    Quote_,
-    /// `` ` ``.
-    Quasiquote_,
-    /// `,`.
-    Unquote_,
-    /// `,@`.
-    UnquoteSplicing_,
-    /// An error token.
-    Error,
-    /// End of stream.
-    Eof,
-    /// A source file.
-    SourceFile,
 }

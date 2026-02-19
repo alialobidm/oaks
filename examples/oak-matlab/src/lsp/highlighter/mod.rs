@@ -1,7 +1,4 @@
 #![doc = include_str!("readme.md")]
-//! Matlab syntax highlighter.
-//!
-//! This module provides syntax highlighting for Matlab source code, supporting keywords, comments, strings, etc.
 
 use oak_highlight::highlighter::{HighlightKind, Highlighter};
 

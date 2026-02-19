@@ -198,6 +198,8 @@ impl<'config> RhombusLexer<'config> {
             "module" => RhombusTokenType::Module,
             "import" => RhombusTokenType::Import,
             "export" => RhombusTokenType::Export,
+            "require" => RhombusTokenType::Require,
+            "provide" => RhombusTokenType::Provide,
             "true" | "false" => RhombusTokenType::BooleanLiteral,
             _ => RhombusTokenType::Identifier,
         };

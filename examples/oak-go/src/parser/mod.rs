@@ -367,7 +367,6 @@ impl<'config> Pratt<GoLanguage> for GoParser<'config> {
         let kind = match state.peek_kind() {
             Some(k) => k,
             None => {
-                state.bump();
                 return state.finish_at(cp, E::Error);
             }
         };
@@ -388,6 +387,10 @@ impl<'config> Pratt<GoLanguage> for GoParser<'config> {
                 self.skip_trivia(state);
                 state.expect(T::RightParen).ok();
                 state.finish_at(cp, E::BinaryExpression) // Or ParenExpression
+            }
+            T::RightBrace | T::Semicolon => {
+                // Don't consume these tokens, they're used to terminate statements or blocks
+                state.finish_at(cp, E::Error)
             }
             _ => {
                 state.bump();
