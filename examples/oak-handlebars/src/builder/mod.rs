@@ -7,14 +7,13 @@ use crate::{
 use core::range::Range;
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, OakError, Parser, RedNode, RedTree, SourceText, TextEdit, source::Source};
 
-/// AST builder for the Handlebars language.
+/// Handlebars 语言的 AST 构建器
 #[derive(Clone)]
 pub struct HandlebarsBuilder<'config> {
     config: &'config HandlebarsLanguage,
 }
 
 impl<'config> HandlebarsBuilder<'config> {
-    /// Creates a new `HandlebarsBuilder`.
     pub fn new(config: &'config HandlebarsLanguage) -> Self {
         Self { config }
     }

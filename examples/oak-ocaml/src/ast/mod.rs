@@ -1,35 +1,22 @@
 #![doc = include_str!("readme.md")]
-use std::ops::Range;
+use core::range::Range;
+use std::{string::String, vec::Vec};
 
-/// Root node of the OCaml AST.
+/// OCaml AST 根节点
 #[derive(Debug, PartialEq, Clone)]
 pub struct OCamlRoot {
-    /// Items in the OCaml AST.
     pub items: Vec<OCamlItem>,
 }
 
-/// A top-level item in the OCaml AST.
+/// OCaml 顶层项
 #[derive(Debug, PartialEq, Clone)]
 pub enum OCamlItem {
-    /// An expression.
     Expression(OCamlExpr),
 }
 
-/// An OCaml expression.
+/// OCaml 表达式
 #[derive(Debug, PartialEq, Clone)]
 pub enum OCamlExpr {
-    /// An identifier.
-    Identifier {
-        /// The name of the identifier.
-        name: String,
-        /// The span of the identifier in the source code.
-        span: Range<usize>,
-    },
-    /// A literal value.
-    Literal {
-        /// The value of the literal.
-        value: String,
-        /// The span of the literal in the source code.
-        span: Range<usize>,
-    },
+    Identifier { name: String, span: Range<usize> },
+    Literal { value: String, span: Range<usize> },
 }

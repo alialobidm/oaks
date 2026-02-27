@@ -1,33 +1,25 @@
 #![doc = include_str!("readme.md")]
+//! Org-mode 语法高亮器
 
-/// Highlight kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword.
     Keyword,
-    /// String.
     String,
-    /// Number.
     Number,
-    /// Comment.
     Comment,
-    /// Identifier.
     Identifier,
-    /// Heading.
     Heading,
-    /// Property.
     Property,
 }
 
-/// Highlighter trait.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Org-mode syntax highlighter.
+/// Org-mode 语法高亮器
 pub struct OrgModeHighlighter {
-    /// Whether to use the parser for highlighting.
     pub use_parser: bool,
 }
 

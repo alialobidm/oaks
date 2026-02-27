@@ -2,22 +2,22 @@
 use crate::{AdaParser, ast::*, language::AdaLanguage};
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, Parser, SourceText, TextEdit, source::Source};
 
-/// AST builder for the Ada language.
+/// Ada 语言的 AST 构建器
 #[derive(Clone)]
 pub struct AdaBuilder<'config> {
-    /// Language configuration.
+    /// 语言配置
     config: &'config AdaLanguage,
 }
 
 impl<'config> AdaBuilder<'config> {
-    /// Creates a new Ada builder.
+    /// 创建新的 Ada 构建器
     pub fn new(config: &'config AdaLanguage) -> Self {
         Self { config }
     }
 
-    /// Builds the AST root node from the syntax tree.
+    /// 从语法树构建 AST 根节点
     pub fn build_root(&self, _green: &GreenNode<AdaLanguage>, _source: &SourceText) -> Result<AdaRoot, oak_core::OakError> {
-        // Simplified AST building logic
+        // 简化的 AST 构建逻辑
         Ok(AdaRoot::new(vec![]))
     }
 }

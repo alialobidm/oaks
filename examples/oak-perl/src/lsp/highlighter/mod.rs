@@ -1,28 +1,21 @@
 #![doc = include_str!("readme.md")]
-/// Local definition of highlight kinds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword.
     Keyword,
-    /// String.
     String,
-    /// Number.
     Number,
-    /// Comment.
     Comment,
-    /// Identifier.
     Identifier,
 }
 
-/// Highlighter trait.
+/// 高亮器 trait
 pub trait Highlighter {
     /// Highlights the given text and returns a list of (start, end, kind) tuples.
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Perl syntax highlighter.
+/// Perl 语法高亮器
 pub struct PerlHighlighter {
-    /// Whether to use the parser for highlighting.
     pub use_parser: bool,
 }
 
@@ -33,12 +26,10 @@ impl Default for PerlHighlighter {
 }
 
 impl PerlHighlighter {
-    /// Creates a new instance of `PerlHighlighter`.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a new instance of `PerlHighlighter` that uses the parser.
     pub fn with_parser() -> Self {
         Self { use_parser: true }
     }

@@ -1,9 +1,11 @@
 #![doc = include_str!("readme.md")]
 use oak_core::language::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Scss language implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ScssLanguage {
     // Scss language-specific configuration, currently empty.
 }

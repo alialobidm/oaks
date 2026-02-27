@@ -1,7 +1,5 @@
 # Java Abstract Syntax Tree (AST) Module
 
-Java AST definitions
-
 This module defines the Abstract Syntax Tree (AST) structure for the [Java programming language](https://www.oracle.com/java/). It provides a strongly-typed and comprehensive representation of Java source code, strictly adhering to the Java Language Specification (JLS).
 
 ## Purpose

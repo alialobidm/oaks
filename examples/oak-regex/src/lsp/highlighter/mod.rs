@@ -5,11 +5,10 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// Syntax highlighter for regular expressions.
+#[allow(missing_docs)]
 pub struct RegexHighlighter {}
 
 impl RegexHighlighter {
-    /// Create a new instance of the regular expression highlighter.
     pub fn new() -> Self {
         Self {}
     }

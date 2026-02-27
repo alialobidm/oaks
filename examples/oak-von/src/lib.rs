@@ -4,6 +4,8 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 
+//! Von support for the Oak language framework.
+
 extern crate alloc;
 
 /// AST module.
@@ -25,17 +27,6 @@ pub mod lsp;
 pub mod parser;
 
 pub use crate::{ast::VonValue, builder::VonBuilder, language::VonLanguage, lexer::VonLexer, parser::VonParser};
-
-/// Parses a Von string into a `VonValue`.
-pub fn parse(von: &str) -> Result<crate::ast::VonValue, String> {
-    use oak_core::{Builder, parser::session::ParseSession, source::SourceText};
-    let language = VonLanguage::default();
-    let builder = VonBuilder::new(&language);
-    let source = SourceText::new(von.to_string());
-    let mut cache = ParseSession::default();
-    let result = builder.build(&source, &[], &mut cache);
-    result.result.map(|root| root.value).map_err(|e| format!("{:?}", e))
-}
 
 // /// LSP implementation.
 #[cfg(feature = "lsp")]

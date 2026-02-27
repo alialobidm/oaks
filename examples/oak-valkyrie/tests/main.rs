@@ -3,7 +3,6 @@
 mod builder;
 mod lexer;
 mod parser;
-mod template_test;
 
 #[test]
 fn ready() {

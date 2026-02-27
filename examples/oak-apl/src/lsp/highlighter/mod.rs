@@ -1,29 +1,30 @@
 #![doc = include_str!("readme.md")]
+//! APL 语法高亮器
 
-/// Represents the kind of highlighting for a syntax element.
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// A keyword (typically special symbols in APL).
+    /// 关键字 (APL 中通常是特殊符号)
     Keyword,
-    /// A string literal.
+    /// 字符串
     String,
-    /// A number literal.
+    /// 数字
     Number,
-    /// A comment.
+    /// 注释
     Comment,
-    /// An identifier.
+    /// 标识符
     Identifier,
 }
 
-/// A trait for highlighting text.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text and returns a list of ranges with their highlight kind.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// A highlighter for the APL language.
+/// APL 语法高亮器
 pub struct AplHighlighter {
-    /// Whether to use the parser for highlighting.
+    /// 是否使用基于解析器的高亮
     pub use_parser: bool,
 }
 
@@ -34,12 +35,12 @@ impl Default for AplHighlighter {
 }
 
 impl AplHighlighter {
-    /// Creates a new `AplHighlighter`.
+    /// 创建一个新的 APL 高亮器实例
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Highlights APL symbols (as keywords).
+    /// 高亮 APL 符号 (作为关键字)
     fn highlight_symbols(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let symbols = ['←', '→', '⋄', '⎕', '⍞', '⍴', '⍳', '⍬', '⍣', '⍤', '⍛', '⍢', '⌸', '⌺', '⌼', '⍠', '⌻', '⍃', '⍄', '⍈', '⍐', '⍗', '⍇', '⍈', '⍌', '⍍', '⍏', '⍖'];
@@ -55,7 +56,7 @@ impl AplHighlighter {
 
 impl Highlighter for AplHighlighter {
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
-        // Simple implementation: only highlight symbols
+        // 简单实现：仅高亮符号
         self.highlight_symbols(text)
     }
 }

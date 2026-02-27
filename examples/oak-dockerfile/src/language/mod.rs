@@ -1,12 +1,12 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-/// Language configuration for Dockerfile.
+/// Dockerfile 语言配置
 #[derive(Debug, Clone, Copy)]
 pub struct DockerfileLanguage {
-    /// Whether to enable strict mode.
+    /// 是否启用严格模式
     pub strict_mode: bool,
-    /// Whether to allow multi-stage builds.
+    /// 是否允许多阶段构
     pub multi_stage: bool,
 }
 
@@ -22,5 +22,5 @@ impl Language for DockerfileLanguage {
 
     type TokenType = crate::lexer::token_type::DockerfileTokenType;
     type ElementType = crate::parser::element_type::DockerfileElementType;
-    type TypedRoot = crate::ast::DockerfileRoot;
+    type TypedRoot = ();
 }

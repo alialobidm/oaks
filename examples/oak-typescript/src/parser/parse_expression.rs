@@ -18,17 +18,7 @@ impl<'config> TypeScriptParser<'config> {
             Some(NumericLiteral) | Some(StringLiteral) | Some(BigIntLiteral) | Some(TemplateString) | Some(True) | Some(False) | Some(Null) | Some(RegexLiteral) => {
                 let kind = state.peek_kind().unwrap();
                 state.bump();
-                let elem = match kind {
-                    NumericLiteral => crate::parser::element_type::TypeScriptElementType::NumericLiteral,
-                    StringLiteral => crate::parser::element_type::TypeScriptElementType::StringLiteral,
-                    BigIntLiteral => crate::parser::element_type::TypeScriptElementType::BigIntLiteral,
-                    TemplateString => crate::parser::element_type::TypeScriptElementType::TemplateString,
-                    True | False => crate::parser::element_type::TypeScriptElementType::BooleanLiteral,
-                    Null => crate::parser::element_type::TypeScriptElementType::Null,
-                    RegexLiteral => crate::parser::element_type::TypeScriptElementType::RegexLiteral,
-                    _ => crate::parser::element_type::TypeScriptElementType::Error,
-                };
-                state.finish_at(cp, elem)
+                state.finish_at(cp, kind.into())
             }
             Some(LeftParen) => {
                 state.bump();
@@ -192,7 +182,7 @@ impl<'config> TypeScriptParser<'config> {
             As => {
                 let cp = state.checkpoint_before(left);
                 self.expect(state, As).ok();
-                // Simple type handling: skip next identifier or basic type
+                // 简单处理类型：跳过接下来的标识符或基本类型
                 self.skip_trivia(state);
                 if state.at(IdentifierName.into()) {
                     self.expect(state, IdentifierName).ok();
@@ -213,7 +203,7 @@ impl<'config> TypeScriptParser<'config> {
                 PrattParser::parse(state, 0, self);
                 Some(state.finish_at(cp, crate::parser::element_type::TypeScriptElementType::ConditionalExpression.into()))
             }
-            _ => Some(binary(state, left, kind, prec, assoc, crate::parser::element_type::TypeScriptElementType::BinaryExpression, |s, p| PrattParser::parse(s, p, self))),
+            _ => Some(binary(state, left, kind, prec, assoc, BinaryExpression.into(), |s, p| PrattParser::parse(s, p, self))),
         }
     }
 }

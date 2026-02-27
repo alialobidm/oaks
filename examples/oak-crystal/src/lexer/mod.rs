@@ -1,13 +1,12 @@
-//! Lexer for the Crystal language.
-
+#![doc = include_str!("readme.md")]
 pub mod token_type;
 use crate::language::CrystalLanguage;
 use oak_core::{Lexer, LexerCache, LexerState, OakError, TextEdit, lexer::LexOutput, source::Source};
 pub use token_type::CrystalTokenType;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, CrystalLanguage>;
+type State<'a, S> = LexerState<'a, S, CrystalLanguage>;
 
-/// Lexer for the Crystal language.
+/// Crystal 词法分析器
 #[derive(Clone)]
 pub struct CrystalLexer<'config> {
     #[allow(dead_code)]
@@ -26,12 +25,11 @@ impl<'config> Lexer<CrystalLanguage> for CrystalLexer<'config> {
 }
 
 impl<'config> CrystalLexer<'config> {
-    /// Creates a new `CrystalLexer` with the given configuration.
     pub fn new(config: &'config CrystalLanguage) -> Self {
         Self { config }
     }
 
-    /// Main lexing loop.
+    /// 主要词法分析循环
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -68,7 +66,7 @@ impl<'config> CrystalLexer<'config> {
                 continue;
             }
 
-            // If no rule matches, skip current character and mark error
+            // 如果没有匹配任何规则，跳过当前字符并标记错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -81,7 +79,7 @@ impl<'config> CrystalLexer<'config> {
         Ok(())
     }
 
-    /// Skip whitespace
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -98,7 +96,7 @@ impl<'config> CrystalLexer<'config> {
         }
     }
 
-    /// Handle newlines
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -120,14 +118,14 @@ impl<'config> CrystalLexer<'config> {
         }
     }
 
-    /// Handle comments
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some('#') = state.peek() {
             state.advance(1);
 
-            // Single-line comment, read until end of line
+            // 单行注释，读取到行尾
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -143,7 +141,7 @@ impl<'config> CrystalLexer<'config> {
         }
     }
 
-    /// Handle strings
+    /// 处理字符串
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -179,7 +177,7 @@ impl<'config> CrystalLexer<'config> {
         }
     }
 
-    /// Handle numbers
+    /// 处理数字
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -203,7 +201,7 @@ impl<'config> CrystalLexer<'config> {
         }
     }
 
-    /// Handle keywords or identifiers
+    /// 处理关键字或标识符
     fn lex_keyword_or_identifier<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -218,7 +216,7 @@ impl<'config> CrystalLexer<'config> {
                 let end_pos = state.get_position();
                 let text = state.get_text_in(oak_core::Range { start: start_pos, end: end_pos });
                 let token_kind = match text.as_ref() {
-                    // Crystal keywords
+                    // Crystal 关键字
                     "class" => CrystalTokenType::ClassKeyword,
                     "module" => CrystalTokenType::ModuleKeyword,
                     "def" => CrystalTokenType::DefKeyword,
@@ -265,7 +263,7 @@ impl<'config> CrystalLexer<'config> {
         }
     }
 
-    /// Handle operators
+    /// 处理操作符
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -470,7 +468,7 @@ impl<'config> CrystalLexer<'config> {
         }
     }
 
-    /// Handle delimiters
+    /// 处理分隔符
     fn lex_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 

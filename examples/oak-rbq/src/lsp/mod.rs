@@ -11,13 +11,10 @@ use {
 };
 #[cfg(feature = "oak-pretty-print")]
 pub mod formatter;
-pub mod semantic_tokens;
-use self::semantic_tokens::RbqSemanticTokensProvider;
-use crate::{language::RbqLanguage, lexer::token_type::RbqTokenType, parser::element_type::RbqElementType};
+use crate::{language::RbqLanguage, lexer::token_type::RbqTokenType, parser::element_type::RbqElementType, semantic_tokens::RbqSemanticTokensProvider};
 use core::range::Range;
 use oak_core::{Parser, source::Source, tree::RedNode};
 use oak_folding::{FoldingProvider, FoldingRange, FoldingRangeKind};
-/// RBQ hover provider.
 #[cfg(feature = "lsp")]
 pub struct RbqHoverProvider;
 #[cfg(feature = "lsp")]
@@ -27,7 +24,6 @@ impl HoverProvider<RbqLanguage> for RbqHoverProvider {
         None
     }
 }
-/// RBQ folding provider.
 pub struct RbqFoldingProvider;
 impl FoldingProvider<RbqLanguage> for RbqFoldingProvider {
     fn folding_ranges(&self, root: &RedNode<RbqLanguage>) -> Vec<FoldingRange> {
@@ -56,7 +52,6 @@ impl RbqFoldingProvider {
 }
 use dashmap::DashMap;
 use oak_core::parser::ParseSession;
-/// RBQ language service.
 #[cfg(feature = "lsp")]
 pub struct RbqLanguageService<V: Vfs> {
     vfs: V,
@@ -66,9 +61,7 @@ pub struct RbqLanguageService<V: Vfs> {
     semantic_tokens_provider: RbqSemanticTokensProvider,
     caches: DashMap<String, ParseSession<RbqLanguage>>,
 }
-
 impl<V: Vfs> RbqLanguageService<V> {
-    /// Creates a new RBQ language service.
     pub fn new(vfs: V) -> Self {
         Self { vfs, workspace: oak_lsp::workspace::WorkspaceManager::default(), hover_provider: RbqHoverProvider, folding_provider: RbqFoldingProvider, semantic_tokens_provider: RbqSemanticTokensProvider, caches: DashMap::new() }
     }

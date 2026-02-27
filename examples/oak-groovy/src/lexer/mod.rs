@@ -1,5 +1,4 @@
-//! Lexer for the Groovy language.
-
+#![doc = include_str!("readme.md")]
 use oak_core::Source;
 pub mod token_type;
 
@@ -7,20 +6,20 @@ use crate::{language::GroovyLanguage, lexer::token_type::GroovyTokenType};
 use oak_core::{
     Lexer, LexerCache, LexerState, OakError,
     lexer::{CommentConfig, LexOutput, StringConfig, WhitespaceConfig},
+    source::TextEdit,
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, GroovyLanguage>;
+type State<'a, S> = LexerState<'a, S, GroovyLanguage>;
 
 static GROOVY_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static GROOVY_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: "//", block_start: "/*", block_end: "*/", nested_blocks: false });
 static GROOVY_STRING: LazyLock<StringConfig> = LazyLock::new(|| StringConfig { quotes: &['"'], escape: Some('\\') });
 static GROOVY_CHAR: LazyLock<StringConfig> = LazyLock::new(|| StringConfig { quotes: &['\''], escape: Some('\\') });
 
-/// Lexer for Groovy source code.
 #[derive(Clone)]
 pub struct GroovyLexer<'config> {
-    config: &'config GroovyLanguage,
+    _config: &'config GroovyLanguage,
 }
 
 impl<'config> Lexer<GroovyLanguage> for GroovyLexer<'config> {
@@ -35,12 +34,10 @@ impl<'config> Lexer<GroovyLanguage> for GroovyLexer<'config> {
 }
 
 impl<'config> GroovyLexer<'config> {
-    /// Creates a new `GroovyLexer` with the given configuration.
     pub fn new(config: &'config GroovyLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Runs the lexer on the given state.
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -83,14 +80,14 @@ impl<'config> GroovyLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         GROOVY_WHITESPACE.scan(state, GroovyTokenType::Whitespace)
     }
 
-    /// Skips comments.
+    /// 跳过注释
     fn skip_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
-        // Line comment // and Block comment /* ... */
+        // 行注释 // 和 块注释 /* ... */
         if GROOVY_COMMENT.scan(state, GroovyTokenType::Comment, GroovyTokenType::Comment) {
             return true;
         }
@@ -98,14 +95,14 @@ impl<'config> GroovyLexer<'config> {
         false
     }
 
-    /// Lexes string literals.
+    /// 词法分析字符串字面量
     fn lex_string_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
-        // Normal string "..."
+        // 普通字符串 "..."
         if GROOVY_STRING.scan(state, GroovyTokenType::StringLiteral) {
             return true;
         }
 
-        // Triple-quoted string """..."""
+        // 三重引号字符串 """..."""
         if state.consume_if_starts_with("\"\"\"") {
             let start = state.get_position() - 3;
 
@@ -144,23 +141,23 @@ impl<'config> GroovyLexer<'config> {
         false
     }
 
-    /// Lexes character literals.
+    /// 词法分析字符字面量
     fn lex_char_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         GROOVY_CHAR.scan(state, GroovyTokenType::CharLiteral)
     }
 
-    /// Lexes number literals.
+    /// 词法分析数字字面量
     fn lex_number_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         let mut has_digits = false;
-        let mut _is_float = false;
+        let mut is_float = false;
 
-        // Handle negative sign
+        // 处理负号
         if state.consume_if_starts_with("-") {
             // Negative sign
         }
 
-        // Handle hex 0x...
+        // 处理十六进制 0x...
         if state.consume_if_starts_with("0x") || state.consume_if_starts_with("0X") {
             while let Some(ch) = state.peek() {
                 if ch.is_ascii_hexdigit() {
@@ -172,7 +169,7 @@ impl<'config> GroovyLexer<'config> {
                 }
             }
         }
-        // Handle octal 0...
+        // 处理八进制 0...
         else if state.peek() == Some('0') {
             state.advance(1);
             has_digits = true;
@@ -185,9 +182,9 @@ impl<'config> GroovyLexer<'config> {
                 }
             }
         }
-        // Handle decimal
+        // 处理十进制
         else {
-            // Handle integer part
+            // 处理整数部分
             while let Some(ch) = state.peek() {
                 if ch.is_ascii_digit() {
                     state.advance(ch.len_utf8());
@@ -198,12 +195,12 @@ impl<'config> GroovyLexer<'config> {
                 }
             }
 
-            // Handle fractional part
+            // 处理小数部分
             if state.peek() == Some('.') && has_digits {
                 if let Some(next_ch) = state.peek_next_n(1) {
                     if next_ch.is_ascii_digit() {
-                        state.advance(1); // skip .
-                        _is_float = true;
+                        state.advance(1); // 跳过 .
+                        is_float = true;
 
                         while let Some(ch) = state.peek() {
                             if ch.is_ascii_digit() {
@@ -217,20 +214,20 @@ impl<'config> GroovyLexer<'config> {
                 }
             }
 
-            // Handle exponent part
+            // 处理指数部分
             if let Some(ch) = state.peek() {
                 if (ch == 'e' || ch == 'E') && has_digits {
                     state.advance(1);
-                    _is_float = true;
+                    is_float = true;
 
-                    // Handle exponent sign
+                    // 处理指数符号
                     if let Some(next) = state.peek() {
                         if next == '+' || next == '-' {
                             state.advance(1);
                         }
                     }
 
-                    // Handle exponent digits
+                    // 处理指数数字
                     let mut exp_digits = false;
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_digit() {
@@ -243,26 +240,26 @@ impl<'config> GroovyLexer<'config> {
                     }
 
                     if !exp_digits {
-                        // Exponent part must have digits
+                        // 指数部分必须有数字
                         return false;
                     }
                 }
             }
         }
 
-        // Handle number suffixes (G, L, F, D)
+        // 处理数字后缀 (G, L, F, D)
         if has_digits {
             if let Some(ch) = state.peek() {
                 if matches!(ch, 'G' | 'g' | 'L' | 'l' | 'F' | 'f' | 'D' | 'd') {
                     state.advance(ch.len_utf8());
-                    _is_float = matches!(ch, 'F' | 'f' | 'D' | 'd' | 'G' | 'g');
+                    is_float = matches!(ch, 'F' | 'f' | 'D' | 'd' | 'G' | 'g');
                 }
             }
         }
 
         if has_digits {
             let end = state.get_position();
-            let kind = if _is_float { GroovyTokenType::FloatLiteral } else { GroovyTokenType::IntLiteral };
+            let kind = if is_float { GroovyTokenType::FloatLiteral } else { GroovyTokenType::IntLiteral };
             state.add_token(kind, start, end);
             true
         }
@@ -271,11 +268,11 @@ impl<'config> GroovyLexer<'config> {
         }
     }
 
-    /// Lexes identifiers or keywords.
+    /// 词法分析标识符或关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
 
-        // Identifier must start with a letter or underscore or $
+        // 标识符必须以字母或下划线开始
         if let Some(first_ch) = state.peek() {
             if !first_ch.is_alphabetic() && first_ch != '_' && first_ch != '$' {
                 return false;
@@ -283,7 +280,7 @@ impl<'config> GroovyLexer<'config> {
 
             state.advance(first_ch.len_utf8());
 
-            // Subsequent characters can be letters, digits, underscores, or $
+            // 后续字符可以是字母、数字或下划线
             while let Some(ch) = state.peek() {
                 if ch.is_alphanumeric() || ch == '_' || ch == '$' { state.advance(ch.len_utf8()) } else { break }
             }
@@ -299,10 +296,10 @@ impl<'config> GroovyLexer<'config> {
         }
     }
 
-    /// Returns the token type for the given text, which can be a keyword or an identifier.
+    /// 判断是关键字还是标识符
     fn keyword_or_identifier(&self, text: &str) -> GroovyTokenType {
         match text {
-            // Keywords
+            // 关键字
             "abstract" => GroovyTokenType::AbstractKeyword,
             "as" => GroovyTokenType::AsKeyword,
             "assert" => GroovyTokenType::AssertKeyword,
@@ -350,20 +347,20 @@ impl<'config> GroovyLexer<'config> {
             "volatile" => GroovyTokenType::VolatileKeyword,
             "while" => GroovyTokenType::WhileKeyword,
 
-            // Special literals
+            // 特殊字面量
             "true" | "false" => GroovyTokenType::BooleanLiteral,
             "null" => GroovyTokenType::NullLiteral,
 
-            // Default to identifier
+            // 默认为标识符
             _ => GroovyTokenType::Identifier,
         }
     }
 
-    /// Lexes operators.
+    /// 词法分析操作符
     fn lex_operators<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
 
-        // Three-character operators
+        // 三字符操作符
         if state.consume_if_starts_with(">>>") {
             state.add_token(GroovyTokenType::UnsignedRightShift, start, state.get_position());
             return true;
@@ -373,7 +370,7 @@ impl<'config> GroovyLexer<'config> {
             return true;
         }
 
-        // Two-character operators
+        // 两字符操作符
         if state.consume_if_starts_with("**") {
             state.add_token(GroovyTokenType::Power, start, state.get_position());
             return true;
@@ -454,7 +451,7 @@ impl<'config> GroovyLexer<'config> {
         false
     }
 
-    /// Lexes single-character tokens.
+    /// 词法分析单字符 token
     fn lex_single_char_tokens<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         if let Some(ch) = state.peek() {
             let start = state.get_position();

@@ -4,11 +4,11 @@ pub mod token_type;
 use crate::{language::PurescriptLanguage, lexer::token_type::PurescriptTokenType};
 use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, PurescriptLanguage>;
+type State<'a, S> = LexerState<'a, S, PurescriptLanguage>;
 
 #[derive(Clone)]
 pub struct PurescriptLexer<'config> {
-    config: &'config PurescriptLanguage,
+    _config: &'config PurescriptLanguage,
 }
 
 impl<'config> Lexer<PurescriptLanguage> for PurescriptLexer<'config> {
@@ -23,9 +23,9 @@ impl<'config> Lexer<PurescriptLanguage> for PurescriptLexer<'config> {
 }
 
 impl<'config> PurescriptLexer<'config> {
-    /// Creates a new PurescriptLexer
+    /// 创建一个新的 PurescriptLexer
     pub fn new(config: &'config PurescriptLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
@@ -67,7 +67,7 @@ impl<'config> PurescriptLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip current character and mark as error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -80,7 +80,7 @@ impl<'config> PurescriptLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -97,7 +97,7 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles newlines
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -119,14 +119,14 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles comments
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some('-') = state.peek() {
             state.advance(1);
             if let Some('-') = state.peek() {
-                // Single-line comment
+                // 单行注释
                 state.advance(1);
                 while let Some(ch) = state.peek() {
                     if ch == '\n' || ch == '\r' {
@@ -145,7 +145,7 @@ impl<'config> PurescriptLexer<'config> {
         else if let Some('{') = state.peek() {
             state.advance(1);
             if let Some('-') = state.peek() {
-                // Multi-line comment
+                // 多行注释
                 state.advance(1);
                 let mut depth = 1;
                 while let Some(ch) = state.peek() {
@@ -183,7 +183,7 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles identifiers or keywords
+    /// 处理标识符或关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -200,7 +200,7 @@ impl<'config> PurescriptLexer<'config> {
                     }
                 }
 
-                // Check if it's a keyword
+                // 检查是否为关键字
                 let text = state.get_text_in((start_pos..state.get_position()).into());
 
                 let token_kind = match text.as_ref() {
@@ -243,7 +243,7 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles number literals
+    /// 处理数字字面
     fn lex_number_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -251,7 +251,7 @@ impl<'config> PurescriptLexer<'config> {
             if ch.is_ascii_digit() {
                 state.advance(1);
 
-                // Handles hexadecimal numbers
+                // 处理十六进制数字
                 if ch == '0' {
                     if let Some('x') | Some('X') = state.peek() {
                         state.advance(1);
@@ -265,20 +265,20 @@ impl<'config> PurescriptLexer<'config> {
                         }
                     }
                     else {
-                        // Handles regular numbers
+                        // 处理普通数
                         while let Some(ch) = state.peek() {
                             if ch.is_ascii_digit() { state.advance(1) } else { break }
                         }
                     }
                 }
                 else {
-                    // Handles decimal numbers
+                    // 处理十进制数
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_digit() { state.advance(1) } else { break }
                     }
                 }
 
-                // Handles decimals
+                // 处理小数
                 if let Some('.') = state.peek() {
                     state.advance(1);
                     while let Some(ch) = state.peek() {
@@ -286,7 +286,7 @@ impl<'config> PurescriptLexer<'config> {
                     }
                 }
 
-                // Handles exponents
+                // 处理指数
                 if let Some('e') | Some('E') = state.peek() {
                     state.advance(1);
                     if let Some('+') | Some('-') = state.peek() {
@@ -309,7 +309,7 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles string literals
+    /// 处理字符串字面量
     fn lex_string_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -328,7 +328,7 @@ impl<'config> PurescriptLexer<'config> {
                     }
                 }
                 else if ch == '\n' || ch == '\r' {
-                    break; // Strings cannot span multiple lines
+                    break; // 字符串不能跨行
                 }
                 else {
                     state.advance(ch.len_utf8())
@@ -343,7 +343,7 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles character literals
+    /// 处理字符字面
     fn lex_char_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -377,7 +377,7 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles operators
+    /// 处理操作
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -401,7 +401,7 @@ impl<'config> PurescriptLexer<'config> {
                     state.advance(1);
                     if let Some('*') = state.peek() {
                         state.advance(1);
-                        PurescriptTokenType::Caret // Use Caret instead of Power
+                        PurescriptTokenType::Caret // 使用 Caret 代替 Power
                     }
                     else {
                         PurescriptTokenType::Star
@@ -494,7 +494,7 @@ impl<'config> PurescriptLexer<'config> {
         }
     }
 
-    /// Handles delimiters
+    /// 处理分隔
     fn lex_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 

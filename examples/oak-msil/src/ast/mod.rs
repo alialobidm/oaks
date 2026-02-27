@@ -3,30 +3,14 @@ use core::range::Range;
 use oak_core::source::{SourceBuffer, ToSource};
 #[cfg(feature = "oak-pretty-print")]
 use oak_pretty_print::{AsDocument, Document};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// MSIL Typed AST Root.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MsilTypedRoot<'a> {
-    red: oak_core::RedNode<'a, crate::language::MsilLanguage>,
-}
-
-impl<'a> oak_core::tree::TypedNode<'a> for MsilTypedRoot<'a> {
-    type Language = crate::language::MsilLanguage;
-
-    fn cast(node: oak_core::RedNode<'a, Self::Language>) -> Option<Self> {
-        if node.kind::<crate::parser::element_type::MsilElementType>() == crate::parser::element_type::MsilElementType::Root { Some(Self { red: node }) } else { None }
-    }
-
-    fn green(&self) -> &oak_core::GreenNode<'a, Self::Language> {
-        self.red.green()
-    }
-}
-
-/// Root node of the MSIL AST.
+/// MSIL 抽象语法树的根节点
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MsilRoot {
-    /// List of items (directives, classes, methods, etc.).
+    /// 指令、类、方法等项目列表
     pub items: Vec<Item>,
 }
 
@@ -46,17 +30,17 @@ impl AsDocument for MsilRoot {
     }
 }
 
-/// Top-level items in MSIL.
+/// MSIL 中的顶级项目
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Item {
-    /// Assembly definition.
+    /// 程序集定义
     Assembly(Assembly),
-    /// Module definition.
+    /// 模块定义
     Module(String),
-    /// Class definition.
+    /// 类定义
     Class(Class),
-    /// External assembly reference.
+    /// 外部程序集引用
     AssemblyExtern(String),
 }
 
@@ -90,13 +74,11 @@ impl AsDocument for Item {
     }
 }
 
-/// Assembly definition.
+/// 程序集定义
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Assembly {
-    /// Name of the assembly.
     pub name: String,
-    /// Span of the assembly definition.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -116,15 +98,12 @@ impl AsDocument for Assembly {
     }
 }
 
-/// Class definition.
+/// 类定义
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Class {
-    /// Name of the class.
     pub name: String,
-    /// Methods in the class.
     pub methods: Vec<Method>,
-    /// Span of the class definition.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -155,15 +134,12 @@ impl AsDocument for Class {
     }
 }
 
-/// Method definition.
+/// 方法定义
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Method {
-    /// Name of the method.
     pub name: String,
-    /// Instructions in the method.
     pub instructions: Vec<Instruction>,
-    /// Span of the method definition.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -200,15 +176,15 @@ impl AsDocument for Method {
     }
 }
 
-/// MSIL instructions.
+/// MSIL 指令
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Instruction {
-    /// Simple instruction without parameters.
+    /// 无参数指令
     Simple(String),
-    /// Instruction with a string parameter (e.g., `ldstr`).
+    /// 字符串参数指令 (ldstr)
     String(String),
-    /// Call instruction with a method name.
+    /// 调用指令 (call)
     Call(String),
 }
 

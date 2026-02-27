@@ -1,17 +1,18 @@
 #![doc = include_str!("readme.md")]
 #![feature(new_range_api)]
-#![warn(missing_docs)]
+#![doc = include_str!("../readme.md")]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+#![warn(missing_docs)]
+//! Valkyrie support for the Oak language framework.
 
-/// AST module.
+/// AST definitions for Valkyrie.
 pub mod ast;
-/// Builder module.
+/// Builder implementation for Valkyrie.
 pub mod builder;
-
-/// Language configuration module.
+/// Language definition for Valkyrie.
 pub mod language;
-/// Lexer module.
+/// Lexer implementation for Valkyrie.
 pub mod lexer;
 /// LSP module.
 #[cfg(any(feature = "lsp", feature = "oak-highlight", feature = "oak-pretty-print"))]
@@ -19,26 +20,29 @@ pub mod lsp;
 /// MCP module.
 #[cfg(feature = "mcp")]
 pub mod mcp;
-
-/// Parser module.
+/// Parser implementation for Valkyrie.
 pub mod parser;
 
-pub use crate::{ast::ValkyrieRoot, language::ValkyrieLanguage, lexer::ValkyrieLexer, parser::ValkyrieParser};
+// Re-export main types for convenience
+pub use crate::{builder::ValkyrieBuilder, language::ValkyrieLanguage, lexer::ValkyrieLexer, parser::ValkyrieParser};
 
-pub use oak_core::{ElementType, TokenType};
-
-/// Highlighter implementation.
-#[cfg(feature = "oak-highlight")]
-pub use crate::lsp::highlighter::ValkyrieHighlighter;
-
-#[cfg(feature = "lsp")]
-pub use crate::lsp::ValkyrieLanguageService;
 /// LSP implementation.
 #[cfg(feature = "lsp")]
+pub use crate::lsp::ValkyrieLanguageService;
+#[cfg(feature = "oak-pretty-print")]
 pub use crate::lsp::formatter::ValkyrieFormatter;
+
+/// Re-export lexer types
+pub mod lexer_types {
+    pub use crate::lexer::ValkyrieKeywords;
+}
+pub use lexer_types::*;
+
+#[cfg(feature = "oak-highlight")]
+/// Highlighter implementation.
+pub use crate::lsp::highlighter::ValkyrieHighlighter;
 
 /// MCP service implementation.
 #[cfg(feature = "mcp")]
 pub use crate::mcp::serve_valkyrie_mcp;
-pub use lexer::token_type::ValkyrieTokenType;
-pub use parser::element_type::ValkyrieElementType;
+pub use crate::{lexer::token_type::ValkyrieSyntaxKind as TokenType, parser::element_type::ValkyrieElementType as ElementType};

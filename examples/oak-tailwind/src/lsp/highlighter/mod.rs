@@ -1,37 +1,32 @@
-//! Highlighter for the Tailwind language.
-
-/// Highlight types for Tailwind language.
+#![doc = include_str!("readme.md")]
+/// Tailwind 语言的高亮类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keywords.
     Keyword,
-    /// Comments.
     Comment,
-    /// Variables.
     Variable,
 }
 
-/// Highlighter for Tailwind language.
+/// Tailwind 语言的高亮器
 #[derive(Debug, Default, Clone, Copy)]
 pub struct TailwindHighlighter;
 
 impl TailwindHighlighter {
-    /// Creates a new Tailwind highlighter.
+    /// 创建新的 Tailwind 高亮器
     pub fn new() -> Self {
         Self
     }
 
-    /// Highlights the given text and returns a list of ranges with their highlight kinds.
     pub fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
 
-        // Simple keyword highlighting
+        // 简单的关键字高亮
         let keywords = ["if", "else", "endif", "for", "in", "endfor", "set", "extends", "include", "block", "endblock"];
         for keyword in keywords {
             let mut start = 0;
             while let Some(pos) = text[start..].find(keyword) {
                 let actual_pos = start + pos;
-                // Check if it's a standalone word
+                // 检查是否是独立的单词
                 let is_start = actual_pos == 0 || !text.as_bytes()[actual_pos - 1].is_ascii_alphanumeric();
                 let is_end = actual_pos + keyword.len() == text.len() || !text.as_bytes()[actual_pos + keyword.len()].is_ascii_alphanumeric();
 
@@ -42,7 +37,7 @@ impl TailwindHighlighter {
             }
         }
 
-        // Highlight comments {# ... #}
+        // 高亮注释 {# ... #}
         let mut start = 0;
         while let Some(pos) = text[start..].find("{#") {
             let actual_start = start + pos;
@@ -57,7 +52,7 @@ impl TailwindHighlighter {
             }
         }
 
-        // Highlight variables {{ ... }}
+        // 高亮变量 {{ ... }}
         let mut start = 0;
         while let Some(pos) = text[start..].find("{{") {
             let actual_start = start + pos;

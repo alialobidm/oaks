@@ -6,9 +6,8 @@ use oak_core::{
 };
 
 /// Formatted output
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FormatOutput {
     /// The formatted code string
     pub content: String,
@@ -87,7 +86,8 @@ pub struct Formatter<L: Language + 'static> {
     pub context: FormatContext<L>,
 }
 
-impl<L: Language + 'static> Formatter<L> {
+impl<L: Language + 'static> Formatter<L>
+{
     /// Creates a new formatter
     pub fn new(config: FormatConfig) -> Self {
         let mut formatter = Self { rules: RuleSet::new(), context: FormatContext::new(config) };

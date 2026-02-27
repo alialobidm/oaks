@@ -1,7 +1,5 @@
 #![doc = include_str!("readme.md")]
 
-/// Content-based caching for parsed results.
-pub mod cache;
 /// Pratt parser implementation for operator precedence parsing.
 pub mod pratt;
 /// Parser memory pool management.
@@ -10,7 +8,6 @@ pub mod session;
 pub mod state;
 
 pub use self::{
-    cache::{CachingParseSession, ContentCache},
     pratt::{Associativity, OperatorInfo, Pratt, PrattParser, binary, postfix, unary},
     session::{ParseCache, ParseSession},
     state::{ParserState, deep_clone_node},
@@ -28,44 +25,20 @@ pub use crate::{
 /// The output of a parsing operation, containing the result and diagnostics.
 pub type ParseOutput<'a, L: Language> = OakDiagnostics<&'a GreenNode<'a, L>>;
 
-/// Core parser trait that defines the interface for language parsers.
-///
-/// This trait is responsible for converting a stream of tokens into a green tree
-/// (a lossless, immutable syntax tree). It supports incremental parsing by
-/// taking previous edits and using a cache for reuse.
-///
-/// # Usage Scenario
-///
-/// The `Parser` is typically used after lexical analysis to:
-/// 1. Take a sequence of tokens produced by a [`Lexer`].
-/// 2. Build a [`GreenNode`] tree representing the hierarchical structure of the source.
-/// 3. Handle incremental updates by reusing nodes from a previous [`GreenNode`] tree.
-///
-/// # Incremental Parsing
-///
-/// The `parse` method should ideally be able to reuse nodes from a previous
-/// parse if the source has only changed partially. This is facilitated by
-/// the [`ParseCache`] and the provided [`TextEdit`]s.
+/// Core parser trait that defines how to run the parser.
 pub trait Parser<L: Language + Send + Sync>
 where
     L::ElementType: From<L::TokenType>,
 {
-    /// The core parsing entry point for converting tokens into a syntax tree.
+    /// The core parsing entry point.
     ///
-    /// This method orchestrates the parsing process. It performs lexical analysis
-    /// (if not already cached) and then builds a green tree structure. It handles
-    /// incremental reuse automatically if the cache contains a previous tree.
+    /// This method orchestrates the parsing process using the provided cache.
+    /// It should handle incremental reuse automatically if the cache contains a previous tree.
     ///
     /// # Arguments
-    ///
-    /// * `text` - The source text to parse.
-    /// * `edits` - A slice of [`TextEdit`]s representing changes since the last parse.
-    ///             Used for incremental parsing.
-    /// * `cache` - The [`ParseCache`] for resources, incremental reuse, and diagnostics.
-    ///
-    /// # Returns
-    ///
-    /// A [`ParseOutput`] containing the root [`GreenNode`] and any diagnostics.
+    /// * `text` - The source text
+    /// * `edits` - Edits applied to the source since the last parse
+    /// * `cache` - The cache for resources and incremental reuse
     fn parse<'a, S: Source + ?Sized>(&self, text: &'a S, edits: &[TextEdit], cache: &'a mut impl ParseCache<L>) -> ParseOutput<'a, L>;
 }
 
@@ -97,58 +70,8 @@ where
     parser.parse(text, &[], cache)
 }
 
-/// Standalone parsing function that performs parallel parsing for large files.
+/// Helper for implementing `Parser::parse` with automatic lexing.
 ///
-/// This function splits the source into chunks and parses them in parallel,
-/// then merges the results. It's designed for large files where parallel processing
-/// can significantly improve performance.
-#[cfg(feature = "parallel")]
-pub fn parse_parallel<'a, L, P, S>(parser: &P, text: &'a S, cache: &'a mut impl ParseCache<L>) -> ParseOutput<'a, L>
-where
-    L: Language + Send + Sync,
-    L::ElementType: From<L::TokenType>,
-    P: Parser<L> + Sync,
-    S: Source + ?Sized,
-{
-    use rayon::prelude::*;
-
-    let length = text.length();
-    const CHUNK_SIZE: usize = 1024 * 1024; // 1MB chunks
-
-    if length <= CHUNK_SIZE {
-        // For small files, use single-threaded parsing
-        return parse_one_pass(parser, text, cache);
-    }
-
-    // Split the source into chunks
-    let chunks: Vec<_> = (0..length)
-        .step_by(CHUNK_SIZE)
-        .map(|start| {
-            let end = std::cmp::min(start + CHUNK_SIZE, length);
-            (start, end)
-        })
-        .collect();
-
-    // Parse each chunk in parallel
-    let results: Vec<_> = chunks
-        .par_iter()
-        .map(|&(start, end)| {
-            // Create a sub-cache for each chunk
-            let mut chunk_cache = cache.clone();
-            // Parse the chunk
-            // Note: This requires the Source to support sub-slicing
-            // For simplicity, we'll assume the source is a contiguous string
-            // In a real implementation, we'd need to handle different Source types
-            parser.parse(text, &[], &mut chunk_cache)
-        })
-        .collect();
-
-    // Merge the results
-    // This is a simplified implementation
-    // In a real implementation, we'd need to properly merge the syntax trees
-    results.into_iter().next().unwrap_or_else(|| parse_one_pass(parser, text, cache))
-}
-
 /// This function handles the boilerplate of preparing the cache, ensuring lexing is performed,
 /// setting up the parser state, and committing the result.
 pub fn parse_with_lexer<'a, L, S, Lex>(lexer: &Lex, text: &'a S, edits: &[TextEdit], cache: &'a mut impl ParseCache<L>, run: impl FnOnce(&mut ParserState<'a, L, S>) -> Result<&'a GreenNode<'a, L>, OakError>) -> ParseOutput<'a, L>
@@ -158,9 +81,12 @@ where
     S: Source + ?Sized,
     Lex: Lexer<L>,
 {
+    // 1. Prepare for new generation
+    cache.prepare_generation();
+
     // 2. Get Lexing Result (Auto-lex if missing)
-    let lex_out = match cache.lex_output().cloned() {
-        Some(out) => out,
+    let lex_out = match cache.lex_output() {
+        Some(out) => out.clone(),
         None => {
             let out = lexer.lex(text, edits, cache);
             cache.set_lex_output(out.clone());
@@ -187,7 +113,7 @@ where
 
     // 5. Commit Generation
     if let Ok(root) = output.result {
-        cache.commit_generation(root);
+        cache.commit_generation(root)
     }
 
     output

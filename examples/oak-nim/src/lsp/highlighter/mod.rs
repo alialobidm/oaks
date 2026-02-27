@@ -1,33 +1,26 @@
 #![doc = include_str!("readme.md")]
+//! Nim 语法高亮器
 
-/// Local definition of highlight types
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword
     Keyword,
-    /// String
     String,
-    /// Number
     Number,
-    /// Comment
     Comment,
-    /// Type
     Type,
-    /// Function
     Function,
-    /// Identifier
     Identifier,
 }
 
-/// Nim syntax highlighter
+/// Nim 语法高亮器
 pub struct NimHighlighter {
-    /// Whether to use the parser for more precise highlighting
     pub use_parser: bool,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
@@ -38,17 +31,15 @@ impl Default for NimHighlighter {
 }
 
 impl NimHighlighter {
-    /// Creates a new Nim highlighter
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a Nim highlighter that uses the parser
     pub fn with_parser() -> Self {
         Self { use_parser: true }
     }
 
-    /// Highlight Nim keywords
+    /// 高亮 Nim 关键字
     fn highlight_keywords(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let keywords = [

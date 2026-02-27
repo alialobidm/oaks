@@ -126,34 +126,27 @@ impl<'config> Pratt<RustLanguage> for RustParser<'config> {
 impl<'config> Parser<RustLanguage> for RustParser<'config> {
     fn parse<'a, S: Source + ?Sized>(&self, text: &'a S, edits: &[TextEdit], cache: &'a mut impl ParseCache<RustLanguage>) -> ParseOutput<'a, RustLanguage> {
         let lexer = RustLexer::new(self.config);
-        parse_with_lexer(&lexer, text, edits, cache, |state| {
-            let cp = state.checkpoint();
-            while state.not_at_end() {
-                if state.current().map(|t| t.kind.is_ignored()).unwrap_or(false) {
-                    state.advance();
-                    continue;
-                }
-                self.parse_statement(state)?
-            }
-            let root = state.finish_at(cp, crate::parser::element_type::RustElementType::SourceFile);
-            Ok(root)
-        })
+        parse_with_lexer(&lexer, text, edits, cache, |state| self.parse_source_file(state))
     }
 }
 
 impl<'config> RustParser<'config> {
+    /// Parses a complete Rust source file.
+    pub(crate) fn parse_source_file<'a, S: oak_core::source::Source + ?Sized>(&self, state: &mut ParserState<'a, RustLanguage, S>) -> Result<&'a GreenNode<'a, RustLanguage>, OakError> {
+        let cp = state.checkpoint();
+        while state.not_at_end() {
+            if state.current().map(|t| t.kind.is_ignored()).unwrap_or(false) {
+                state.advance();
+                continue;
+            }
+            self.parse_statement(state)?
+        }
+        let root = state.finish_at(cp, crate::parser::element_type::RustElementType::SourceFile);
+        Ok(root)
+    }
+
     /// Parses a single Rust statement or item.
-    ///
-    /// This method identifies the type of statement or item at the current position
-    /// and dispatches to the appropriate parsing method. If no specific statement
-    /// type is recognized, it parses an expression followed by a semicolon.
-    ///
-    /// # Arguments
-    /// * `state` - The current parser state
-    ///
-    /// # Returns
-    /// * `Result<(), OakError>` - Ok if parsing succeeds, Err otherwise
-    fn parse_statement<'a, S: Source + ?Sized>(&self, state: &mut ParserState<'a, RustLanguage, S>) -> Result<(), OakError> {
+    fn parse_statement<'a, S: oak_core::source::Source + ?Sized>(&self, state: &mut ParserState<'a, RustLanguage, S>) -> Result<(), OakError> {
         use crate::{lexer::RustTokenType, parser::RustElementType::*};
 
         let kind = match state.peek_kind() {
@@ -245,17 +238,8 @@ impl<'config> RustParser<'config> {
     }
 
     /// Parses a function definition.
-    ///
-    /// This method parses a complete Rust function definition, including the function
-    /// keyword, name, parameters, return type (if specified), and body.
-    ///
-    /// # Arguments
-    /// * `state` - The current parser state
-    ///
-    /// # Returns
-    /// * `Result<(), OakError>` - Ok if parsing succeeds, Err otherwise
     fn parse_function<'a, S: oak_core::source::Source + ?Sized>(&self, state: &mut ParserState<'a, RustLanguage, S>) -> Result<(), OakError> {
-        use crate::lexer::RustTokenType;
+        use crate::lexer::token_type::RustTokenType;
         let cp = state.checkpoint();
         state.expect(RustTokenType::Fn).ok();
         state.expect(RustTokenType::Identifier).ok();
@@ -270,15 +254,6 @@ impl<'config> RustParser<'config> {
         Ok(())
     }
 
-    /// Parses a function parameter list.
-    ///
-    /// This method parses the parameters of a function definition, enclosed in parentheses.
-    ///
-    /// # Arguments
-    /// * `state` - The current parser state
-    ///
-    /// # Returns
-    /// * `Result<(), OakError>` - Ok if parsing succeeds, Err otherwise
     fn parse_param_list<'a, S: oak_core::source::Source + ?Sized>(&self, state: &mut ParserState<'a, RustLanguage, S>) -> Result<(), OakError> {
         use crate::lexer::RustTokenType::*;
         let cp = state.checkpoint();
@@ -292,15 +267,6 @@ impl<'config> RustParser<'config> {
     }
 
     /// Parses a block of statements enclosed in braces.
-    ///
-    /// This method parses a block of code enclosed in curly braces, which can contain
-    /// multiple statements and nested blocks.
-    ///
-    /// # Arguments
-    /// * `state` - The current parser state
-    ///
-    /// # Returns
-    /// * `Result<(), OakError>` - Ok if parsing succeeds, Err otherwise
     fn parse_block<'a, S: oak_core::source::Source + ?Sized>(&self, state: &mut ParserState<'a, RustLanguage, S>) -> Result<(), OakError> {
         use crate::lexer::RustTokenType::*;
         let cp = state.checkpoint();

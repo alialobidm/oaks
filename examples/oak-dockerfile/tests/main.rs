@@ -2,5 +2,5 @@ mod lexer;
 
 #[test]
 fn ready() {
-    // Simple readiness test
+    // 简单的就绪测试
 }

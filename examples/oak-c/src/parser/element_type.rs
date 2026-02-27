@@ -1,47 +1,35 @@
 use crate::lexer::CTokenType;
 use oak_core::{ElementType, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Represents all possible element kinds in the C programming language.
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CElementType {
-    /// A wrapper for tokens.
+    /// A wrapper for tokens
     Token(CTokenType),
-    /// Root node representing the entire source file.
+    /// Root node representing the entire source file
     Root,
-    /// A function definition.
+    /// Function definition
     FunctionDefinition,
-    /// A list of parameters in a function declaration or definition.
+    /// Parameter list
     ParameterList,
-    /// A compound statement (a block of code enclosed in braces).
+    /// Compound statement (block)
     CompoundStatement,
-    /// An expression statement.
+    /// Expression statement
     ExpressionStatement,
-    /// A declaration statement.
+    /// Declaration statement
     DeclarationStatement,
-    /// A declarator.
-    Declarator,
-    /// An `if` statement.
+    /// If statement
     IfStatement,
-    /// A `while` statement.
+    /// While statement
     WhileStatement,
-    /// A `for` statement.
+    /// For statement
     ForStatement,
-    /// A `return` statement.
+    /// Return statement
     ReturnStatement,
-    /// A struct definition.
-    StructDefinition,
-    /// A union definition.
-    UnionDefinition,
-    /// An enum definition.
-    EnumDefinition,
-    /// A struct/union member declaration.
-    StructMember,
-    /// An enum constant.
-    EnumConstant,
-    /// A function call.
-    FunctionCall,
-    /// An error element used for recovery.
+    /// Error element
     Error,
 }
 
@@ -65,7 +53,7 @@ impl ElementType for CElementType {
     fn role(&self) -> Self::Role {
         match self {
             Self::Root => UniversalElementRole::Root,
-            Self::FunctionDefinition | Self::StructDefinition | Self::UnionDefinition | Self::EnumDefinition => UniversalElementRole::Definition,
+            Self::FunctionDefinition => UniversalElementRole::Definition,
             Self::CompoundStatement | Self::ExpressionStatement | Self::DeclarationStatement | Self::IfStatement | Self::WhileStatement | Self::ForStatement | Self::ReturnStatement => UniversalElementRole::Statement,
             Self::Error => UniversalElementRole::Error,
             _ => UniversalElementRole::None,

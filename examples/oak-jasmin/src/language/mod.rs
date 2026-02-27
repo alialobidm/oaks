@@ -1,27 +1,24 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-/// Jasmin language configuration.
+/// JASMIN 语言绑定与配置
 #[derive(Debug, Default, Copy, Clone)]
 pub struct JasminLanguage {
-    /// Whether to enable extended instructions (e.g., invokedynamic).
+    /// 是否启用扩展指令（如 invokedynamic 等）
     pub extended: bool,
-    /// Whether to allow comments.
+    /// 是否允许注释
     pub comments: bool,
 }
 
 impl JasminLanguage {
-    /// Creates a new `JasminLanguage` configuration with default values.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a standard `JasminLanguage` configuration with all features enabled.
     pub fn standard() -> Self {
         Self { extended: true, comments: true }
     }
 
-    /// Creates a minimal `JasminLanguage` configuration with all features disabled.
     pub fn minimal() -> Self {
         Self { extended: false, comments: false }
     }

@@ -2,7 +2,7 @@
 use crate::lsp::DejavuLanguageService;
 use oak_vfs::MemoryVfs;
 
-/// Starts Dejavu MCP service
+/// 启动 Dejavu MCP 服务
 pub async fn serve_dejavu_mcp(vfs: MemoryVfs) {
     let service = DejavuLanguageService::new(vfs);
     let server = oak_mcp::McpServer::new(service);

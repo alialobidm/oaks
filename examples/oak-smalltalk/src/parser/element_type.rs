@@ -1,17 +1,77 @@
-use oak_core::{ElementType, UniversalElementRole};
+use oak_core::{ElementType, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Smalltalk element types.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[repr(u8)]
 pub enum SmalltalkElementType {
-    /// Root element.
+    // Special
     Root,
-    /// Method definition.
-    MethodDefinition,
-    /// Message send.
-    MessageSend,
-    /// Error.
+    SourceFile,
+    Eof,
     Error,
+
+    // Literals
+    Number,
+    Integer,
+    Float,
+    String,
+    Character,
+    Symbol,
+
+    // Keywords
+    True,
+    False,
+    Nil,
+    Self_,
+    Super,
+
+    // Identifiers
+    Identifier,
+
+    // Operators
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Equal,
+    NotEqual,
+    Less,
+    Greater,
+    LessEqual,
+    GreaterEqual,
+
+    // Delimiters
+    LeftParen,
+    RightParen,
+    LeftBracket,
+    RightBracket,
+    LeftBrace,
+    RightBrace,
+    Dot,
+    Semicolon,
+    Comma,
+    Colon,
+    Pipe,
+    Caret,
+
+    // Comments
+    Comment,
+
+    // Whitespace
+    Whitespace,
+    Newline,
+}
+
+impl TokenType for SmalltalkElementType {
+    type Role = UniversalTokenRole;
+    const END_OF_STREAM: Self = Self::Eof;
+
+    fn role(&self) -> Self::Role {
+        UniversalTokenRole::None
+    }
 }
 
 impl ElementType for SmalltalkElementType {
@@ -19,10 +79,13 @@ impl ElementType for SmalltalkElementType {
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Root => UniversalElementRole::Root,
-            Self::MethodDefinition => UniversalElementRole::Definition,
-            Self::MessageSend => UniversalElementRole::Call,
-            Self::Error => UniversalElementRole::Error,
+            _ => UniversalElementRole::None,
         }
+    }
+}
+
+impl From<crate::lexer::token_type::SmalltalkTokenType> for SmalltalkElementType {
+    fn from(token: crate::lexer::token_type::SmalltalkTokenType) -> Self {
+        unsafe { std::mem::transmute(token) }
     }
 }

@@ -1,6 +1,4 @@
-//! Lexer for Windows Command (CMD) language.
-
-/// Token types for command-line arguments.
+#![doc = include_str!("readme.md")]
 pub mod token_type;
 
 pub use token_type::CmdTokenType;
@@ -8,12 +6,11 @@ pub use token_type::CmdTokenType;
 use crate::language::CmdLanguage;
 use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, CmdLanguage>;
+type State<'a, S> = LexerState<'a, S, CmdLanguage>;
 
-/// Lexer for the CMD language.
 #[derive(Clone)]
 pub struct CmdLexer<'config> {
-    config: &'config CmdLanguage,
+    _config: &'config CmdLanguage,
 }
 
 impl<'config> Lexer<CmdLanguage> for CmdLexer<'config> {
@@ -28,9 +25,8 @@ impl<'config> Lexer<CmdLanguage> for CmdLexer<'config> {
 }
 
 impl<'config> CmdLexer<'config> {
-    /// Creates a new `CmdLexer` with the given configuration.
     pub fn new(config: &'config CmdLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {

@@ -1,178 +1,107 @@
-use oak_core::{Token, TokenType, UniversalTokenRole};
+use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Token types for Pascal.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PascalTokenType {
-    /// Whitespace characters.
+    // 空白和换行
     Whitespace,
-    /// Newline characters.
     Newline,
 
-    /// Comments.
+    // 注释
     Comment,
 
-    /// `program` keyword.
+    // 关键字
     Program,
-    /// `begin` keyword.
     Begin,
-    /// `end` keyword.
     End,
-    /// `var` keyword.
     Var,
-    /// `const` keyword.
     Const,
-    /// `type` keyword.
     Type,
-    /// `function` keyword.
     Function,
-    /// `procedure` keyword.
     Procedure,
-    /// `if` keyword.
     If,
-    /// `then` keyword.
     Then,
-    /// `else` keyword.
     Else,
-    /// `while` keyword.
     While,
-    /// `do` keyword.
     Do,
-    /// `for` keyword.
     For,
-    /// `to` keyword.
     To,
-    /// `downto` keyword.
     Downto,
-    /// `repeat` keyword.
     Repeat,
-    /// `until` keyword.
     Until,
-    /// `case` keyword.
     Case,
-    /// `of` keyword.
     Of,
-    /// `with` keyword.
     With,
-    /// `record` keyword.
     Record,
-    /// `array` keyword.
     Array,
-    /// `set` keyword.
     Set,
-    /// `file` keyword.
     File,
-    /// `packed` keyword.
     Packed,
-    /// `nil` keyword.
     Nil,
-    /// `true` keyword.
     True,
-    /// `false` keyword.
     False,
-    /// `and` keyword.
     And,
-    /// `or` keyword.
     Or,
-    /// `not` keyword.
     Not,
-    /// `div` keyword.
     Div,
-    /// `mod` keyword.
     Mod,
-    /// `in` keyword.
     In,
 
-    /// An identifier.
+    // 标识符和字面量
     Identifier,
-    /// An integer literal.
     IntegerLiteral,
-    /// A real number literal.
     RealLiteral,
-    /// A string literal.
     StringLiteral,
-    /// A character literal.
     CharLiteral,
 
-    /// Plus operator `+`.
-    Plus,
-    /// Minus operator `-`.
-    Minus,
-    /// Multiply operator `*`.
-    Multiply,
-    /// Divide operator `/`.
-    Divide,
-    /// Assignment operator `:=`.
-    Assign,
-    /// Equality operator `=`.
-    Equal,
-    /// Inequality operator `<>`.
-    NotEqual,
-    /// Less than operator `<`.
-    Less,
-    /// Less than or equal operator `<=`.
-    LessEqual,
-    /// Greater than operator `>`.
-    Greater,
-    /// Greater than or equal operator `>=`.
-    GreaterEqual,
+    // 运算符
+    Plus,         // +
+    Minus,        // -
+    Multiply,     // *
+    Divide,       // /
+    Assign,       // :=
+    Equal,        // =
+    NotEqual,     // <>
+    Less,         // <
+    LessEqual,    // <=
+    Greater,      // >
+    GreaterEqual, // >=
 
-    /// Left parenthesis `(`.
-    LeftParen,
-    /// Right parenthesis `)`.
-    RightParen,
-    /// Left bracket `[`.
-    LeftBracket,
-    /// Right bracket `]`.
-    RightBracket,
-    /// Semicolon `;`.
-    Semicolon,
-    /// Comma `,`.
-    Comma,
-    /// Dot `.`.
-    Dot,
-    /// Colon `:`.
-    Colon,
-    /// Range operator `..`.
-    Range,
-    /// Caret operator `^`.
-    Caret,
+    // 分隔符
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBracket,  // [
+    RightBracket, // ]
+    Semicolon,    // ;
+    Comma,        // ,
+    Dot,          // .
+    Colon,        // :
+    Range,        // ..
+    Caret,        // ^
 
-    /// Root node (Internal use).
+    // Element markers (Internal use)
     Root,
-    /// Program block (Internal use).
     ProgramBlock,
-    /// Variable section (Internal use).
     VarSection,
-    /// Constant section (Internal use).
     ConstSection,
-    /// Type section (Internal use).
     TypeSection,
-    /// Procedure definition (Internal use).
     ProcedureDef,
-    /// Function definition (Internal use).
     FunctionDef,
-    /// Compound statement (Internal use).
     CompoundStmt,
-    /// Expression (Internal use).
     Expression,
 
-    /// Error token.
+    // 其他
     Error,
-    /// End of file.
     Eof,
 }
 
-/// Represents a token in a Pascal source file.
 pub type PascalToken = Token<PascalTokenType>;
 
 impl TokenType for PascalTokenType {
     type Role = UniversalTokenRole;
-    const END_OF_STREAM: Self = Self::Eof;
-
-    fn is_ignored(&self) -> bool {
-        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
-    }
+    const END_OF_STREAM: Self = Self::Error;
 
     fn role(&self) -> Self::Role {
         use UniversalTokenRole::*;
@@ -215,12 +144,12 @@ impl TokenType for PascalTokenType {
             | Self::Not
             | Self::Div
             | Self::Mod
-            | Self::In => UniversalTokenRole::Keyword,
-            Self::Plus | Self::Minus | Self::Multiply | Self::Divide | Self::Assign | Self::Equal | Self::NotEqual | Self::Less | Self::LessEqual | Self::Greater | Self::GreaterEqual | Self::Caret => UniversalTokenRole::Operator,
-            Self::LeftParen | Self::RightParen | Self::LeftBracket | Self::RightBracket | Self::Semicolon | Self::Comma | Self::Dot | Self::Colon | Self::Range => UniversalTokenRole::Punctuation,
-            Self::Error => UniversalTokenRole::Error,
-            Self::Eof => UniversalTokenRole::Eof,
-            _ => UniversalTokenRole::None,
+            | Self::In => Keyword,
+            Self::Plus | Self::Minus | Self::Multiply | Self::Divide | Self::Assign | Self::Equal | Self::NotEqual | Self::Less | Self::LessEqual | Self::Greater | Self::GreaterEqual | Self::Caret => Operator,
+            Self::LeftParen | Self::RightParen | Self::LeftBracket | Self::RightBracket | Self::Semicolon | Self::Comma | Self::Dot | Self::Colon | Self::Range => Punctuation,
+            Self::Error => Error,
+            Self::Eof => Eof,
+            _ => None,
         }
     }
 }

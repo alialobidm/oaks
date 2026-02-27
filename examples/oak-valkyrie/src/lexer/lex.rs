@@ -10,7 +10,7 @@ use oak_core::{
 use std::sync::LazyLock;
 use unicode_ident::{is_xid_continue, is_xid_start};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, ValkyrieLanguage>;
+type State<'a, S> = LexerState<'a, S, ValkyrieLanguage>;
 
 static VK_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static VK_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: "#", block_start: "/*", block_end: "*/", nested_blocks: true });
@@ -18,17 +18,9 @@ static VK_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { li
 impl crate::lexer::ValkyrieLexer<'_> {
     /// Runs the lexer on the given state.
     pub(crate) fn run<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
-        match self.config.syntax_mode {
-            oak_dejavu::language::SyntaxMode::Programming => self.run_programming(state),
-            oak_dejavu::language::SyntaxMode::Template => self.run_template(state),
+        match self._config.syntax_mode {
+            crate::language::SyntaxMode::Programming => self.run_programming(state),
         }
-    }
-
-    fn run_template<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
-        let start = state.get_position();
-        let end = state.source().length();
-        self.lex_interpolation(state, start, end, true);
-        Ok(())
     }
 
     fn run_programming<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
@@ -169,26 +161,36 @@ impl crate::lexer::ValkyrieLexer<'_> {
     }
 
     fn lex_interpolation<S: Source + ?Sized>(&self, state: &mut State<'_, S>, start: usize, end: usize, interpolation_enabled: bool) {
-        let original_pos = state.get_position();
-        state.set_position(start);
         let mut current = start;
-        let template = &self.config.template;
+        let original_pos = state.get_position();
+
+        state.set_position(start);
 
         while state.get_position() < end {
-            if interpolation_enabled && state.starts_with(&template.comment_start) {
+            if interpolation_enabled && (state.starts_with("\\{") || state.starts_with("\\}")) {
+                state.advance(2);
+                continue;
+            }
+            if interpolation_enabled && (state.starts_with("\\<") || state.starts_with("\\%") || state.starts_with("\\#")) {
+                state.advance(2);
+                continue;
+            }
+
+            if interpolation_enabled && state.starts_with("<#") {
                 let part_end = state.get_position();
                 if current < part_end {
                     state.add_token(ValkyrieSyntaxKind::StringPart, current, part_end)
                 }
 
                 let comment_start = state.get_position();
-                state.advance(template.comment_start.len());
+                state.advance(2); // skip <#
                 state.add_token(ValkyrieSyntaxKind::TemplateCommentStart, comment_start, state.get_position());
 
+                // Find matching #>
                 while state.get_position() < end {
-                    if state.starts_with(&template.comment_end) {
+                    if state.starts_with("#>") {
                         let comment_end = state.get_position();
-                        state.advance(template.comment_end.len());
+                        state.advance(2);
                         state.add_token(ValkyrieSyntaxKind::TemplateCommentEnd, comment_end, state.get_position());
                         break;
                     }
@@ -198,20 +200,21 @@ impl crate::lexer::ValkyrieLexer<'_> {
                 continue;
             }
 
-            if interpolation_enabled && state.starts_with(&template.control_start) {
+            if interpolation_enabled && state.starts_with("<%") {
                 let part_end = state.get_position();
                 if current < part_end {
                     state.add_token(ValkyrieSyntaxKind::StringPart, current, part_end)
                 }
 
                 let control_start = state.get_position();
-                state.advance(template.control_start.len());
+                state.advance(2); // skip <%
                 state.add_token(ValkyrieSyntaxKind::TemplateControlStart, control_start, state.get_position());
 
+                // Find matching %>
                 while state.get_position() < end {
-                    if state.starts_with(&template.control_end) {
+                    if state.starts_with("%>") {
                         let control_end = state.get_position();
-                        state.advance(template.control_end.len());
+                        state.advance(2);
                         state.add_token(ValkyrieSyntaxKind::TemplateControlEnd, control_end, state.get_position());
                         break;
                     }
@@ -221,33 +224,32 @@ impl crate::lexer::ValkyrieLexer<'_> {
                 continue;
             }
 
-            if interpolation_enabled && state.starts_with(&template.interpolation_start) {
+            if interpolation_enabled && state.starts_with("{") {
                 let part_end = state.get_position();
                 if current < part_end {
                     state.add_token(ValkyrieSyntaxKind::StringPart, current, part_end)
                 }
 
                 let interp_start = state.get_position();
-                state.advance(template.interpolation_start.len());
+                state.advance(1); // skip {
                 state.add_token(ValkyrieSyntaxKind::InterpolationStart, interp_start, state.get_position());
 
+                // Find matching }
                 let mut depth = 1;
                 while depth > 0 && state.get_position() < end {
-                    if state.starts_with(&template.interpolation_start) {
-                        depth += 1;
-                        state.advance(template.interpolation_start.len());
-                    }
-                    else if state.starts_with(&template.interpolation_end) {
-                        depth -= 1;
-                        if depth == 0 {
-                            let interp_end = state.get_position();
-                            state.advance(template.interpolation_end.len());
-                            state.add_token(ValkyrieSyntaxKind::InterpolationEnd, interp_end, state.get_position());
-                            break;
+                    if let Some(c) = state.current() {
+                        if c == '{' {
+                            depth += 1;
                         }
-                        state.advance(template.interpolation_end.len());
-                    }
-                    else if let Some(c) = state.current() {
+                        else if c == '}' {
+                            depth -= 1;
+                            if depth == 0 {
+                                let interp_end = state.get_position();
+                                state.advance(1);
+                                state.add_token(ValkyrieSyntaxKind::InterpolationEnd, interp_end, state.get_position());
+                                break;
+                            }
+                        }
                         state.advance(c.len_utf8());
                     }
                     else {
@@ -277,7 +279,7 @@ impl crate::lexer::ValkyrieLexer<'_> {
             if ch.is_ascii_digit() {
                 state.advance(ch.len_utf8());
 
-                // Continue reading digits
+                // 继续读取数字
                 while let Some(ch) = state.current() {
                     if ch.is_ascii_digit() || ch == '.' || ch == '_' { state.advance(ch.len_utf8()) } else { break }
                 }
@@ -552,7 +554,7 @@ impl crate::lexer::ValkyrieLexer<'_> {
                     state.add_token(ValkyrieSyntaxKind::At, start, state.get_position());
                     return true;
                 }
-                '\u{21AF}' => {
+                '↯' => {
                     state.advance(ch.len_utf8());
                     state.add_token(ValkyrieSyntaxKind::Bolt, start, state.get_position());
                     return true;

@@ -1,49 +1,26 @@
-(* Comprehensive OCaml Lexer Test *)
+(* Basic OCaml test file *)
 
-(* Basic Types and Literals *)
-let int_val = 42
-let float_val = 3.14
-let string_val = "Hello, world!"
-let char_val = 'a'
-let bool_val = true
-
-(* Lists and Arrays *)
-let list = [1; 2; 3; 4]
-let array = [| 1; 2; 3; 4 |]
-
-(* Functions *)
 let rec factorial n =
-    if n = 0 then 1 else n * factorial (n - 1)
+  if n <= 1 then 1
+  else n * factorial (n - 1)
 
-let add x y = x + y
-let result = add 5 10
+let main () =
+  let result = factorial 5 in
+  Printf.printf "Factorial of 5 is %d\n" result
 
-(* Pattern Matching *)
-let describe_list l =
-    match l with
-    | [] -> "Empty"
-    | [x] -> "Singleton"
-    | x :: xs -> "Multiple elements"
+type 'a tree =
+  | Leaf of 'a
+  | Node of 'a tree * 'a * 'a tree
 
-(* Records *)
-type person = {
-    name : string;
-    age : int;
-    mutable active : bool;
-}
+let rec insert x = function
+  | Leaf y -> if x <= y then Node (Leaf x, y, Leaf y) else Node (Leaf y, y, Leaf x)
+  | Node (l, v, r) -> if x <= v then Node (insert x l, v, r) else Node (l, v, insert x r)
 
-let alice = { name = "Alice"; age = 30; active = true }
-let name = alice.name
-let () = alice.active <- false
+module StringSet = Set.Make(String)
 
-(* Variants and Algebraic Data Types *)
-type shape =
-    | Circle of float
-    | Rectangle of float * float
-    | Point
-
-let area s =
-    match s with
-    | Circle r -> 3.14159 *. r *. r
-    | Rectangle (w, h) -> w *. h
-    | Point -> 0.0
+class counter =
+  object
+    val mutable count = 0
+    method get = count
+    method incr = count <- count + 1
+  end

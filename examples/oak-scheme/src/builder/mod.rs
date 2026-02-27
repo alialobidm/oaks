@@ -1,16 +1,13 @@
-//! Builder implementation for the Scheme language.
-
 use crate::{language::SchemeLanguage, parser::SchemeParser};
 use oak_core::{Builder, BuilderCache, Lexer, OakDiagnostics, Parser, TextEdit, source::Source};
 
-/// Builder for the Scheme language.
+/// Scheme 语言的 AST 构建器
 #[derive(Clone)]
 pub struct SchemeBuilder<'config> {
     config: &'config SchemeLanguage,
 }
 
 impl<'config> SchemeBuilder<'config> {
-    /// Creates a new `SchemeBuilder` with the given configuration.
     pub fn new(config: &'config SchemeLanguage) -> Self {
         Self { config }
     }

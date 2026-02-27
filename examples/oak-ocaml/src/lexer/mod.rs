@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token types for the OCaml language.
 pub mod token_type;
 
 use crate::{language::OCamlLanguage, lexer::token_type::OCamlTokenType};
@@ -10,15 +9,14 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, OCamlLanguage>;
+type State<'a, S> = LexerState<'a, S, OCamlLanguage>;
 
 static OCAML_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static OCAML_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: "//", block_start: "(*", block_end: "*)", nested_blocks: true });
 
-/// OCaml lexer implementation.
 #[derive(Clone, Debug)]
 pub struct OCamlLexer<'config> {
-    config: &'config OCamlLanguage,
+    _config: &'config OCamlLanguage,
 }
 
 impl<'config> Lexer<OCamlLanguage> for OCamlLexer<'config> {
@@ -33,12 +31,11 @@ impl<'config> Lexer<OCamlLanguage> for OCamlLexer<'config> {
 }
 
 impl<'config> OCamlLexer<'config> {
-    /// Create a new OCaml lexer.
     pub fn new(config: &'config OCamlLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Main lexical analysis loop
+    /// 主词法分析循环
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -81,7 +78,7 @@ impl<'config> OCamlLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         OCAML_WHITESPACE.scan(state, OCamlTokenType::Whitespace)
     }
@@ -312,7 +309,6 @@ impl<'config> OCamlLexer<'config> {
             ("::", OCamlTokenType::ColonColon),
             ("->", OCamlTokenType::RightArrow),
             ("<-", OCamlTokenType::LeftArrow),
-            ("-.", OCamlTokenType::MinusDot),
         ];
 
         for (pat, kind) in patterns {

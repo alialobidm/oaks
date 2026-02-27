@@ -2,7 +2,7 @@
 #[cfg(feature = "oak-highlight")]
 pub mod highlighter;
 
-use crate::{PythonElementType, language::PythonLanguage};
+use crate::{language::PythonLanguage, parser::element_type::PythonElementType};
 use core::range::Range;
 use oak_core::tree::RedNode;
 #[cfg(feature = "lsp")]

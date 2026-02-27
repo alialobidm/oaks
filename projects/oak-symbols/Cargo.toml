@@ -10,9 +10,5 @@ categories = ["development-tools"]
 keywords = ["symbols", "extraction", "indexing"]
 
 [dependencies]
-oak-core = { workspace = true }
-serde = { workspace = true, optional = true }
-
-[features]
-default = ["serde"]
-serde = ["dep:serde", "oak-core/serde"]
+oak-core = { workspace = true, features = ["serde"] }
+serde = { workspace = true }

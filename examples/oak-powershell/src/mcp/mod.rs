@@ -2,7 +2,6 @@
 use crate::lsp::PowerShellLanguageService;
 use oak_vfs::MemoryVfs;
 
-/// Serves the PowerShell MCP (Model Context Protocol) server.
 pub async fn serve_powershell_mcp(vfs: MemoryVfs) {
     let service = PowerShellLanguageService::new(vfs);
     let server = oak_mcp::McpServer::new(service);

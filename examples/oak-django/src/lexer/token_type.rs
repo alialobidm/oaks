@@ -1,11 +1,13 @@
 use oak_core::{Token, TokenRole, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub type DjangoToken = Token<DjangoTokenType>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DjangoTokenType {
-    // Basic kind
+    // 基本 kind
     Identifier,
     Number,
     String,
@@ -13,7 +15,7 @@ pub enum DjangoTokenType {
     Newline,
     Comment,
 
-    // Django template tags
+    // Django 模板标签
     VariableStart, // {{
     VariableEnd,   // }}
     TagStart,      // {%
@@ -21,7 +23,7 @@ pub enum DjangoTokenType {
     CommentStart,  // {#
     CommentEnd,    // #}
 
-    // Django tag keywords
+    // Django 标签关键字
     If,
     Elif,
     Else,
@@ -54,7 +56,7 @@ pub enum DjangoTokenType {
     Not,
     In,
 
-    // Symbols
+    // 符号
     Dot,
     Pipe,
     Colon,
@@ -72,14 +74,14 @@ pub enum DjangoTokenType {
     Slash,
     Percent,
 
-    // Brackets
+    // 括号
     LeftParen,
     RightParen,
     LeftBracket,
     RightBracket,
     Semicolon,
 
-    // Others
+    // 其他
     HtmlContent,
     Eof,
     Error,

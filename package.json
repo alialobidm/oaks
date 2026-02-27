@@ -2,11 +2,12 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "check": "cargo cry",
+        "check": "node --no-warnings --experimental-strip-types scripts/check.ts",
         "regenerate": "$env:REGENERATE_TESTS=1; cargo test --release --all-features",
         "test": "cargo test --release",
         "fmt": "cargo fmt --all",
-        "p": "cargo workspaces publish --no-git-commit --allow-dirty --yes",
+        "p": "cargo workspaces publish --no-git-commit --allow-dirty",
+        "reset": "git reset Head~ --soft",
         "u": "cargo upgrade --incompatible"
     },
     "packageManager": "pnpm@10.18.3"

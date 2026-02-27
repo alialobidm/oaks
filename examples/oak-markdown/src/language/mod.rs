@@ -1,9 +1,11 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Configuration for the Markdown language features.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MarkdownLanguage {
     /// Enable math formulas.
     ///
@@ -44,7 +46,7 @@ pub struct MarkdownLanguage {
     /// Enable superscript and subscript.
     ///
     /// Example: `^sup^` or `~sub~`
-    pub allow_subscript: bool,
+    pub allow_sub_superscript: bool,
     /// Enable autolinks.
     ///
     /// Example: `<https://example.com>`
@@ -106,13 +108,6 @@ pub struct MarkdownLanguage {
     pub allow_xml: bool,
 }
 
-impl MarkdownLanguage {
-    /// Creates a new Markdown language configuration with default settings.
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
 impl Language for MarkdownLanguage {
     const NAME: &'static str = "markdown";
     const CATEGORY: LanguageCategory = LanguageCategory::Markup;
@@ -132,9 +127,9 @@ impl Default for MarkdownLanguage {
             allow_footnotes: true,
             allow_front_matter: true,
             allow_definition_lists: false,
-            allow_subscript: false,
+            allow_sub_superscript: false,
             allow_autolinks: true,
-            allow_abbreviations: true,
+            allow_abbreviations: false,
             allow_indented_code_blocks: true,
             allow_html: true,
             allow_hard_line_breaks: true,

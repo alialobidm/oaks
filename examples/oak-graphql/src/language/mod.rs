@@ -1,7 +1,7 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-/// Implementation of the GraphQL language.
+/// GraphQL 语言实现
 #[derive(Debug, Clone)]
 pub struct GraphQLLanguage {}
 
@@ -11,5 +11,5 @@ impl Language for GraphQLLanguage {
 
     type TokenType = crate::lexer::token_type::GraphQLTokenType;
     type ElementType = crate::parser::element_type::GraphQLElementType;
-    type TypedRoot = crate::ast::GraphQLRoot;
+    type TypedRoot = ();
 }

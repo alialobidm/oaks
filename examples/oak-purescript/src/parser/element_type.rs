@@ -1,233 +1,94 @@
 use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Element types for PureScript AST.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PurescriptElementType {
-    /// Whitespace.
     Whitespace,
-    /// Newline.
     Newline,
-    /// Comment.
     Comment,
-    /// `ado`
     Ado,
-    /// `case`
     Case,
-    /// `class`
     Class,
-    /// `data`
     Data,
-    /// `derive`
     Derive,
-    /// `do`
     Do,
-    /// `else`
     Else,
-    /// `false`
     False,
-    /// `forall`
     Forall,
-    /// `foreign`
     Foreign,
-    /// `if`
     If,
-    /// `import`
     Import,
-    /// `in`
     In,
-    /// `infix`
     Infix,
-    /// `infixl`
     Infixl,
-    /// `infixr`
     Infixr,
-    /// `instance`
     Instance,
-    /// `let`
     Let,
-    /// `module`
     Module,
-    /// `newtype`
     Newtype,
-    /// `of`
     Of,
-    /// `then`
     Then,
-    /// `true`
     True,
-    /// `type`
     Type,
-    /// `where`
     Where,
-    /// `->`
     Arrow,
-    /// `=>`
     FatArrow,
-    /// `\`
     Backslash,
-    /// `|`
     Pipe,
-    /// `=`
     Equal,
-    /// `::`
     ColonColon,
-    /// `.`
     Dot,
-    /// `..`
     DotDot,
-    /// `+`
     Plus,
-    /// `-`
     Minus,
-    /// `*`
     Star,
-    /// `/`
     Slash,
-    /// `%`
     Percent,
-    /// `^`
     Caret,
-    /// `==`
     EqualEqual,
-    /// `/=`
     NotEqual,
-    /// `<`
     Less,
-    /// `>`
     Greater,
-    /// `<=`
     LessEqual,
-    /// `>=`
     GreaterEqual,
-    /// `&&`
     And,
-    /// `||`
     Or,
-    /// `!`
-    Not,
-    /// `(`
-    LeftParen,
-    /// `)`
-    RightParen,
-    /// `[`
-    LeftBracket,
-    /// `]`
-    RightBracket,
-    /// `{`
-    LeftBrace,
-    /// `}`
-    RightBrace,
-    /// `,`
-    Comma,
-    /// `;`
-    Semicolon,
-    /// `:`
-    Colon,
-    /// `$`
-    Dollar,
-    /// `<>`
     Append,
-    /// `<-`
-    LeftArrow,
-    /// `_`
-    Underscore,
-    /// Identifier.
-    Identifier,
-    /// Constructor.
-    Constructor,
-    /// Operator.
-    Operator,
-    /// String literal.
-    StringLiteral,
-    /// Integer literal.
-    IntLiteral,
-    /// Float literal.
-    NumberLiteral,
-    /// Char literal.
-    CharLiteral,
-
-    /// A module declaration.
-    ModuleDeclaration,
-    /// An import declaration.
-    ImportDeclaration,
-    /// A data declaration.
-    DataDeclaration,
-    /// A newtype declaration.
-    NewtypeDeclaration,
-    /// A type alias declaration.
-    TypeAliasDeclaration,
-    /// A class declaration.
-    ClassDeclaration,
-    /// An instance declaration.
-    InstanceDeclaration,
-    /// A foreign import declaration.
-    ForeignImportDeclaration,
-    /// A type signature.
-    TypeSignature,
-    /// A value declaration.
-    ValueDeclaration,
-    /// A pattern.
-    Pattern,
-    /// An expression.
-    Expression,
-    /// A literal expression.
-    LiteralExpression,
-    /// An identifier expression.
-    IdentifierExpression,
-    /// A prefix expression.
-    PrefixExpression,
-    /// An infix expression.
-    InfixExpression,
-    /// A function application.
-    ApplicationExpression,
-    /// A lambda expression.
-    LambdaExpression,
-    /// A let expression.
-    LetExpression,
-    /// A case expression.
-    CaseExpression,
-    /// A case arm.
-    CaseArm,
-    /// A do expression.
-    DoExpression,
-    /// A type.
-    TypeNode,
-
-    /// Source file node.
-    SourceFile,
-    /// `<<<`
     Compose,
-    /// `>>>`
     ComposeFlipped,
-    /// `$`
     Apply,
-    /// `#`
     ApplyFlipped,
-    /// `>>=`
     Bind,
-    /// `=<<`
     BindFlipped,
-    /// `?`
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    LeftBracket,
+    RightBracket,
+    Comma,
+    Semicolon,
+    Colon,
     Question,
-    /// `!`
     Exclamation,
-    /// `@`
     At,
-    /// Backtick
+    Underscore,
     Tick,
-    /// Upper case identifier
-    UpperIdentifier,
-    /// Qualified identifier
-    QualifiedIdentifier,
-    /// Boolean literal
+    IntLiteral,
+    NumberLiteral,
+    StringLiteral,
+    CharLiteral,
     BooleanLiteral,
-    /// Root node
+    Identifier,
+    UpperIdentifier,
+    Operator,
+    QualifiedIdentifier,
     Root,
-    /// End of file
-    Eof,
-    /// Error node.
+    SourceFile,
     Error,
+    Eof,
 }
 
 impl ElementType for PurescriptElementType {

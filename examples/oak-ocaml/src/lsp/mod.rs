@@ -39,7 +39,6 @@ pub struct OCamlLanguageService<V: Vfs> {
     hover_provider: OCamlHoverProvider,
 }
 impl<V: Vfs> OCamlLanguageService<V> {
-    /// Creates a new OCaml language service.
     pub fn new(vfs: V) -> Self {
         Self { vfs, workspace: oak_lsp::workspace::WorkspaceManager::default(), hover_provider: OCamlHoverProvider }
     }

@@ -6,7 +6,7 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// Haskell syntax highlighter.
+/// Haskell 语法高亮器
 pub struct HaskellHighlighter {
     use_parser: bool,
 }

@@ -10,9 +10,5 @@ categories = ["development-tools"]
 keywords = ["navigation", "goto-definition", "references"]
 
 [dependencies]
-oak-core = { workspace = true }
-serde = { workspace = true, optional = true }
-
-[features]
-default = []
-serde = ["dep:serde", "oak-core/serde"]
+oak-core = { workspace = true, features = ["serde"] }
+serde = { workspace = true }

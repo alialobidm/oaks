@@ -14,7 +14,6 @@ pub enum LspError {
     /// UTF-8 decoding error.
     Utf8(std::string::FromUtf8Error),
     /// JSON serialization/deserialization error.
-    #[cfg(feature = "serde")]
     Json(String),
     /// Other miscellaneous errors.
     Other(String),
@@ -25,7 +24,6 @@ impl Display for LspError {
         match self {
             LspError::Io(e) => write!(f, "IO error: {}", e),
             LspError::Utf8(e) => write!(f, "UTF-8 error: {}", e),
-            #[cfg(feature = "serde")]
             LspError::Json(e) => write!(f, "JSON error: {}", e),
             LspError::Other(e) => write!(f, "Other error: {}", e),
         }
@@ -46,7 +44,6 @@ impl From<std::string::FromUtf8Error> for LspError {
     }
 }
 
-#[cfg(feature = "serde")]
 impl From<serde_json::Error> for LspError {
     fn from(e: serde_json::Error) -> Self {
         LspError::Json(e.to_string())

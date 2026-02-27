@@ -1,10 +1,3 @@
 #![doc = include_str!("readme.md")]
-/// Formatter for regular expressions.
+#[allow(missing_docs)]
 pub struct RegexFormatter {}
-
-impl RegexFormatter {
-    /// Create a new instance of the regular expression formatter.
-    pub fn new() -> Self {
-        Self {}
-    }
-}

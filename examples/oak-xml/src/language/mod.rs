@@ -1,19 +1,10 @@
-//! XML language definition.
-
+#![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-#[cfg(feature = "serde")]
-pub mod serde;
-#[cfg(feature = "serde")]
-pub use serde::{from_value, to_value};
-
-/// XML language.
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct XmlLanguage {}
 
 impl XmlLanguage {
-    /// Creates a new `XmlLanguage`.
     pub fn new() -> Self {
         Self {}
     }

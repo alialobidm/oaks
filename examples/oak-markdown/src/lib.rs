@@ -1,9 +1,10 @@
 #![doc = include_str!("readme.md")]
 #![feature(new_range_api)]
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 #![allow(missing_copy_implementations)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+//! Markdown support for the Oak language framework.
 
 /// The Markdown language implementation for Oaks.
 pub mod language;

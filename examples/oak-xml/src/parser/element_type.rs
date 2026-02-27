@@ -1,28 +1,19 @@
-use oak_core::{ElementType, UniversalElementRole};
+use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// XML element types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum XmlElementType {
-    /// Root element.
     Root,
-    /// Prolog.
     Prolog,
-    /// Element.
     Element,
-    /// Start tag.
     StartTag,
-    /// End tag.
     EndTag,
-    /// Self-closing tag.
     SelfClosingTag,
-    /// Attribute.
     Attribute,
-    /// Text content.
     Text,
-    /// Comment.
     Comment,
-    /// CDATA section.
     CData,
 }
 

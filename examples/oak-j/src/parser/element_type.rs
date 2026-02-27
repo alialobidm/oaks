@@ -1,41 +1,43 @@
 use crate::lexer::JTokenType;
 use oak_core::{ElementType, GreenNode, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-/// Type alias for J syntax tree elements.
+/// J 语法树元素的类型别名
 pub type JElement<'a> = Arc<GreenNode<'a, JElementType>>;
 
-/// All possible element types in the J syntax tree.
+/// J 语法树中所有可能的元素类型。
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum JElementType {
     /// Root node
     Root,
     /// Compilation unit
     CompilationUnit,
 
-    /// Sentence
+    /// 句子 (Sentence)
     Sentence,
 
-    /// Assignment
+    /// 赋值语句 (Assignment)
     Assignment,
 
-    /// Expression
+    /// 表达式 (Expression)
     Expression,
 
-    /// Verb
+    /// 动词 (Verb)
     Verb,
 
-    /// Noun
+    /// 名词 (Noun)
     Noun,
 
-    /// Adverb
+    /// 副词 (Adverb)
     Adverb,
 
-    /// Conjunction
+    /// 连词 (Conjunction)
     Conjunction,
 
-    /// Parenthesized expression
+    /// 括号表达式
     Group,
 }
 

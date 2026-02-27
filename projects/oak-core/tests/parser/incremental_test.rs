@@ -1,7 +1,7 @@
 use core::range::Range;
 use oak_core::{
     ElementType, Language, TokenType, UniversalElementRole, UniversalTokenRole,
-    lexer::{LexOutput, Token, Tokens},
+    lexer::{LexOutput, Token},
     memory::arena::SyntaxArena,
     parser::state::ParserState,
     source::TextEdit,
@@ -10,7 +10,6 @@ use oak_core::{
 use triomphe::Arc;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum MockToken {
     Item,
     Whitespace,
@@ -26,7 +25,6 @@ impl TokenType for MockToken {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum MockElement {
     Root,
     Item,
@@ -74,7 +72,7 @@ fn mock_lex(text: &str) -> LexOutput<MockLanguage> {
 
     tokens.push(Token { kind: MockToken::End, span: Range { start: pos, end: pos } });
 
-    LexOutput::<MockLanguage> { result: Ok(Tokens::from(tokens)), diagnostics: Vec::new() }
+    LexOutput::<MockLanguage> { result: Ok(Arc::from(tokens)), diagnostics: Vec::new() }
 }
 
 impl From<MockToken> for MockElement {

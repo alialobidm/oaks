@@ -1,33 +1,34 @@
 #![doc = include_str!("readme.md")]
+//! TOML 语法高亮器
 
-/// Type of highlighting to apply for TOML code.
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Configuration key.
+    /// 键
     Key,
-    /// String literal.
+    /// 字符串
     String,
-    /// Numeric literal.
+    /// 数字
     Number,
-    /// Boolean literal (true/false).
+    /// 布尔值
     Boolean,
-    /// Comment block or line.
+    /// 注释
     Comment,
-    /// Date-time literal.
+    /// 日期时间
     DateTime,
-    /// Punctuation symbols (e.g., [ ] { } = .).
+    /// 符号 (如 [ ] { } = .)
     Punctuation,
 }
 
-/// Highlighter trait for processing source text.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text and returns a list of ranges with their corresponding highlight kind.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// TOML-specific syntax highlighter.
+/// TOML 语法高亮器
 pub struct TomlHighlighter {
-    /// Whether to use the full parser for more accurate highlighting.
+    /// 是否使用基于解析器的高亮
     pub use_parser: bool,
 }
 
@@ -38,12 +39,10 @@ impl Default for TomlHighlighter {
 }
 
 impl TomlHighlighter {
-    /// Creates a new `TomlHighlighter` with default settings.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Internal method to highlight comments in the text.
     fn highlight_comments(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut start = 0;
@@ -56,7 +55,6 @@ impl TomlHighlighter {
         highlights
     }
 
-    /// Internal method to highlight strings in the text.
     fn highlight_strings(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut chars = text.char_indices().peekable();

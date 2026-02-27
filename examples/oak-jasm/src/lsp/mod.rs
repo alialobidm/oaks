@@ -13,7 +13,6 @@ use {
     oak_vfs::Vfs,
 };
 #[cfg(feature = "lsp")]
-/// Hover provider for Jasm.
 pub struct JasmHoverProvider;
 #[cfg(feature = "lsp")]
 impl HoverProvider<JasmLanguage> for JasmHoverProvider {
@@ -24,18 +23,13 @@ impl HoverProvider<JasmLanguage> for JasmHoverProvider {
     }
 }
 #[cfg(feature = "lsp")]
-/// Language service for Jasm.
 pub struct JasmLanguageService<V: Vfs> {
-    /// The virtual file system.
-    pub vfs: V,
-    /// The workspace manager.
-    pub workspace: oak_lsp::workspace::WorkspaceManager,
-    /// The hover provider.
-    pub hover_provider: JasmHoverProvider,
+    vfs: V,
+    workspace: oak_lsp::workspace::WorkspaceManager,
+    hover_provider: JasmHoverProvider,
 }
 #[cfg(feature = "lsp")]
 impl<V: Vfs> JasmLanguageService<V> {
-    /// Creates a new instance of `JasmLanguageService`.
     pub fn new(vfs: V) -> Self {
         Self { vfs, workspace: oak_lsp::workspace::WorkspaceManager::default(), hover_provider: JasmHoverProvider }
     }

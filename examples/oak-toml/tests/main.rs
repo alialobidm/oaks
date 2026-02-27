@@ -47,7 +47,7 @@ fn test_lexer_string() {
     let tokens = result.result.unwrap();
     assert!(!tokens.is_empty());
 
-    // Check if string kind exists.
+    // 检查是否包含字符串 kind
     let has_string = tokens.iter().any(|t| matches!(t.kind, TomlSyntaxKind::BasicString));
     assert!(has_string, "Should contain a string token")
 }
@@ -65,7 +65,7 @@ fn test_lexer_number() {
     let tokens = result.result.unwrap();
     assert!(!tokens.is_empty());
 
-    // Check if number token exists.
+    // 检查是否包含数token
     let has_number = tokens.iter().any(|t| matches!(t.kind, TomlSyntaxKind::Integer | TomlSyntaxKind::Float));
     assert!(has_number, "Should contain a number token")
 }
@@ -83,7 +83,7 @@ fn test_lexer_boolean() {
     let tokens = result.result.unwrap();
     assert!(!tokens.is_empty());
 
-    // Check if boolean token exists.
+    // 检查是否包含布尔token
     let has_boolean = tokens.iter().any(|t| matches!(t.kind, TomlSyntaxKind::Boolean));
     assert!(has_boolean, "Should contain a boolean token")
 }
@@ -130,11 +130,11 @@ fn test_empty_input() {
     let source = SourceText::new("");
     let mut cache = oak_core::ParseSession::<TomlLanguage>::default();
 
-    // Test lexing of empty input
+    // 测试空输入的词法分析
     let lex_result = lexer.lex(&source, &[], &mut cache);
     assert!(lex_result.result.is_ok());
 
-    // Test parsing of empty input
+    // 测试空输入的语法分析
     let parse_result = oak_core::parser::parse(&parser, &lexer, &source, &[], &mut cache);
     assert!(parse_result.result.is_ok())
 }

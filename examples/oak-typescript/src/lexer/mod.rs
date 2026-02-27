@@ -1,23 +1,20 @@
 #![doc = include_str!("readme.md")]
-/// Token types for the TypeScript language.
 pub mod token_type;
 
 pub use self::token_type::TypeScriptTokenType;
 use crate::language::TypeScriptLanguage;
 use oak_core::{Lexer, LexerCache, LexerState, OakError, TextEdit, lexer::LexOutput, source::Source};
 
-/// Lexer for the TypeScript language.
 #[derive(Clone, Debug)]
 pub struct TypeScriptLexer<'config> {
-    config: &'config TypeScriptLanguage,
+    _config: &'config TypeScriptLanguage,
 }
 
-pub(crate) type State<'a, S> = LexerState<'a, S, TypeScriptLanguage>;
+type State<'a, S> = LexerState<'a, S, TypeScriptLanguage>;
 
 impl<'config> TypeScriptLexer<'config> {
-    /// Creates a new `TypeScriptLexer` with the given language configuration.
     pub fn new(config: &'config TypeScriptLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 }
 
@@ -71,7 +68,7 @@ impl<'config> TypeScriptLexer<'config> {
                 continue;
             }
 
-            // If all rules do not match, skip current character and mark as error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -131,7 +128,7 @@ impl<'config> TypeScriptLexer<'config> {
         let start = state.get_position();
         let rest = state.rest();
 
-        // Line comment: // ...
+        // 行注释: // ...
         if rest.starts_with("//") {
             state.advance(2);
             while let Some(ch) = state.peek() {
@@ -144,7 +141,7 @@ impl<'config> TypeScriptLexer<'config> {
             return true;
         }
 
-        // Block comment: /* ... */
+        // 块注释: /* ... */
         if rest.starts_with("/*") {
             state.advance(2);
             while let Some(ch) = state.peek() {
@@ -228,7 +225,7 @@ impl<'config> TypeScriptLexer<'config> {
             if ch.is_ascii_digit() {
                 state.advance(1);
 
-                // Handle hexadecimal
+                // 处理十六进制
                 if ch == '0' && (state.peek() == Some('x') || state.peek() == Some('X')) {
                     state.advance(1);
                     while let Some(ch) = state.peek() {
@@ -241,7 +238,7 @@ impl<'config> TypeScriptLexer<'config> {
                     }
                 }
                 else {
-                    // Handle decimal
+                    // 处理十进制
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_digit() {
                             state.advance(1);
@@ -264,7 +261,7 @@ impl<'config> TypeScriptLexer<'config> {
                     }
                 }
 
-                // Check BigInt suffix
+                // 检查 BigInt 后缀
                 if state.peek() == Some('n') {
                     state.advance(1);
                     state.add_token(TypeScriptTokenType::BigIntLiteral, start, state.get_position());
@@ -296,7 +293,7 @@ impl<'config> TypeScriptLexer<'config> {
                     }
                 }
 
-                // Get identifier text and check if it's a keyword
+                // 获取标识符文本并检查是否为关键字
                 let end = state.get_position();
                 let text = state.get_text_in(oak_core::Range { start, end });
                 let kind = self.keyword_or_identifier(&text);

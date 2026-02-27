@@ -3,6 +3,7 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+//! Dot support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
@@ -19,7 +20,6 @@ pub mod lexer;
 pub mod lsp;
 
 #[cfg(feature = "mcp")]
-/// MCP module.
 pub mod mcp;
 /// Parser module.
 pub mod parser;
@@ -37,7 +37,5 @@ pub use crate::lsp::DotLanguageService;
 /// MCP service implementation.
 #[cfg(feature = "mcp")]
 pub use crate::mcp::serve_dot_mcp;
-/// Dot token type.
 pub use lexer::token_type::DotTokenType;
-/// Dot element type.
 pub use parser::element_type::DotElementType;

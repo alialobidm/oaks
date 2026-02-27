@@ -3,22 +3,22 @@
 use crate::{ast::*, language::AplLanguage, parser::AplParser};
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, Parser, SourceText, TextEdit, source::Source};
 
-/// AST builder for the APL language.
+/// APL 语言的 AST 构建器
 #[derive(Clone)]
 pub struct AplBuilder<'config> {
-    /// The language configuration.
-    pub config: &'config AplLanguage,
+    /// 语言配置
+    config: &'config AplLanguage,
 }
 
 impl<'config> AplBuilder<'config> {
-    /// Creates a new `AplBuilder`.
+    /// 创建新的 APL 构建器
     pub fn new(config: &'config AplLanguage) -> Self {
         Self { config }
     }
 
-    /// Builds the AST root node from a green tree.
+    /// 从语法树构建 AST 根节点
     pub fn build_root(&self, _green: &GreenNode<AplLanguage>, _source: &SourceText) -> Result<AplRoot, oak_core::OakError> {
-        // Simplified AST building logic
+        // 简化的 AST 构建逻辑
         Ok(AplRoot::new(vec![]))
     }
 }

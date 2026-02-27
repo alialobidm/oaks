@@ -1,65 +1,54 @@
 #![doc = include_str!("readme.md")]
 use core::range::Range;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// The root of a Tcl Abstract Syntax Tree.
+/// Tcl 抽象语法树根节点
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TclRoot {
-    /// The span of the entire Tcl script in the source file.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The items (commands or comments) in the script.
     pub items: Vec<TclItem>,
 }
 
-/// A top-level item in a Tcl script.
+/// Tcl 顶级项目
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TclItem {
-    /// A Tcl command.
     Command(TclCommand),
-    /// A Tcl comment.
     Comment(TclComment),
 }
 
-/// A Tcl command.
+/// Tcl 命令
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TclCommand {
-    /// The span of the command in the source file.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The words (arguments) of the command.
     pub words: Vec<TclWord>,
 }
 
-/// A Tcl word (an argument or command name).
+/// Tcl 词 (命令的参数或命令名)
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TclWord {
-    /// A simple string word.
     Simple(String),
-    /// A variable substitution word.
     Variable(String),
-    /// A script substitution word.
     Script(TclRoot),
-    /// A braced string word.
     Braced(String),
 }
 
-/// A Tcl comment.
+/// Tcl 注释
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TclComment {
-    /// The span of the comment in the source file.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The text of the comment.
     pub text: String,
 }
 
 impl TclRoot {
-    /// Creates a new Tcl root node with the given span.
     pub fn new(span: Range<usize>) -> Self {
         Self { span, items: Vec::new() }
     }

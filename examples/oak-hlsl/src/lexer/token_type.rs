@@ -1,48 +1,44 @@
 use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub type HlslToken = Token<HlslTokenType>;
 
 impl TokenType for HlslTokenType {
     type Role = UniversalTokenRole;
-    const END_OF_STREAM: Self = Self::Eof;
+    const END_OF_STREAM: Self = Self::Error;
 
     fn is_ignored(&self) -> bool {
-        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
+        false
     }
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Eof => UniversalTokenRole::Eof,
-            Self::Whitespace | Self::Newline => UniversalTokenRole::Whitespace,
-            Self::Comment => UniversalTokenRole::Comment,
-            Self::Identifier => UniversalTokenRole::Name,
-            Self::StringLiteral | Self::NumberLiteral | Self::BooleanLiteral => UniversalTokenRole::Literal,
-            Self::Error => UniversalTokenRole::Error,
             _ => UniversalTokenRole::None,
         }
     }
 }
 
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum HlslTokenType {
-    // Whitespace and newline
+    // 空白字符和换行
     Whitespace,
     Newline,
 
-    // Comments
+    // 注释
     Comment,
 
-    // Literals
+    // 字面量
     StringLiteral,
     NumberLiteral,
     BooleanLiteral,
 
-    // Identifiers and keywords
+    // 标识符和关键字
     Identifier,
 
-    // Data types
+    // 数据类型
     Bool,
     Int,
     Uint,
@@ -55,7 +51,7 @@ pub enum HlslTokenType {
     Min12int,
     Min16uint,
 
-    // Vector types
+    // 向量类型
     Bool2,
     Bool3,
     Bool4,
@@ -75,7 +71,7 @@ pub enum HlslTokenType {
     Double3,
     Double4,
 
-    // Matrix types
+    // 矩阵类型
     Float2x2,
     Float2x3,
     Float2x4,
@@ -95,7 +91,7 @@ pub enum HlslTokenType {
     Double4x3,
     Double4x4,
 
-    // Texture types
+    // 纹理类型
     Texture1D,
     Texture2D,
     Texture3D,
@@ -106,12 +102,12 @@ pub enum HlslTokenType {
     Texture2DMS,
     Texture2DMSArray,
 
-    // Sampler types
+    // 采样器类型
     Sampler,
     SamplerState,
     SamplerComparisonState,
 
-    // Buffer types
+    // 缓冲区类型
     Buffer,
     StructuredBuffer,
     ByteAddressBuffer,
@@ -121,7 +117,7 @@ pub enum HlslTokenType {
     AppendStructuredBuffer,
     ConsumeStructuredBuffer,
 
-    // Control flow keywords
+    // 控制流关键字
     If,
     Else,
     For,
@@ -135,7 +131,7 @@ pub enum HlslTokenType {
     Return,
     Discard,
 
-    // Function and variable modifiers
+    // 函数和变量修饰符
     Static,
     Const,
     Uniform,
@@ -156,11 +152,11 @@ pub enum HlslTokenType {
     Noperspective,
     Target,
 
-    // Semantic modifiers
+    // 语义修饰符
     Register,
     Packoffset,
 
-    // Special keywords
+    // 特殊关键字
     Struct,
     Cbuffer,
     Tbuffer,
@@ -176,7 +172,7 @@ pub enum HlslTokenType {
     Sizeof,
     Undef,
 
-    // Preprocessor directives
+    // 预处理器指令
     Include,
     Define,
     If_,
@@ -188,7 +184,7 @@ pub enum HlslTokenType {
     Line,
     Pragma,
 
-    // Operators
+    // 运算符
     Plus,
     Minus,
     Multiply,
@@ -226,7 +222,7 @@ pub enum HlslTokenType {
     Arrow,
     Conditional,
 
-    // Punctuations
+    // 分隔符
     LeftParen,
     RightParen,
     LeftBracket,
@@ -242,16 +238,8 @@ pub enum HlslTokenType {
     At,
     Backslash,
 
-    // Special tokens
+    // 特殊标记
     Eof,
     Root,
-    FunctionDeclaration,
-    StructDeclaration,
-    VariableDeclaration,
-    ParameterList,
-    Parameter,
-    Block,
-    Statement,
-    Expression,
     Error,
 }

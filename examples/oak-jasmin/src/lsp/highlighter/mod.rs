@@ -6,11 +6,9 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// Jasmin highlighter implementation.
 pub struct JasminHighlighter;
 
 impl JasminHighlighter {
-    /// Creates a new `JasminHighlighter`.
     pub fn new() -> Self {
         Self
     }

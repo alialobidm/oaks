@@ -1,156 +1,69 @@
--- Comprehensive Haskell Lexer Test
-module Main where
+-- Basic Haskell syntax test file
 
-import Data.List (sort, group)
-import qualified Data.Map as Map
-import Control.Monad (when, forM_)
-
--- Basic Types
-i :: Int
-i = 42
-
-d :: Double
-d = 3.14
-
-c :: Char
-c = 'A'
-
-s :: String
-s = "Hello, Haskell!"
-
-b :: Bool
-b = True
-
--- Lists and Tuples
-list :: [Int]
-list = [1, 2, 3, 4, 5]
-
-tuple :: (Int, String)
-tuple = (1, "One")
-
--- Algebraic Data Types
-data Color
-    = Red
-    | Green
-    | Blue
-    | RGB Int Int Int
-    deriving (Show, Eq)
-
-data Maybe a
-    = Nothing
-    | Just a
-
--- Record Syntax
-data Person = Person
-    { name :: String
-    , age :: Int
-    , active :: Bool
-    } deriving (Show)
-
--- Type Classes
-class Describable a where
-    describe :: a -> String
-
-instance Describable Color where
-    describe Red = "Red color"
-    describe Green = "Green color"
-    describe Blue = "Blue color"
-    describe (RGB r g b) = "RGB(" ++ show r ++ "," ++ show g ++ "," ++ show b ++ ")"
-
--- Functions
+-- Function definitions with type signatures
 factorial :: Integer -> Integer
 factorial 0 = 1
 factorial n = n * factorial (n - 1)
 
--- Pattern Matching
-analyzeList :: [a] -> String
-analyzeList [] = "Empty list"
-analyzeList [x] = "Singleton list"
-analyzeList (x:xs) = "List with head and tail"
+-- List operations
+quickSort :: (Ord a) => [a] -> [a]
+quickSort [] = []
+quickSort (x:xs) = 
+    quickSort [y | y <- xs, y <= x] ++ [x] ++ quickSort [y | y <- xs, y > x]
 
--- Guards
-grade :: Int -> String
-grade score
-    | score >= 90 = "A"
-    | score >= 80 = "B"
-    | score >= 70 = "C"
-    | otherwise   = "F"
+-- Data type definitions
+data Tree a = Empty | Node a (Tree a) (Tree a) deriving (Show, Eq)
 
--- Case Expressions
-checkZero :: Int -> String
-checkZero x = case x of
-    0 -> "It's zero"
-    _ -> "Not zero"
+-- Type classes
+class Describable a where
+    describe :: a -> String
 
--- Where Clause
-circleArea :: Double -> Double
-circleArea r = pi * r ^ 2
-    where
-        pi = 3.14159
+instance Describable Bool where
+    describe True = "A true value"
+    describe False = "A false value"
 
--- Let Expression
-cylinderVolume :: Double -> Double -> Double
-cylinderVolume r h =
-    let area = circleArea r
-    in area * h
+-- Higher-order functions
+map' :: (a -> b) -> [a] -> [b]
+map' _ [] = []
+map' f (x:xs) = f x : map' f xs
 
--- Higher Order Functions
-squares :: [Int]
-squares = map (\x -> x * x) [1..10]
+-- Pattern matching
+guardExample :: Int -> String
+guardExample x
+    | x < 0     = "Negative"
+    | x == 0    = "Zero"
+    | otherwise = "Positive"
 
-filtered :: [Int]
-filtered = filter (> 5) squares
+-- List comprehensions
+pythagoreanTriples :: [(Int, Int, Int)]
+pythagoreanTriples = [(a, b, c) | c <- [1..100], b <- [1..c], a <- [1..b], a^2 + b^2 == c^2]
 
--- List Comprehensions
-pairs :: [(Int, Int)]
-pairs = [(x, y) | x <- [1..3], y <- [1..3], x /= y]
+-- Monadic operations
+maybeExample :: Maybe Int -> Maybe Int
+maybeExample mx = do
+    x <- mx
+    return (x * 2)
 
--- Operator Sections
-increment :: Int -> Int
-increment = (+ 1)
+-- Record syntax
+data Person = Person {
+    name :: String,
+    age :: Int,
+    email :: String
+} deriving (Show)
 
-half :: Double -> Double
-half = (/ 2)
+-- Lambda expressions
+filterEven :: [Int] -> [Int]
+filterEven = filter (\x -> x `mod` 2 == 0)
 
--- Infix Operators
-customOp :: Int -> Int -> Int
-customOp x y = x + y * 2
+-- String operations
+reverseWords :: String -> String
+reverseWords = unwords . reverse . words
 
-result = 5 `customOp` 3
-
--- Monads and Do Notation
+-- Main function
 main :: IO ()
 main = do
-    putStrLn "What is your name?"
-    name <- getLine
-    putStrLn $ "Hello, " ++ name
-    
-    when (length name > 5) $ do
-        putStrLn "That's a long name!"
-
--- Newtype
-newtype UserId = UserId Int
-
--- Type Synonyms
-type Username = String
-
--- Comments
--- Single line comment
-{- Multi-line
-   comment -}
-{- Nested {- comments -} -}
-
--- Pragma
-{-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wall #-}
-
--- Foreign Function Interface
-foreign import ccall "math.h sin" c_sin :: Double -> Double
-
--- GADTs
-data Expr a where
-    I   :: Int  -> Expr Int
-    B   :: Bool -> Expr Bool
-    Add :: Expr Int -> Expr Int -> Expr Int
-    Mul :: Expr Int -> Expr Int -> Expr Int
-    Eq  :: Eq a => Expr a -> Expr a -> Expr Bool
+    putStrLn "Hello, Haskell!"
+    print $ factorial 5
+    print $ quickSort [3, 1, 4, 1, 5, 9, 2, 6]
+    let person = Person "Alice" 30 "alice@example.com"
+    print person

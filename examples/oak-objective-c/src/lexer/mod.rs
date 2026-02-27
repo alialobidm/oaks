@@ -1,13 +1,11 @@
 #![doc = include_str!("readme.md")]
-/// Token type definitions.
 pub mod token_type;
 
 use crate::{language::ObjectiveCLanguage, lexer::token_type::ObjectiveCTokenType};
 use oak_core::{Lexer, LexerCache, LexerState, OakError, TextEdit, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, ObjectiveCLanguage>;
+type State<'a, S> = LexerState<'a, S, ObjectiveCLanguage>;
 
-/// Objective-C lexer.
 #[derive(Clone)]
 pub struct ObjectiveCLexer<'config> {
     #[allow(dead_code)]
@@ -26,12 +24,11 @@ impl<'config> Lexer<ObjectiveCLanguage> for ObjectiveCLexer<'config> {
 }
 
 impl<'config> ObjectiveCLexer<'config> {
-    /// Creates a new Objective-C lexer.
     pub fn new(config: &'config ObjectiveCLanguage) -> Self {
         Self { config }
     }
 
-    /// Main lexing loop.
+    /// 主词法分析循环
     fn run<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -68,7 +65,7 @@ impl<'config> ObjectiveCLexer<'config> {
                 continue;
             }
 
-            // If no pattern matches, add an error token and advance.
+            // 如果没有匹配任何模式，添加错误 token 并前进
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -81,7 +78,7 @@ impl<'config> ObjectiveCLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace.
+    /// 跳过空白字符
     fn skip_whitespace<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start = state.get_position();
         while let Some(ch) = state.peek() {

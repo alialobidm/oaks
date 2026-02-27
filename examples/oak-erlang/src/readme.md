@@ -1,7 +1,5 @@
 # 🛠️ oak-erlang Developer Guide
 
-Erlang support for the Oak language framework.
-
 Welcome to the internal implementation of the Erlang parser. This module provides the core logic for tokenizing and parsing Erlang source code into a high-fidelity syntax tree.
 
 ## 📦 Core Components

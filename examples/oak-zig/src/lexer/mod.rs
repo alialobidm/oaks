@@ -7,14 +7,13 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, ZigLanguage>;
+type State<'a, S> = LexerState<'a, S, ZigLanguage>;
 
 static ZIG_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 
-/// Lexer for the Zig language.
 #[derive(Clone)]
 pub struct ZigLexer<'config> {
-    config: &'config ZigLanguage,
+    _config: &'config ZigLanguage,
 }
 
 impl<'config> Lexer<ZigLanguage> for ZigLexer<'config> {
@@ -29,12 +28,11 @@ impl<'config> Lexer<ZigLanguage> for ZigLexer<'config> {
 }
 
 impl<'config> ZigLexer<'config> {
-    /// Creates a new Zig lexer with the given configuration.
     pub fn new(config: &'config ZigLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Main lexical analysis loop
+    /// 主要的词法分析循环
     fn run<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -75,7 +73,7 @@ impl<'config> ZigLexer<'config> {
                 continue;
             }
 
-            // If no rules match, advance one character and mark as error
+            // 如果没有匹配到任何规则，前进一个字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -88,21 +86,21 @@ impl<'config> ZigLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace characters
+    /// 跳过空白字符
     fn skip_whitespace<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         ZIG_WHITESPACE.scan(state, ZigTokenType::Whitespace)
     }
 
-    /// Skips comments
+    /// 跳过注释
     fn skip_comment<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start = state.get_position();
         let rest = state.rest();
 
-        // Line comment: // ... until newline
+        // 行注释: // ... 直到换行
         if rest.starts_with("//") {
             state.advance(2);
 
-            // Check if it's a doc comment ///
+            // 检查是否是文档注释 ///
             let is_doc_comment = if state.peek() == Some('/') {
                 state.advance(1);
                 true
@@ -126,15 +124,15 @@ impl<'config> ZigLexer<'config> {
         false
     }
 
-    /// Parses string literals
+    /// 解析字符串字面量
     fn lex_string_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
 
-        // Multiline string: \\...
+        // 多行字符串: \\...
         if state.rest().starts_with("\\\\") {
             state.advance(2);
 
-            // Skip to end of line
+            // 跳过到行尾
             while let Some(ch) = state.peek() {
                 if ch == '\n' {
                     state.advance(1);
@@ -143,18 +141,18 @@ impl<'config> ZigLexer<'config> {
                 state.advance(ch.len_utf8())
             }
 
-            // Read multiline string content
+            // 读取多行字符串内容
             while state.not_at_end() {
                 let _line_start = state.get_position();
 
-                // Check if it's a continuation line
+                // 检查是否是续行
                 if !state.rest().starts_with("\\\\") {
                     break;
                 }
 
                 state.advance(2);
 
-                // Read to end of line
+                // 读取到行尾
                 while let Some(ch) = state.peek() {
                     if ch == '\n' {
                         state.advance(1);
@@ -168,7 +166,7 @@ impl<'config> ZigLexer<'config> {
             return true;
         }
 
-        // Normal string: "..."
+        // 普通字符串: "..."
         if state.current() == Some('"') {
             state.advance(1);
             while let Some(ch) = state.peek() {
@@ -192,7 +190,7 @@ impl<'config> ZigLexer<'config> {
         false
     }
 
-    /// Parses character literals
+    /// 解析字符字面量
     fn lex_char_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         if state.current() == Some('\'') {
@@ -217,7 +215,7 @@ impl<'config> ZigLexer<'config> {
         false
     }
 
-    /// Parses number literals
+    /// 解析数字字面量
     fn lex_number_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         let ch = state.current();
@@ -226,7 +224,7 @@ impl<'config> ZigLexer<'config> {
         if let Some(ch) = ch {
             if ch.is_ascii_digit() {
                 state.advance(1);
-                // Handle hexadecimal, binary, octal
+                // 处理十六进制、二进制、八进制
                 if ch == '0' {
                     if let Some(next) = state.peek() {
                         match next {
@@ -252,7 +250,7 @@ impl<'config> ZigLexer<'config> {
                     state.take_while(|c| c.is_ascii_digit() || c == '_');
                 }
 
-                // Handle decimal point
+                // 处理小数点
                 if state.current() == Some('.') {
                     if let Some(next) = state.peek() {
                         if next.is_ascii_digit() {
@@ -263,7 +261,7 @@ impl<'config> ZigLexer<'config> {
                     }
                 }
 
-                // Handle exponent
+                // 处理指数
                 if let Some(c) = state.current() {
                     if c == 'e' || c == 'E' || c == 'p' || c == 'P' {
                         is_float = true;
@@ -285,7 +283,7 @@ impl<'config> ZigLexer<'config> {
         false
     }
 
-    /// Parses identifiers or keywords
+    /// 解析标识符或关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         if let Some(ch) = state.current() {
@@ -303,10 +301,10 @@ impl<'config> ZigLexer<'config> {
         false
     }
 
-    /// Gets keyword or identifier type
+    /// 获取关键字或标识符类型
     fn get_keyword_or_identifier(&self, text: &str) -> ZigTokenType {
         match text {
-            // Basic structures
+            // 基本结构
             "const" => ZigTokenType::Const,
             "var" => ZigTokenType::Var,
             "fn" => ZigTokenType::Fn,
@@ -326,7 +324,7 @@ impl<'config> ZigLexer<'config> {
             "callconv" => ZigTokenType::CallConv,
             "linksection" => ZigTokenType::LinkSection,
 
-            // Control flow
+            // 控制流
             "if" => ZigTokenType::If,
             "else" => ZigTokenType::Else,
             "switch" => ZigTokenType::Switch,
@@ -340,13 +338,13 @@ impl<'config> ZigLexer<'config> {
             "unreachable" => ZigTokenType::Unreachable,
             "noreturn" => ZigTokenType::NoReturn,
 
-            // Error handling
+            // 错误处理
             "try" => ZigTokenType::TryKeyword,
             "catch" => ZigTokenType::CatchKeyword,
             "orelse" => ZigTokenType::OrElse,
             "error" => ZigTokenType::ErrorKeyword,
 
-            // Test and async
+            // 测试和异步
             "test" => ZigTokenType::Test,
             "async" => ZigTokenType::Async,
             "await" => ZigTokenType::AwaitKeyword,
@@ -354,23 +352,23 @@ impl<'config> ZigLexer<'config> {
             "resume" => ZigTokenType::Resume,
             "cancel" => ZigTokenType::Cancel,
 
-            // Memory management
+            // 内存管理
             "undefined" => ZigTokenType::Undefined,
             "null" => ZigTokenType::Null,
             "volatile" => ZigTokenType::Volatile,
             "allowzero" => ZigTokenType::AllowZero,
             "noalias" => ZigTokenType::NoAlias,
 
-            // Logical operations
+            // 逻辑运算
             "and" => ZigTokenType::And,
             "or" => ZigTokenType::Or,
 
-            // Others
+            // 其他
             "anyframe" => ZigTokenType::AnyFrame,
             "anytype" => ZigTokenType::AnyType,
             "threadlocal" => ZigTokenType::ThreadLocal,
 
-            // Basic types
+            // 基本类型
             "bool" => ZigTokenType::Bool,
             "i8" => ZigTokenType::I8,
             "i16" => ZigTokenType::I16,
@@ -403,17 +401,17 @@ impl<'config> ZigLexer<'config> {
             "comptime_int" => ZigTokenType::ComptimeInt,
             "comptime_float" => ZigTokenType::ComptimeFloat,
 
-            // Boolean literals
+            // 布尔字面量
             "true" | "false" => ZigTokenType::BooleanLiteral,
 
             _ => ZigTokenType::Identifier,
         }
     }
 
-    /// Parses builtin identifiers (e.g., @import)
+    /// 解析内置标识符 (↯import 等)
     fn lex_builtin<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
-        if state.current() == Some('@') {
+        if state.current() == Some('↯') {
             state.advance(1);
             if let Some(ch) = state.current() {
                 if ch.is_ascii_alphabetic() || ch == '_' {
@@ -427,12 +425,12 @@ impl<'config> ZigLexer<'config> {
         false
     }
 
-    /// Parses operators
+    /// 解析操作符
     fn lex_operators<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         let rest = state.rest();
 
-        // Try to match the longest operator
+        // 尝试匹配最长的操作符
         let ops = [
             ("<<=", ZigTokenType::LessLessAssign),
             (">>=", ZigTokenType::GreaterGreaterAssign),
@@ -473,7 +471,7 @@ impl<'config> ZigLexer<'config> {
         false
     }
 
-    /// Parses single-character tokens
+    /// 解析单字符标记
     fn lex_single_char_tokens<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         if let Some(ch) = state.current() {

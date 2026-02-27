@@ -3,11 +3,6 @@ use crate::RustParser;
 use crate::{ast::*, language::RustLanguage, lexer::RustTokenType, parser::RustElementType};
 use core::range::Range;
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, OakError, Parser, RedNode, RedTree, SourceText, TextEdit, builder::BuildOutput, source::Source};
-use std::sync::Arc;
-
-mod build_generics;
-
-pub use build_generics::*;
 
 /// AST builder for the Rust language.
 ///
@@ -29,31 +24,36 @@ impl<'config> RustBuilder<'config> {
 
 impl<'config> Builder<RustLanguage> for RustBuilder<'config> {
     fn build<'a, S: Source + ?Sized>(&self, source: &S, edits: &[TextEdit], _cache: &'a mut impl BuilderCache<RustLanguage>) -> BuildOutput<RustLanguage> {
+        // Parse source code to get syntax tree
         let parser = RustParser::new(self.config);
-        let mut session = oak_core::parser::session::ParseSession::<RustLanguage>::default();
-        let OakDiagnostics { result, diagnostics } = parser.parse(source, edits, &mut session);
 
-        match result {
-            Ok(green) => {
+        // TODO: True incremental building should utilize the cache
+        let mut cache = oak_core::parser::session::ParseSession::<RustLanguage>::default();
+        let parse_result = parser.parse(source, edits, &mut cache);
+
+        // Check if parsing was successful
+        match parse_result.result {
+            Ok(green_tree) => {
+                // Build AST
                 let source_text = SourceText::new(source.get_text_in((0..source.length()).into()).into_owned());
-                match self.build_root(green, &source_text) {
-                    Ok(root) => OakDiagnostics { result: Ok(root), diagnostics },
-                    Err(e) => {
-                        let mut diagnostics = diagnostics;
-                        diagnostics.push(e.clone());
-                        OakDiagnostics { result: Err(e), diagnostics }
+                match self.build_root(green_tree.clone(), &source_text) {
+                    Ok(ast_root) => OakDiagnostics { result: Ok(ast_root), diagnostics: parse_result.diagnostics },
+                    Err(build_error) => {
+                        let mut diagnostics = parse_result.diagnostics;
+                        diagnostics.push(build_error.clone());
+                        OakDiagnostics { result: Err(build_error), diagnostics }
                     }
                 }
             }
-            Err(e) => OakDiagnostics { result: Err(e), diagnostics },
+            Err(parse_error) => OakDiagnostics { result: Err(parse_error), diagnostics: parse_result.diagnostics },
         }
     }
 }
 
 impl<'config> RustBuilder<'config> {
-    /// Builds the root of the AST (the entire source file).
-    pub(crate) fn build_root<'a>(&self, green_tree: &'a GreenNode<'a, RustLanguage>, source: &SourceText) -> Result<RustRoot, OakError> {
-        let red_root = RedNode::new(green_tree, 0);
+    /// Builds the root node.
+    pub(crate) fn build_root(&self, green_tree: GreenNode<RustLanguage>, source: &SourceText) -> Result<RustRoot, OakError> {
+        let red_root = RedNode::new(&green_tree, 0);
         let mut items = Vec::new();
 
         for child in red_root.children() {
@@ -108,18 +108,16 @@ impl<'config> RustBuilder<'config> {
                 }
             }
         }
-        let root = RustRoot { items };
-        Ok(root)
+        Ok(RustRoot { items })
     }
 
     /// Builds a function definition.
-    pub(crate) fn build_function(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Function>, OakError> {
+    pub(crate) fn build_function(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Function, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
         let mut params = Vec::new();
         let mut return_type = None;
         let mut body = None;
-        let generics = self.build_generics_and_where(node.clone(), source)?;
         let mut is_async = false;
         let mut is_unsafe = false;
         let mut is_extern = false;
@@ -151,22 +149,20 @@ impl<'config> RustBuilder<'config> {
             }
         }
 
-        let function = Arc::new(Function {
+        Ok(Function {
             name,
             params,
             return_type,
             body: body.unwrap_or_else(|| Block { statements: Vec::new(), block_start: 0, block_end: 0, nested: 0, span: Range { start: 0, end: 0 } }),
             is_async,
             is_unsafe,
-            generics,
+            generics: Vec::new(),
             is_extern,
             span: span.into(),
-        });
-
-        Ok(function)
+        })
     }
 
-    /// Builds a parameter list.
+    /// 构建参数列表
     fn build_param_list(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Vec<Param>, OakError> {
         let mut params = Vec::new();
         for child in node.children() {
@@ -179,7 +175,7 @@ impl<'config> RustBuilder<'config> {
         Ok(params)
     }
 
-    /// Builds a parameter.
+    /// 构建参数
     fn build_param(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Param, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
@@ -483,351 +479,127 @@ impl<'config> RustBuilder<'config> {
         }
     }
 
-    /// Builds a struct definition.
-    pub(crate) fn build_struct(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Struct>, OakError> {
+    // Placeholder methods - these need to be implemented based on specific requirements
+    fn build_struct(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Struct, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut fields = Vec::new();
-        let generics = self.build_generics_and_where(node.clone(), source)?;
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
-                    name.name = text(source, t.span.clone().into());
-                    name.span = t.span.clone().into();
-                }
-                RedTree::Node(n) if n.green.kind == RustElementType::StructBody => {
-                    fields = self.build_fields(n, source)?;
-                }
-                _ => {}
-            }
-        }
-
-        let struct_def = Arc::new(Struct { name, generics, fields, span: span.into() });
-        Ok(struct_def)
-    }
-
-    /// Builds a list of fields (for structs or enums).
-    fn build_fields(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Vec<Field>, OakError> {
-        let mut fields = Vec::new();
-        for child in node.children() {
-            if let RedTree::Node(n) = child {
-                if n.green.kind == RustElementType::Field {
-                    fields.push(self.build_field(n, source)?);
-                }
-            }
-        }
-        Ok(fields)
-    }
-
-    /// Builds a single field.
-    fn build_field(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Field, OakError> {
-        let span = node.span();
-        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut ty = Type::Path("_".to_string());
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
-                    name.name = text(source, t.span.clone().into());
-                    name.span = t.span.clone().into();
-                }
-                RedTree::Node(n) if n.green.kind == RustElementType::Type => {
-                    ty = self.build_type(n, source)?;
-                }
-                _ => {}
-            }
-        }
-
-        Ok(Field { name, ty, span: span.into() })
-    }
-
-    /// Builds an enum definition.
-    pub(crate) fn build_enum(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Enum>, OakError> {
-        let span = node.span();
-        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut variants = Vec::new();
-        let generics = self.build_generics_and_where(node.clone(), source)?;
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
-                    name.name = text(source, t.span.clone().into());
-                    name.span = t.span.clone().into();
-                }
-                RedTree::Node(n) if n.green.kind == RustElementType::EnumBody => {
-                    variants = self.build_variants(n, source)?;
-                }
-                _ => {}
-            }
-        }
-
-        let enum_def = Arc::new(Enum { name, generics, variants, span: span.into() });
-        Ok(enum_def)
-    }
-
-    /// Builds a list of enum variants.
-    fn build_variants(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Vec<Variant>, OakError> {
-        let mut variants = Vec::new();
-        for child in node.children() {
-            if let RedTree::Node(n) = child {
-                if n.green.kind == RustElementType::Variant {
-                    variants.push(self.build_variant(n, source)?);
-                }
-            }
-        }
-        Ok(variants)
-    }
-
-    /// Builds a single enum variant.
-    fn build_variant(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Variant, OakError> {
-        let span = node.span();
-        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut fields = None;
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
-                    name.name = text(source, t.span.clone().into());
-                    name.span = t.span.clone().into();
-                }
-                RedTree::Node(n) if n.green.kind == RustElementType::TupleBody || n.green.kind == RustElementType::StructBody => {
-                    fields = Some(self.build_fields(n, source)?);
-                }
-                _ => {}
-            }
-        }
-
-        Ok(Variant { name, fields, span: span.into() })
-    }
-
-    /// Builds a trait definition.
-    pub(crate) fn build_trait(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Trait>, OakError> {
-        let span = node.span();
-        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut items = Vec::new();
-        let generics = self.build_generics_and_where(node.clone(), source)?;
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
-                    name.name = text(source, t.span.clone().into());
-                    name.span = t.span.clone().into();
-                }
-                RedTree::Node(n) if n.green.kind == RustElementType::TraitBody => {
-                    items = self.build_trait_items(n, source)?;
-                }
-                _ => {}
-            }
-        }
-
-        let trait_def = Arc::new(Trait { name, generics, items, span: span.into() });
-        Ok(trait_def)
-    }
-
-    /// Builds items within a trait.
-    fn build_trait_items(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Vec<TraitItem>, OakError> {
-        let mut items = Vec::new();
-        for child in node.children() {
-            if let RedTree::Node(n) = child {
-                match n.green.kind {
-                    RustElementType::Function => {
-                        let func = self.build_function(n, source)?;
-                        items.push(TraitItem::Method((*func).clone()));
-                    }
-                    RustElementType::TypeAlias => {
-                        let alias = self.build_type_alias(n, source)?;
-                        items.push(TraitItem::Type((*alias).clone()));
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Ok(items)
-    }
-
-    /// Builds an impl block.
-    pub(crate) fn build_impl(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Impl>, OakError> {
-        let span = node.span();
-        let mut ty = Type::Path("_".to_string());
-        let mut trait_ = None;
-        let mut items = Vec::new();
-        let generics = self.build_generics_and_where(node.clone(), source)?;
-
-        for child in node.children() {
-            if let RedTree::Node(n) = child {
-                match n.green.kind {
-                    RustElementType::Type => {
-                        // In Rust, `impl Trait for Type` or `impl Type`.
-                        // The parser distinguishes these.
-                        if trait_.is_none() {
-                            ty = self.build_type(n, source)?;
-                        }
-                        else {
-                            // This would be the type after 'for'
-                            ty = self.build_type(n, source)?;
-                        }
-                    }
-                    RustElementType::TraitRef => {
-                        trait_ = Some(self.build_type(n, source)?);
-                    }
-                    RustElementType::ImplBody => {
-                        items = self.build_impl_items(n, source)?;
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        let impl_block = Arc::new(Impl { generics, ty, trait_, items, span: span.into() });
-        Ok(impl_block)
-    }
-
-    /// Builds items within an impl block.
-    fn build_impl_items(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Vec<ImplItem>, OakError> {
-        let mut items = Vec::new();
-        for child in node.children() {
-            if let RedTree::Node(n) = child {
-                match n.green.kind {
-                    RustElementType::Function => {
-                        let func = self.build_function(n, source)?;
-                        items.push(ImplItem::Method((*func).clone()));
-                    }
-                    RustElementType::TypeAlias => {
-                        let alias = self.build_type_alias(n, source)?;
-                        items.push(ImplItem::Type((*alias).clone()));
-                    }
-                    RustElementType::Const => {
-                        let constant = self.build_const(n, source)?;
-                        items.push(ImplItem::Const((*constant).clone()));
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Ok(items)
-    }
-
-    /// Builds a module definition.
-    pub(crate) fn build_module(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Module>, OakError> {
-        let span = node.span();
-        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut items = Vec::new();
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
-                    name.name = text(source, t.span.clone().into());
-                    name.span = t.span.clone().into();
-                }
-                RedTree::Node(n) if n.green.kind == RustElementType::Block => {
-                    // Reuse build_root logic for module items
-                    let root = self.build_root(n.green, source)?;
-                    items = root.items;
-                }
-                _ => {}
-            }
-        }
-
-        let module = Arc::new(Module { name, items, span: span.into() });
-        Ok(module)
-    }
-
-    /// Builds a use statement.
-    pub(crate) fn build_use(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<UseItem>, OakError> {
-        let span = node.span();
-        let mut path = String::new();
 
         for child in node.children() {
             if let RedTree::Leaf(t) = child {
                 if t.kind == RustTokenType::Identifier {
-                    path = text(source, t.span().into());
-                }
-            }
-        }
-
-        let use_item = Arc::new(UseItem { path, span: span.into() });
-        Ok(use_item)
-    }
-
-    /// Builds a constant definition.
-    pub(crate) fn build_const(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Const>, OakError> {
-        let span = node.span();
-        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut ty = Type::Path("_".to_string());
-        let mut expr = Expr::Bool { value: false, span: span.clone().into() };
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
                     name.name = text(source, t.span.clone().into());
                     name.span = t.span.clone().into();
                 }
-                RedTree::Node(n) => match n.green.kind {
-                    RustElementType::Type => ty = self.build_type(n, source)?,
-                    RustElementType::Expression => expr = self.build_expr(n, source)?,
-                    _ => {}
-                },
-                _ => {}
             }
         }
 
-        let constant = Arc::new(Const { name, ty, expr, span: span.into() });
-        Ok(constant)
+        Ok(Struct { name, fields: Vec::new(), span: span.into() })
     }
 
-    /// Builds a static definition.
-    pub(crate) fn build_static(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<Static>, OakError> {
+    fn build_enum(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Enum, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut ty = Type::Path("_".to_string());
-        let mut expr = Expr::Bool { value: false, span: span.clone().into() };
-        let mut mutable = false;
 
         for child in node.children() {
-            match child {
-                RedTree::Leaf(t) => match t.kind {
-                    RustTokenType::Identifier => {
-                        name.name = text(source, t.span.clone().into());
-                        name.span = t.span.clone().into();
-                    }
-                    RustTokenType::Mut => mutable = true,
-                    _ => {}
-                },
-                RedTree::Node(n) => match n.green.kind {
-                    RustElementType::Type => ty = self.build_type(n, source)?,
-                    RustElementType::Expression => expr = self.build_expr(n, source)?,
-                    _ => {}
-                },
-            }
-        }
-
-        let static_def = Arc::new(Static { name, ty, expr, mutable, span: span.into() });
-        Ok(static_def)
-    }
-
-    /// Builds a type alias.
-    pub(crate) fn build_type_alias(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Arc<TypeAlias>, OakError> {
-        let span = node.span();
-        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
-        let mut ty = Type::Path("_".to_string());
-        let generics = self.build_generics_and_where(node.clone(), source)?;
-
-        for child in node.children() {
-            match child {
-                RedTree::Leaf(t) if t.kind == RustTokenType::Identifier => {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == RustTokenType::Identifier {
                     name.name = text(source, t.span.clone().into());
                     name.span = t.span.clone().into();
                 }
-                RedTree::Node(n) if n.green.kind == RustElementType::Type => {
-                    ty = self.build_type(n, source)?;
-                }
-                _ => {}
             }
         }
 
-        let type_alias = Arc::new(TypeAlias { name, generics, ty, span: span.into() });
-        Ok(type_alias)
+        Ok(Enum { name, variants: Vec::new(), span: span.into() })
+    }
+
+    fn build_trait(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Trait, OakError> {
+        let span = node.span();
+        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
+
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == RustTokenType::Identifier {
+                    name.name = text(source, t.span.clone().into());
+                    name.span = t.span.clone().into();
+                }
+            }
+        }
+
+        Ok(Trait { name, items: Vec::new(), span: span.into() })
+    }
+
+    fn build_impl(&self, node: RedNode<RustLanguage>, _source: &SourceText) -> Result<Impl, OakError> {
+        let span = node.span();
+        Ok(Impl { trait_: None, ty: Type::Path("_".to_string()), items: Vec::new(), span: span.into() })
+    }
+
+    fn build_module(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Module, OakError> {
+        let span = node.span();
+        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
+
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == RustTokenType::Identifier {
+                    name.name = text(source, t.span.clone().into());
+                    name.span = t.span.clone().into();
+                }
+            }
+        }
+
+        Ok(Module { name, items: Vec::new(), span: span.into() })
+    }
+
+    fn build_use(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<UseItem, OakError> {
+        let span = node.span();
+        Ok(UseItem { path: text(source, span.clone().into()), span: span.into() })
+    }
+
+    fn build_const(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Const, OakError> {
+        let span = node.span();
+        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
+
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == RustTokenType::Identifier {
+                    name.name = text(source, t.span.clone().into());
+                    name.span = t.span.clone().into();
+                }
+            }
+        }
+
+        Ok(Const { name, ty: Type::Path("_".to_string()), expr: Expr::Bool { value: false, span: span.clone().into() }, span: span.into() })
+    }
+
+    fn build_static(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Static, OakError> {
+        let span = node.span();
+        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
+
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == RustTokenType::Identifier {
+                    name.name = text(source, t.span.clone().into());
+                    name.span = t.span.clone().into();
+                }
+            }
+        }
+
+        Ok(Static { name, ty: Type::Path("_".to_string()), expr: Expr::Bool { value: false, span: span.clone().into() }, mutable: false, span: span.into() })
+    }
+
+    fn build_type_alias(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<TypeAlias, OakError> {
+        let span = node.span();
+        let mut name = Identifier { name: String::new(), span: Range { start: 0, end: 0 } };
+
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == RustTokenType::Identifier {
+                    name.name = text(source, t.span.clone().into());
+                    name.span = t.span.clone().into();
+                }
+            }
+        }
+
+        Ok(TypeAlias { name, ty: Type::Path("_".to_string()), span: span.into() })
     }
 
     fn build_item_statement(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Item, OakError> {
@@ -853,30 +625,14 @@ impl<'config> RustBuilder<'config> {
 
     fn build_type(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Type, OakError> {
         let span = node.span();
-        match node.green.kind {
-            _ => Ok(Type::Path(text(source, span.into()))),
-        }
+        Ok(Type::Path(text(source, span.into())))
     }
 
     fn build_pattern(&self, node: RedNode<RustLanguage>, source: &SourceText) -> Result<Pattern, OakError> {
         for child in node.children() {
-            match child {
-                RedTree::Leaf(t) => match t.kind {
-                    RustTokenType::Identifier => {
-                        return Ok(Pattern::Ident(Identifier { name: text(source, t.span.clone().into()), span: t.span.clone().into() }));
-                    }
-                    RustTokenType::Underscore => {
-                        return Ok(Pattern::Wildcard);
-                    }
-                    _ => {}
-                },
-                RedTree::Node(n) => {
-                    // Recurse into nested patterns if necessary
-                    if let Ok(pattern) = self.build_pattern(n, source) {
-                        if !matches!(pattern, Pattern::Wildcard) {
-                            return Ok(pattern);
-                        }
-                    }
+            if let RedTree::Leaf(t) = child {
+                if t.kind == RustTokenType::Identifier {
+                    return Ok(Pattern::Ident(Identifier { name: text(source, t.span.clone().into()), span: t.span.clone().into() }));
                 }
             }
         }
@@ -894,8 +650,8 @@ impl<'config> RustBuilder<'config> {
     }
 }
 
-/// Helper function to extract text from source code.
+/// 从源代码中提取文本的辅助函数
 #[inline]
-pub(crate) fn text(source: &SourceText, span: Range<usize>) -> String {
+fn text(source: &SourceText, span: Range<usize>) -> String {
     source.get_text_in(span.into()).to_string()
 }

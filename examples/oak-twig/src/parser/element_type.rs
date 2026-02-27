@@ -1,122 +1,65 @@
 use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Element types for the Twig parser.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TwigElementType {
-    /// The root node of the parse tree.
+    // 节点种类
     Root,
-    /// A document node.
     Document,
-    /// A template node.
     Template,
-    /// A block node (`{% block %}`).
     Block,
-    /// A variable node (`{{ var }}`).
     Variable,
-    /// A filter node (`| filter`).
     Filter,
-    /// A function node (`func()`).
     Function,
-    /// A tag node (`{% tag %}`).
     Tag,
-    /// A comment node (`{# comment #}`).
     Comment,
-    /// Plain text content.
     Text,
-    /// An expression node.
     Expression,
 
-    /// An if statement node (`{% if %}`).
-    IfStatement,
-    /// A for statement node (`{% for %}`).
-    ForStatement,
-    /// A macro definition node (`{% macro %}`).
-    MacroDefinition,
-
-    /// A generic literal.
-    Literal,
-
-    /// A string literal.
+    // 细分字面量类
     String,
-    /// A numeric literal.
     Number,
-    /// A boolean literal.
     Boolean,
-    /// A null literal.
     Null,
-    /// An array literal.
     Array,
-    /// An object literal.
     Object,
-    /// An identifier.
     Identifier,
-    /// An operator.
     Operator,
-    /// An error node in the parse tree.
     ErrorNode,
 
-    /// An opening brace (`{`).
-    LeftBrace,
-    /// A closing brace (`}`).
-    RightBrace,
-    /// An opening bracket (`[`).
-    LeftBracket,
-    /// A closing bracket (`]`).
-    RightBracket,
-    /// Double opening braces (`{{`).
-    DoubleLeftBrace,
-    /// Double closing braces (`}}`).
-    DoubleRightBrace,
-    /// Opening brace and percent (`{%`).
-    LeftBracePercent,
-    /// Percent and closing brace (`%}`).
-    PercentRightBrace,
-    /// An opening parenthesis (`(`).
-    LeftParen,
-    /// A closing parenthesis (`)`).
-    RightParen,
-    /// A pipe character (`|`).
-    Pipe,
-    /// A comma (`,`).
-    Comma,
-    /// A dot character (`.`).
-    Dot,
-    /// A colon character (`:`).
-    Colon,
-    /// A semicolon character (`;`).
-    Semicolon,
-    /// An equal sign (`=`).
-    Eq,
-    /// A plus sign (`+`).
-    Plus,
-    /// A minus sign (`-`).
-    Minus,
-    /// A star sign (`*`).
-    Star,
-    /// A slash sign (`/`).
-    Slash,
-    /// A percent sign (`%`).
-    Percent,
-    /// An exclamation mark (`!`).
-    Bang,
-    /// A question mark (`?`).
-    Question,
-    /// A less-than sign (`<`).
-    Lt,
-    /// A greater-than sign (`>`).
-    Gt,
-    /// An ampersand character (`&`).
-    Amp,
-    /// A caret character (`^`).
-    Caret,
-    /// A tilde character (`~`).
-    Tilde,
-    /// Whitespace characters.
+    // 词法种类
+    LeftBrace,         // {
+    RightBrace,        // }
+    LeftBracket,       // [
+    RightBracket,      // ]
+    DoubleLeftBrace,   // {{
+    DoubleRightBrace,  // }}
+    LeftBracePercent,  // {%
+    PercentRightBrace, // %}
+    LeftParen,         // (
+    RightParen,        // )
+    Pipe,              // |
+    Comma,             // ,
+    Dot,               // .
+    Colon,             // :
+    Semicolon,         // ;
+    Eq,                // =
+    Plus,              // +
+    Minus,             // -
+    Star,              // *
+    Slash,             // /
+    Percent,           // %
+    Bang,              // !
+    Question,          // ?
+    Lt,                // <
+    Gt,                // >
+    Amp,               // &
+    Caret,             // ^
+    Tilde,             // ~
     Whitespace,
-    /// End of stream.
     Eof,
-    /// An error element.
     Error,
 }
 
@@ -147,10 +90,6 @@ impl core::fmt::Display for TwigElementType {
             TwigElementType::Comment => f.write_str("Comment"),
             TwigElementType::Text => f.write_str("Text"),
             TwigElementType::Expression => f.write_str("Expression"),
-            TwigElementType::IfStatement => f.write_str("IfStatement"),
-            TwigElementType::ForStatement => f.write_str("ForStatement"),
-            TwigElementType::MacroDefinition => f.write_str("MacroDefinition"),
-            TwigElementType::Literal => f.write_str("Literal"),
             TwigElementType::String => f.write_str("String"),
             TwigElementType::Number => f.write_str("Number"),
             TwigElementType::Boolean => f.write_str("Boolean"),

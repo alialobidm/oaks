@@ -1,7 +1,5 @@
 # 🛠️ CSS Parser Developer Guide
 
-Css support for the Oak language framework.
-
 This guide is designed to help you quickly get started with developing and integrating `oak-css`.
 
 ## 🚦 Quick Start

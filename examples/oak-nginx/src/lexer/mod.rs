@@ -1,25 +1,22 @@
 #![doc = include_str!("readme.md")]
-/// Token types for the Nginx lexer.
 pub mod token_type;
 
 use crate::{language::NginxLanguage, lexer::token_type::NginxTokenType};
 use oak_core::{Lexer, LexerCache, LexerState, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, NginxLanguage>;
+type State<'a, S> = LexerState<'a, S, NginxLanguage>;
 
-/// Lexer for Nginx configuration files.
 #[derive(Clone, Debug)]
 pub struct NginxLexer<'config> {
-    config: &'config NginxLanguage,
+    _config: &'config NginxLanguage,
 }
 
 impl<'config> NginxLexer<'config> {
-    /// Creates a new Nginx lexer with the given configuration.
     pub fn new(config: &'config NginxLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -41,7 +38,7 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles newline characters.
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -63,14 +60,14 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles comments.
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some('#') = state.peek() {
             state.advance(1);
 
-            // Read until the end of the line
+            // 读取到行
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -86,7 +83,7 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles strings.
+    /// 处理字符
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -95,14 +92,14 @@ impl<'config> NginxLexer<'config> {
                 return false;
             }
 
-            state.advance(1); // Skip start quote
+            state.advance(1); // 跳过开始引
             while let Some(ch) = state.peek() {
                 if ch == quote {
-                    state.advance(1); // Skip end quote
+                    state.advance(1); // 跳过结束引号
                     break;
                 }
                 else if ch == '\\' {
-                    state.advance(1); // Skip escape character
+                    state.advance(1); // 跳过转义字符
                     if let Some(c) = state.peek() {
                         state.advance(c.len_utf8());
                     }
@@ -120,7 +117,7 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles numbers.
+    /// 处理数字
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -129,7 +126,7 @@ impl<'config> NginxLexer<'config> {
                 return false;
             }
 
-            // Handle integer part
+            // 处理整数部分
             while let Some(ch) = state.peek() {
                 if ch.is_ascii_digit() {
                     state.advance(ch.len_utf8());
@@ -139,11 +136,11 @@ impl<'config> NginxLexer<'config> {
                 }
             }
 
-            // Handle decimal part
+            // 处理小数
             if let Some('.') = state.peek() {
                 if let Some(next_ch) = state.peek_next_n(1) {
                     if next_ch.is_ascii_digit() {
-                        state.advance(1); // Skip decimal point
+                        state.advance(1); // 跳过小数
                         while let Some(ch) = state.peek() {
                             if ch.is_ascii_digit() {
                                 state.advance(ch.len_utf8());
@@ -156,7 +153,7 @@ impl<'config> NginxLexer<'config> {
                 }
             }
 
-            // Handle unit suffixes (k, m, g, s, ms, etc.)
+            // 处理单位后缀 (k, m, g, s, ms, etc.)
             if let Some(ch) = state.peek() {
                 if ch.is_ascii_alphabetic() {
                     while let Some(ch) = state.peek() {
@@ -178,7 +175,7 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles paths.
+    /// 处理路径
     fn lex_path<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -202,11 +199,11 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles URLs.
+    /// 处理 URL
     fn lex_url<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
-        // Check if starts with http:// or https://
+        // 检查是否以 http:// https:// 开
         if state.starts_with("http://") || state.starts_with("https://") {
             let scheme_len = if state.starts_with("https://") { 8 } else { 7 };
             state.advance(scheme_len);
@@ -228,7 +225,7 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles identifiers and keywords.
+    /// 处理标识符和关键
     fn lex_identifier<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -237,7 +234,7 @@ impl<'config> NginxLexer<'config> {
                 return false;
             }
 
-            // Collect identifier characters
+            // 收集标识符字
             while let Some(ch) = state.peek() {
                 if ch.is_ascii_alphanumeric() || ch == '_' || ch == '$' {
                     state.advance(ch.len_utf8());
@@ -247,7 +244,7 @@ impl<'config> NginxLexer<'config> {
                 }
             }
 
-            // Check if it's a keyword
+            // 检查是否是关键
             let end_pos = state.get_position();
             let text = state.source().get_text_in(oak_core::Range { start: start_pos, end: end_pos });
             let token_kind = match text.as_ref() {
@@ -272,7 +269,7 @@ impl<'config> NginxLexer<'config> {
         }
     }
 
-    /// Handles delimiters.
+    /// 处理分隔
     fn lex_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -297,7 +294,7 @@ impl<'config> NginxLexer<'config> {
         while state.not_at_end() {
             let start_pos = state.get_position();
 
-            // Try various lexical rules
+            // 尝试各种词法规则
             if self.skip_whitespace(state) {
                 continue;
             }
@@ -334,7 +331,7 @@ impl<'config> NginxLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip current character and mark as error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             state.advance_if_dead_lock(start_pos);
             if state.get_position() > start_pos {
                 state.add_token(NginxTokenType::Error, start_pos, state.get_position())

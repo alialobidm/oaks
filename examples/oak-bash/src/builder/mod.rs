@@ -2,21 +2,19 @@
 use crate::{ast::*, language::BashLanguage, parser::BashParser};
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, Parser, SourceText, TextEdit, source::Source};
 
-/// Bash language AST builder
+/// Bash 语言的 AST 构建器
 #[derive(Clone)]
 pub struct BashBuilder<'config> {
     config: &'config BashLanguage,
 }
 
 impl<'config> BashBuilder<'config> {
-    /// Creates a new `BashBuilder` instance.
     pub fn new(config: &'config BashLanguage) -> Self {
         Self { config }
     }
 
-    /// Builds the root AST node from a green tree.
     pub fn build_root(&self, _green: &GreenNode<BashLanguage>, _source: &SourceText) -> Result<BashRoot, oak_core::OakError> {
-        // Simplified AST building logic
+        // 简化的 AST 构建逻辑
         Ok(BashRoot { elements: vec![] })
     }
 }

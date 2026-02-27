@@ -8,15 +8,13 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
-pub(crate) type State<'a, S> = LexerState<'a, S, MojoLanguage>;
+type State<'a, S> = LexerState<'a, S, MojoLanguage>;
 
-/// Mojo lexer
-#[derive(Clone)]
-pub struct MojoLexer<'config> {
-    config: &'config MojoLanguage,
-}
+/// Mojo 词法分析器
+#[derive(Clone, Default)]
+pub struct MojoLexer {}
 
-impl<'config> Lexer<MojoLanguage> for MojoLexer<'config> {
+impl Lexer<MojoLanguage> for MojoLexer {
     fn lex<'a, S: Source + ?Sized>(&self, source: &S, _edits: &[TextEdit], cache: &'a mut impl LexerCache<MojoLanguage>) -> LexOutput<MojoLanguage> {
         let mut state = State::new_with_cache(source, 0, cache);
         let result = self.run(&mut state);
@@ -27,10 +25,10 @@ impl<'config> Lexer<MojoLanguage> for MojoLexer<'config> {
     }
 }
 
-impl<'config> MojoLexer<'config> {
-    /// Creates a new Mojo lexer
-    pub fn new(config: &'config MojoLanguage) -> Self {
-        Self { config }
+impl MojoLexer {
+    /// 创建新的词法分析器
+    pub fn new() -> Self {
+        Self {}
     }
 
     pub(crate) fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {

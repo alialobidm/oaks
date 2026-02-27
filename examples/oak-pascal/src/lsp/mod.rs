@@ -31,15 +31,11 @@ impl HoverProvider<PascalLanguage> for PascalHoverProvider {
 /// Language service implementation for Pascal.
 #[cfg(feature = "lsp")]
 pub struct PascalLanguageService<V: Vfs> {
-    /// The virtual file system.
-    pub vfs: V,
-    /// The workspace manager.
-    pub workspace: oak_lsp::workspace::WorkspaceManager,
-    /// The hover provider.
-    pub hover_provider: PascalHoverProvider,
+    vfs: V,
+    workspace: oak_lsp::workspace::WorkspaceManager,
+    hover_provider: PascalHoverProvider,
 }
 impl<V: Vfs> PascalLanguageService<V> {
-    /// Creates a new Pascal language service.
     pub fn new(vfs: V) -> Self {
         Self { vfs, workspace: oak_lsp::workspace::WorkspaceManager::default(), hover_provider: PascalHoverProvider }
     }

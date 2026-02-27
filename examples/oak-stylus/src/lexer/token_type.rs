@@ -1,4 +1,6 @@
-use oak_core::{Token, TokenType, UniversalTokenRole};
+use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub type StylusToken = Token<StylusTokenType>;
 
@@ -21,12 +23,12 @@ impl TokenType for StylusTokenType {
 }
 
 impl StylusTokenType {
-    /// Checks if it is a value type.
+    /// 检查是否为值类型
     pub fn is_value(self) -> bool {
         matches!(self, StylusTokenType::Number | StylusTokenType::String | StylusTokenType::Color | StylusTokenType::Identifier)
     }
 
-    /// Checks if it is an operator.
+    /// 检查是否为操作符
     pub fn is_operator(self) -> bool {
         matches!(self, StylusTokenType::Plus | StylusTokenType::Minus | StylusTokenType::Star | StylusTokenType::Slash | StylusTokenType::Percent | StylusTokenType::Equal)
     }
@@ -73,74 +75,41 @@ impl core::fmt::Display for StylusTokenType {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-/// Stylus token types.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum StylusTokenType {
-    // Node types
-    /// Root node
+    // 节点种类
     Root,
-    /// Document node
     Document,
-    /// Rule node
     Rule,
-    /// Selector node
     Selector,
-    /// Property node
     Property,
-    /// Value node
     Value,
-    /// Block node
     Block,
 
-    // Lexical types
-    /// Identifier (body, div, color, etc.)
-    Identifier,
-    /// Number (10, 100px, 1.5em)
-    Number,
-    /// String ("Arial", 'Helvetica')
-    String,
-    /// Color (#fff, red, rgb(255,0,0))
-    Color,
-    /// Left brace {
-    LeftBrace,
-    /// Right brace }
-    RightBrace,
-    /// Left parenthesis (
-    LeftParen,
-    /// Right parenthesis )
-    RightParen,
-    /// Colon :
-    Colon,
-    /// Semicolon ;
-    Semicolon,
-    /// Comma ,
-    Comma,
-    /// Dot .
-    Dot,
-    /// Hash #
-    Hash,
-    /// Ampersand &
-    Ampersand,
-    /// Plus +
-    Plus,
-    /// Minus -
-    Minus,
-    /// Star *
-    Star,
-    /// Slash /
-    Slash,
-    /// Percent %
-    Percent,
-    /// Equal =
-    Equal,
-    /// Whitespace
+    // 词法种类
+    Identifier, // body, div, color, etc.
+    Number,     // 10, 100px, 1.5em
+    String,     // "Arial", 'Helvetica'
+    Color,      // #fff, red, rgb(255,0,0)
+    LeftBrace,  // {
+    RightBrace, // }
+    LeftParen,  // (
+    RightParen, // )
+    Colon,      // :
+    Semicolon,  // ;
+    Comma,      // ,
+    Dot,        // .
+    Hash,       // #
+    Ampersand,  // &
+    Plus,       // +
+    Minus,      // -
+    Star,       // *
+    Slash,      // /
+    Percent,    // %
+    Equal,      // =
     Whitespace,
-    /// Newline
     Newline,
-    /// Comment
     Comment,
-    /// End of file
     Eof,
-    /// Error token
     Error,
 }

@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Ada grammar element type definitions.
 pub mod element_type;
 
 pub use element_type::AdaElementType;
@@ -13,13 +12,11 @@ use oak_core::{
 
 pub(crate) type State<'a, S> = ParserState<'a, AdaLanguage, S>;
 
-/// Parser for the Ada language.
 pub struct AdaParser<'config> {
     pub(crate) config: &'config AdaLanguage,
 }
 
 impl<'config> AdaParser<'config> {
-    /// Creates a new `AdaParser` with the given language configuration.
     pub fn new(config: &'config AdaLanguage) -> Self {
         Self { config }
     }

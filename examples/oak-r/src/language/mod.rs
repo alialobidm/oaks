@@ -1,9 +1,8 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-/// Defines the R language.
+/// R 语言定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RLanguage {}
 
 impl RLanguage {

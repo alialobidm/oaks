@@ -3,12 +3,12 @@ use crate::language::SwiftLanguage;
 use oak_core::RedNode;
 
 pub struct SwiftFormatter<'config> {
-    config: &'config SwiftLanguage,
+    _config: &'config SwiftLanguage,
 }
 
 impl<'config> SwiftFormatter<'config> {
     pub fn new(config: &'config SwiftLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     pub fn format(&self, _root: &RedNode<SwiftLanguage>) -> String {

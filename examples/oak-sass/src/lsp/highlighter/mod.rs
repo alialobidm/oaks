@@ -5,7 +5,7 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// Sass highlighter
+/// Sass 高亮
 pub struct SassHighlighter {}
 
 impl SassHighlighter {
@@ -16,7 +16,7 @@ impl SassHighlighter {
 
 impl Highlighter for SassHighlighter {
     fn highlight<'a>(&self, source: &'a str, _language: &str, _theme: Theme) -> ParseResult<HighlightResult<'a>> {
-        // Temporarily return a simple result
+        // 暂时返回一个简单的结果
         Ok(HighlightResult { segments: vec![], source: std::borrow::Cow::Borrowed(source) })
     }
 }

@@ -1,35 +1,37 @@
 use crate::lexer::token_type::AplTokenType;
 use oak_core::{ElementType, GreenNode, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-/// Type alias for APL syntax tree elements.
+/// APL 语法树元素的类型别名
 pub type AplElement<'a> = Arc<GreenNode<'a, AplElementType>>;
 
-/// Element types for the APL language.
+/// APL 语法树中所有可能的元素类型。
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AplElementType {
-    /// Root node.
+    /// Root node
     Root,
-    /// A statement.
+    /// Statement
     Statement,
-    /// An expression.
+    /// Expression
     Expression,
-    /// An assignment (←).
+    /// Assignment (←)
     Assignment,
-    /// A vector or array literal.
+    /// Vector/Array literal
     ArrayLiteral,
-    /// A function (primitive or dfn).
+    /// Function (primitive or dfn)
     Function,
-    /// An operator (primitive or dop).
+    /// Operator (primitive or dop)
     Operator,
-    /// An identifier (variable name).
+    /// Identifier (variable name)
     Identifier,
-    /// A number literal.
+    /// Number literal
     NumberLiteral,
-    /// A string literal.
+    /// String literal
     StringLiteral,
-    /// An error node.
+    /// Error node
     Error,
 }
 

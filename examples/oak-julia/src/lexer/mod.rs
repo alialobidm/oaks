@@ -1,22 +1,20 @@
 #![doc = include_str!("readme.md")]
-/// Token type definitions for the Julia language.
 pub mod token_type;
 
 use crate::{language::JuliaLanguage, lexer::token_type::JuliaTokenType};
 use oak_core::{Lexer, LexerCache, LexerState, lexer::LexOutput, source::Source};
+use std::str::FromStr;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, JuliaLanguage>;
+type State<'a, S> = LexerState<'a, S, JuliaLanguage>;
 
-/// Lexer for the Julia language.
 #[derive(Clone, Debug)]
 pub struct JuliaLexer<'config> {
-    config: &'config JuliaLanguage,
+    _config: &'config JuliaLanguage,
 }
 
 impl<'config> JuliaLexer<'config> {
-    /// Creates a new instance of the Julia lexer.
     pub fn new(config: &'config JuliaLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 }
 
@@ -32,7 +30,7 @@ impl<'config> Lexer<JuliaLanguage> for JuliaLexer<'config> {
 }
 
 impl JuliaLexer<'_> {
-    /// Skips whitespace characters (spaces and tabs).
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -49,7 +47,7 @@ impl JuliaLexer<'_> {
         }
     }
 
-    /// Lexes a newline character (LF or CRLF).
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -71,10 +69,7 @@ impl JuliaLexer<'_> {
         }
     }
 
-    /// Lexes identifiers and keywords.
-    ///
-    /// Identifiers in Julia start with an alphabetic character or underscore,
-    /// followed by alphanumeric characters, underscores, `!`, or `?`.
+    /// 处理标识符和关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -94,7 +89,7 @@ impl JuliaLexer<'_> {
                 let end_pos = state.get_position();
                 let identifier_str = state.get_text_in((start_pos..end_pos).into());
 
-                // Check if it's a keyword
+                // 检查是否是关键字
                 if let Ok(keyword_kind) = identifier_str.as_ref().parse::<JuliaTokenType>() {
                     state.add_token(keyword_kind, start_pos, end_pos)
                 }
@@ -112,10 +107,7 @@ impl JuliaLexer<'_> {
         }
     }
 
-    /// Lexes a number literal (integer or float).
-    ///
-    /// Supports decimal integers, floating-point numbers with scientific notation,
-    /// and type suffixes.
+    /// 处理数字字面量
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -123,21 +115,21 @@ impl JuliaLexer<'_> {
             if ch.is_ascii_digit() {
                 state.advance(1);
 
-                // Handle integer part
+                // 处理整数部分
                 while let Some(ch) = state.peek() {
                     if ch.is_ascii_digit() || ch == '_' { state.advance(1) } else { break }
                 }
 
                 let mut is_float = false;
 
-                // Check for decimal point
+                // 检查小数点
                 if let Some('.') = state.peek() {
-                    // Check next char to avoid confusion with range operator
+                    // 检查下一个字符是否是数字，避免与范围操作符混淆
                     if let Some(next_ch) = state.peek_next_n(1) {
                         if next_ch.is_ascii_digit() {
                             is_float = true;
-                            state.advance(1); // Skip dot
-                            // Handle fractional part
+                            state.advance(1); // 跳过小数
+                            // 处理小数部分
                             while let Some(ch) = state.peek() {
                                 if ch.is_ascii_digit() || ch == '_' {
                                     state.advance(1);
@@ -150,20 +142,20 @@ impl JuliaLexer<'_> {
                     }
                 }
 
-                // Check for scientific notation
+                // 检查科学计数法
                 if let Some(ch) = state.peek() {
                     if ch == 'e' || ch == 'E' {
                         is_float = true;
                         state.advance(1);
 
-                        // Optional sign
+                        // 可选的符号
                         if let Some(sign) = state.peek() {
                             if sign == '+' || sign == '-' {
                                 state.advance(1)
                             }
                         }
 
-                        // Exponent part
+                        // 指数部分
                         while let Some(ch) = state.peek() {
                             if ch.is_ascii_digit() {
                                 state.advance(1);
@@ -175,7 +167,7 @@ impl JuliaLexer<'_> {
                     }
                 }
 
-                // Check for type suffix (f32, f64, i32, i64)
+                // 检查类型后缀 (f32, f64, i32, i64)
                 if let Some(ch) = state.peek() {
                     if ch.is_ascii_alphabetic() {
                         while let Some(ch) = state.peek() {
@@ -203,7 +195,7 @@ impl JuliaLexer<'_> {
         }
     }
 
-    /// Lexes a string literal (single or double quoted).
+    /// 处理字符串字面量
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -219,7 +211,7 @@ impl JuliaLexer<'_> {
                         break;
                     }
                     else if ch == '\\' {
-                        // Handle escape sequences
+                        // 处理转义字符
                         state.advance(1);
                         if let Some(_) = state.peek() {
                             state.advance(1);
@@ -236,7 +228,7 @@ impl JuliaLexer<'_> {
                     true
                 }
                 else {
-                    // No end quote, backtrack
+                    // 未找到结束引号，回退到开始位
                     state.set_position(start_pos);
                     false
                 }
@@ -250,17 +242,17 @@ impl JuliaLexer<'_> {
         }
     }
 
-    /// Lexes triple-quoted string literals.
+    /// 处理三重引号字符
     fn lex_triple_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
-        // Check for triple quotes
+        // 检查是否是三重引号
         if let Some('"') = state.peek() {
             if let Some('"') = state.peek_next_n(1) {
                 if let Some('"') = state.peek_next_n(2) {
                     state.advance(3);
 
-                    // Look for closing triple quotes
+                    // 寻找结束的三重引号
                     while let Some(ch) = state.peek() {
                         if ch == '"' {
                             if let Some('"') = state.peek_next_n(1) {
@@ -274,7 +266,7 @@ impl JuliaLexer<'_> {
                         state.advance(ch.len_utf8());
                     }
 
-                    // No end quote, backtrack
+                    // 未找到结束的三重引号，回退
                     state.set_position(start_pos);
                 }
             }
@@ -282,12 +274,12 @@ impl JuliaLexer<'_> {
         false
     }
 
-    /// Lexes a comment (single-line or nested multi-line).
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some('#') = state.peek() {
-            // Check for multi-line comment #= ... =#
+            // 检查是否是多行注释 #=
             if let Some('=') = state.peek_next_n(1) {
                 state.advance(2);
                 let mut depth = 1;
@@ -313,7 +305,7 @@ impl JuliaLexer<'_> {
                 true
             }
             else {
-                // Single-line comment
+                // 单行注释
                 state.advance(1);
 
                 while let Some(ch) = state.peek() {
@@ -332,7 +324,7 @@ impl JuliaLexer<'_> {
         }
     }
 
-    /// Lexes operators.
+    /// 处理操作符
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -503,7 +495,7 @@ impl JuliaLexer<'_> {
         }
     }
 
-    /// Lexes delimiters (parentheses, brackets, braces, commas, semicolons).
+    /// 处理分隔符
     fn lex_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -531,12 +523,12 @@ impl JuliaLexer<'_> {
 }
 
 impl<'config> JuliaLexer<'config> {
-    /// Main lexing loop.
+    /// 主要的词法分析循环
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), oak_core::OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
 
-            // Try various lexical rules
+            // 尝试各种词法规则
             if self.skip_whitespace(state) {
                 continue;
             }
@@ -573,7 +565,7 @@ impl<'config> JuliaLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip the current character and mark as error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());

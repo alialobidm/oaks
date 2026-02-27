@@ -1,6 +1,7 @@
 use oak_core::{Token, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Token type for Lua.
 pub type LuaToken = Token<LuaTokenType>;
 
 impl TokenType for LuaTokenType {
@@ -71,148 +72,83 @@ impl TokenType for LuaTokenType {
     }
 }
 
-/// Token types for Lua.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u16)]
 pub enum LuaTokenType {
-    /// Root node.
     Root,
-    // Keywords
-    /// The `and` keyword.
+    // 关键字
     And,
-    /// The `break` keyword.
     Break,
-    /// The `do` keyword.
     Do,
-    /// The `else` keyword.
     Else,
-    /// The `elseif` keyword.
     Elseif,
-    /// The `end` keyword.
     End,
-    /// The `false` keyword.
     False,
-    /// The `for` keyword.
     For,
-    /// The `function` keyword.
     Function,
-    /// The `goto` keyword.
     Goto,
-    /// The `if` keyword.
     If,
-    /// The `in` keyword.
     In,
-    /// The `local` keyword.
     Local,
-    /// The `nil` keyword.
     Nil,
-    /// The `not` keyword.
     Not,
-    /// The `or` keyword.
     Or,
-    /// The `repeat` keyword.
     Repeat,
-    /// The `return` keyword.
     Return,
-    /// The `then` keyword.
     Then,
-    /// The `true` keyword.
     True,
-    /// The `until` keyword.
     Until,
-    /// The `while` keyword.
     While,
 
-    // Identifiers and literals
-    /// An identifier.
+    // 标识符和字面量
     Identifier,
-    /// A numeric literal.
     Number,
-    /// A string literal.
     String,
 
-    // Operators
-    /// The `+` operator.
-    Plus,
-    /// The `-` operator.
-    Minus,
-    /// The `*` operator.
-    Star,
-    /// The `/` operator.
-    Slash,
-    /// The `%` operator.
-    Percent,
-    /// The `^` operator.
-    Caret,
-    /// The `#` operator.
-    Hash,
-    /// The `&` operator.
-    Ampersand,
-    /// The `~` operator.
-    Tilde,
-    /// The `|` operator.
-    Pipe,
-    /// The `<<` operator.
-    LtLt,
-    /// The `>>` operator.
-    GtGt,
-    /// The `//` operator.
-    SlashSlash,
-    /// The `==` operator.
-    EqEq,
-    /// The `~=` operator.
-    TildeEq,
-    /// The `<=` operator.
-    LtEq,
-    /// The `>=` operator.
-    GtEq,
-    /// The `<` operator.
-    Lt,
-    /// The `>` operator.
-    Gt,
-    /// The `=` operator.
-    Eq,
+    // 操作符
+    Plus,       // +
+    Minus,      // -
+    Star,       // *
+    Slash,      // /
+    Percent,    // %
+    Caret,      // ^
+    Hash,       // #
+    Ampersand,  // &
+    Tilde,      // ~
+    Pipe,       // |
+    LtLt,       // <<
+    GtGt,       // >>
+    SlashSlash, // //
+    EqEq,       // ==
+    TildeEq,    // ~=
+    LtEq,       // <=
+    GtEq,       // >=
+    Lt,         // <
+    Gt,         // >
+    Eq,         // =
 
-    // Delimiters
-    /// The `(` punctuation.
-    LeftParen,
-    /// The `)` punctuation.
-    RightParen,
-    /// The `{` punctuation.
-    LeftBrace,
-    /// The `}` punctuation.
-    RightBrace,
-    /// The `[` punctuation.
-    LeftBracket,
-    /// The `]` punctuation.
-    RightBracket,
-    /// The `::` punctuation.
-    ColonColon,
-    /// The `;` punctuation.
-    Semicolon,
-    /// The `:` punctuation.
-    Colon,
-    /// The `,` punctuation.
-    Comma,
-    /// The `.` punctuation.
-    Dot,
-    /// The `..` punctuation.
-    DotDot,
-    /// The `...` punctuation.
-    DotDotDot,
+    // 分隔符
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBrace,    // {
+    RightBrace,   // }
+    LeftBracket,  // [
+    RightBracket, // ]
+    ColonColon,   // ::
+    Semicolon,    // ;
+    Colon,        // :
+    Comma,        // ,
+    Dot,          // .
+    DotDot,       // ..
+    DotDotDot,    // ...
 
-    // Whitespace and comments
-    /// Whitespace.
+    // 空白和注释
     Whitespace,
-    /// Newline.
     Newline,
-    /// A comment.
     Comment,
 
-    // Special markers
-    /// End of stream marker.
+    // 特殊标记
     EndOfStream,
-    /// Error marker.
     Error,
 }

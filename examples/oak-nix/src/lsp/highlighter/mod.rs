@@ -1,29 +1,22 @@
 #![doc = include_str!("readme.md")]
+//! Nix syntax highlighter
 
-/// Syntax highlight kinds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Language keywords.
     Keyword,
-    /// String literals.
     String,
-    /// Numeric literals.
     Number,
-    /// Comments.
     Comment,
-    /// Identifiers.
     Identifier,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Performs highlighting on the given text.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Nix syntax highlighter implementation.
 pub struct NixHighlighter {
-    /// Whether to use the parser for highlighting.
     pub use_parser: bool,
 }
 
@@ -34,12 +27,10 @@ impl Default for NixHighlighter {
 }
 
 impl NixHighlighter {
-    /// Creates a new Nix highlighter with default settings.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a new Nix highlighter that uses the parser.
     pub fn with_parser() -> Self {
         Self { use_parser: true }
     }

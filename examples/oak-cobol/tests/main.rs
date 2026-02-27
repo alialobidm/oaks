@@ -45,7 +45,7 @@ fn test_lexer() {
             Ok(content) => {
                 let source = SourceText::new(&*content);
                 let language = CobolLanguage {};
-                let lexer = CobolLexer::new();
+                let lexer = CobolLexer::new(&language);
                 let mut session = ParseSession::<CobolLanguage>::new(16);
                 let output = lexer.lex(&source, &[], &mut session);
 
@@ -58,7 +58,7 @@ fn test_lexer() {
                 };
                 println!("  Tokens found: {}", tokens.len());
 
-                // Show first few tokens as example
+                // 显示前几tokens 作为示例
                 for (i, token) in tokens.iter().take(10).enumerate() {
                     println!("    {}: {:?}", i, token)
                 }
@@ -67,7 +67,7 @@ fn test_lexer() {
                     println!("    ... and {} more tokens", tokens.len() - 10)
                 }
 
-                // Verify last token is EOF
+                // 验证最后一tokens EOF
                 if let Some(last_token) = tokens.last() {
                     match last_token.kind {
                         CobolTokenType::Eof => println!("  Lexing completed successfully"),
@@ -98,7 +98,7 @@ fn test_parser() {
 
         match test_suite.read_file_content(&file_path) {
             Ok(content) => {
-                // Perform lexical analysis first
+                // 首先进行词法分析
                 let source = SourceText::new(&*content);
                 let language = CobolLanguage {};
                 let lexer = CobolLexer::new(&language);
@@ -107,7 +107,7 @@ fn test_parser() {
 
                 match &output.result {
                     Ok(_tokens) => {
-                        // Parser test temporarily skipped because COBOL parser may not be implemented yet
+                        // 解析器测试暂时跳过，因为 COBOL 解析器可能还未实现
                         println!("  Parser test skipped (not implemented yet)")
                     }
                     Err(e) => {

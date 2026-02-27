@@ -1,55 +1,36 @@
-//! INI token types and roles.
-
 use oak_core::{Token, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// A token in the INI language.
 pub type IniToken = Token<IniTokenType>;
 
-/// INI token types.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum IniTokenType {
-    /// Whitespace characters.
+    // Basic kinds
     Whitespace,
-    /// Newline character.
     Newline,
-    /// Comment.
     Comment,
-    /// Error token.
     Error,
-    /// End of file.
     Eof,
 
-    /// `{` symbol.
-    LeftBrace,
-    /// `}` symbol.
-    RightBrace,
-    /// `[` symbol.
-    LeftBracket,
-    /// `]` symbol.
-    RightBracket,
-    /// `[[` symbol.
-    DoubleLeftBracket,
-    /// `]]` symbol.
-    DoubleRightBracket,
-    /// `,` symbol.
-    Comma,
-    /// `.` symbol.
-    Dot,
-    /// `=` operator.
-    Equal,
+    // Tokens
+    LeftBrace,          // {
+    RightBrace,         // }
+    LeftBracket,        // [
+    RightBracket,       // ]
+    DoubleLeftBracket,  // [[
+    DoubleRightBracket, // ]]
+    Comma,              // ,
+    Dot,                // .
+    Equal,              // =
 
-    /// Identifier.
+    // Values
     Identifier,
-    /// String literal.
     String,
-    /// Integer literal.
     Integer,
-    /// Floating-point literal.
     Float,
-    /// Boolean literal.
     Boolean,
-    /// Date and time literal.
     DateTime,
 }
 

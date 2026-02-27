@@ -1,16 +1,18 @@
 #![doc = include_str!("readme.md")]
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Root node of a Perl program.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerlRoot {
     /// Top-level items in the program.
     pub items: Vec<PerlItem>,
 }
 
-/// Top-level item in a Perl program.
+/// Top-level items in a Perl program.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlItem {
     /// Package declaration.
     Package(PerlPackage),
@@ -28,7 +30,7 @@ pub enum PerlItem {
 
 /// Package declaration.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerlPackage {
     /// Package name.
     pub name: String,
@@ -36,21 +38,21 @@ pub struct PerlPackage {
 
 /// Use statement.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerlUse {
     /// Module name.
     pub module: String,
-    /// Optional import list.
+    /// Optional imports.
     pub imports: Option<Vec<String>>,
 }
 
 /// Subroutine definition.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerlSubroutine {
     /// Subroutine name.
     pub name: String,
-    /// List of parameter names.
+    /// Parameter names.
     pub parameters: Vec<String>,
     /// Subroutine body statements.
     pub body: Vec<PerlStatement>,
@@ -58,7 +60,7 @@ pub struct PerlSubroutine {
 
 /// Variable declaration.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerlVariable {
     /// Variable scope.
     pub scope: PerlScope,
@@ -70,7 +72,7 @@ pub struct PerlVariable {
 
 /// Variable scope.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlScope {
     /// Lexical scope (`my`).
     My,
@@ -82,12 +84,11 @@ pub enum PerlScope {
 
 /// Perl statement.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlStatement {
     /// Expression statement.
     Expression(PerlExpression),
-    /// If statement.
-    If(PerlIf),
+    /// If statement.    If(PerlIf),
     /// Loop statement.
     Loop(PerlLoop),
     /// Return statement.
@@ -98,7 +99,7 @@ pub enum PerlStatement {
 
 /// If statement.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerlIf {
     /// Condition expression.
     pub condition: PerlExpression,
@@ -112,7 +113,7 @@ pub struct PerlIf {
 
 /// Loop statement.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlLoop {
     /// `while` loop.
     While {
@@ -130,7 +131,7 @@ pub enum PerlLoop {
     },
     /// `for` loop.
     For {
-        /// Initialization.
+        /// Initializer.
         init: Option<PerlExpression>,
         /// Condition.
         condition: Option<PerlExpression>,
@@ -141,7 +142,7 @@ pub enum PerlLoop {
     },
     /// `foreach` loop.
     Foreach {
-        /// Iteration variable name.
+        /// Iterator variable name.
         variable: String,
         /// Iterable expression.
         iterable: PerlExpression,
@@ -152,7 +153,7 @@ pub enum PerlLoop {
 
 /// Control flow statement.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlControl {
     /// Exit the innermost loop.
     Last,
@@ -164,7 +165,7 @@ pub enum PerlControl {
 
 /// Perl expression.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlExpression {
     /// Literal value.
     Literal(PerlLiteral),
@@ -190,7 +191,7 @@ pub enum PerlExpression {
     Call {
         /// Function name.
         function: String,
-        /// Argument list.
+        /// Arguments.
         arguments: Vec<PerlExpression>,
     },
     /// Array access.
@@ -211,11 +212,11 @@ pub enum PerlExpression {
 
 /// Literal value.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlLiteral {
     /// String literal.
     String(String),
-    /// Number literal.
+    /// Numeric literal.
     Number(String),
     /// Array literal.
     Array(Vec<PerlExpression>),
@@ -225,7 +226,7 @@ pub enum PerlLiteral {
 
 /// Variable reference.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerlVariableRef {
     /// Variable sigil.
     pub sigil: PerlSigil,
@@ -235,23 +236,23 @@ pub struct PerlVariableRef {
 
 /// Variable sigil.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlSigil {
-    /// Scalar symbol (`$`).
+    /// Scalar sigil (`$`).
     Scalar,
-    /// Array symbol (`@`).
+    /// Array sigil (`@`).
     Array,
-    /// Hash symbol (`%`).
+    /// Hash sigil (`%`).
     Hash,
-    /// Code symbol (`&`).
+    /// Code sigil (`&`).
     Code,
-    /// Glob symbol (`*`).
+    /// Glob sigil (`*`).
     Glob,
 }
 
 /// Binary operator.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlBinaryOp {
     // Arithmetic operators
     /// Addition.
@@ -264,7 +265,7 @@ pub enum PerlBinaryOp {
     Divide,
     /// Modulo.
     Modulo,
-    /// Exponentiation.
+    /// Power.
     Power,
 
     // String operators
@@ -286,7 +287,7 @@ pub enum PerlBinaryOp {
     GreaterThan,
     /// Greater than or equal to.
     GreaterEqual,
-    /// Spaceship operator (`<=>`).
+    /// Spaceship operator.
     Spaceship,
 
     // Logical operators
@@ -307,33 +308,24 @@ pub enum PerlBinaryOp {
     /// Right shift.
     RightShift,
 
-    /// Assignment.
+    // 赋值操作符
     Assign,
 
-    /// Regular expression match.
+    // 模式匹配
     Match,
-    /// Regular expression non-match.
     NotMatch,
 }
 
-/// Unary operator.
+/// 一元操作符
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PerlUnaryOp {
-    /// Positive.
     Plus,
-    /// Negative.
     Minus,
-    /// Logical NOT.
     LogicalNot,
-    /// Bitwise NOT.
     BitwiseNot,
-    /// Increment.
     Increment,
-    /// Decrement.
     Decrement,
-    /// Reference.
     Reference,
-    /// Dereference.
     Dereference,
 }

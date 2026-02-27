@@ -1,8 +1,9 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Configuration for the Nginx language support.
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NginxLanguage {
     /// Whether to allow extended directives.
@@ -27,17 +28,14 @@ impl Language for NginxLanguage {
 }
 
 impl NginxLanguage {
-    /// Creates a new `NginxLanguage` with default settings.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a new `NginxLanguage` with standard settings (strict mode enabled).
     pub fn standard() -> Self {
         Self { allow_extensions: false, strict_mode: true }
     }
 
-    /// Creates a new `NginxLanguage` with extended settings (extensions allowed).
     pub fn extended() -> Self {
         Self { allow_extensions: true, strict_mode: false }
     }

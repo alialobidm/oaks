@@ -5,14 +5,14 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// Django syntax highlighter.
-///
-/// This module provides syntax highlighting for Django source code, supporting keywords, tags, filters, comments, etc.
-pub struct DjangoHighlighter;
+/// Django 高亮
+pub struct DjangoHighlighter {
+    pub use_parser: bool,
+}
 
 impl DjangoHighlighter {
-    pub fn new() -> Self {
-        Self
+    pub fn new(use_parser: bool) -> Self {
+        Self { use_parser }
     }
 }
 

@@ -2,38 +2,38 @@
 use crate::{language::CoqLanguage, lexer::token_type::CoqTokenType};
 use oak_core::{LexOutput, Lexer, LexerCache, SourceText, Token};
 
-/// Highlight kind definition
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword
+    /// 关键字
     Keyword,
-    /// Function/Tactic
+    /// 函数/策略
     Function,
-    /// String
+    /// 字符串
     String,
-    /// Number
+    /// 数字
     Number,
-    /// Comment
+    /// 注释
     Comment,
-    /// Identifier
+    /// 标识符
     Identifier,
-    /// Operator
+    /// 运算符
     Operator,
 }
 
-/// Coq language highlighter
+/// Coq 语言的高亮器
 pub struct CoqHighlighter;
 
 impl CoqHighlighter {
-    /// Creates a new Coq highlighter
+    /// 创建新的 Coq 高亮器
     pub fn new() -> Self {
         Self
     }
 }
 
-/// Highlighter interface
+/// 高亮器接口
 pub trait Highlighter {
-    /// Highlights the text
+    /// 对文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 

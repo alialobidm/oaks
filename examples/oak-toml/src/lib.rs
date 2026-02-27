@@ -1,13 +1,18 @@
 #![doc = include_str!("readme.md")]
 #![feature(new_range_api)]
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+
+//! Toml support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
 /// Builder module.
 pub mod builder;
+/// Error handling module.
+pub mod errors;
+
 /// Syntax kind module.
 /// Language configuration module.
 pub mod language;

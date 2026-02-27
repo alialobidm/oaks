@@ -1,8 +1,7 @@
-//! Zig token types and roles.
+use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-use oak_core::{Token, TokenType, UniversalTokenRole};
-
-/// A token in the Zig language.
 pub type ZigToken = Token<ZigTokenType>;
 
 impl TokenType for ZigTokenType {
@@ -24,371 +23,221 @@ impl TokenType for ZigTokenType {
     }
 }
 
-/// Zig token types.
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ZigTokenType {
-    /// Root element.
     Root,
-    /// Whitespace characters.
+    // 基础 kind
     Whitespace,
-    /// Newline character.
     Newline,
-    /// Comment.
     Comment,
-    /// Documentation comment.
     DocComment,
-    /// Error token.
     Error,
-    /// End of file.
     Eof,
 
-    /// Identifier.
+    // 字面量
     Identifier,
-    /// String literal.
     StringLiteral,
-    /// Character literal.
     CharLiteral,
-    /// Integer literal.
     IntegerLiteral,
-    /// Floating-point literal.
     FloatLiteral,
-    /// Boolean literal.
     BooleanLiteral,
 
-    /// `const` keyword.
+    // Zig 关键字 - 基本结构
     Const,
-    /// `var` keyword.
     Var,
-    /// `fn` keyword.
     Fn,
-    /// `struct` keyword.
     Struct,
-    /// `union` keyword.
     Union,
-    /// `enum` keyword.
     Enum,
-    /// `opaque` keyword.
     Opaque,
-    /// `type` keyword.
     Type,
-    /// `comptime` keyword.
     Comptime,
-    /// `inline` keyword.
     Inline,
-    /// `noinline` keyword.
     NoInline,
-    /// `pub` keyword.
     Pub,
-    /// `export` keyword.
     Export,
-    /// `extern` keyword.
     Extern,
-    /// `packed` keyword.
     Packed,
-    /// `align` keyword.
     Align,
-    /// `callconv` keyword.
     CallConv,
-    /// `linksection` keyword.
     LinkSection,
 
-    /// `if` keyword.
+    // Zig 关键字 - 控制流
     If,
-    /// `else` keyword.
     Else,
-    /// `switch` keyword.
     Switch,
-    /// `while` keyword.
     While,
-    /// `for` keyword.
     For,
-    /// `break` keyword.
     Break,
-    /// `continue` keyword.
     Continue,
-    /// `return` keyword.
     Return,
-    /// `defer` keyword.
     Defer,
-    /// `errdefer` keyword.
     ErrDefer,
-    /// `unreachable` keyword.
     Unreachable,
-    /// `noreturn` keyword.
     NoReturn,
 
-    /// `error` keyword.
+    // Zig 关键字 - 错误处理
     ErrorKeyword,
 
-    /// `test` keyword.
+    // Zig 关键字 - 测试和异步
     Test,
-    /// `async` keyword.
     Async,
-    /// `await` keyword.
     Await,
-    /// `suspend` keyword.
     Suspend,
-    /// `resume` keyword.
     Resume,
-    /// `cancel` keyword.
     Cancel,
 
-    /// `undefined` keyword.
+    // Zig 关键字 - 内存管理
     Undefined,
-    /// `null` keyword.
     Null,
-    /// `volatile` keyword.
     Volatile,
-    /// `allowzero` keyword.
     AllowZero,
-    /// `noalias` keyword.
     NoAlias,
 
-    /// `and` keyword.
+    // Zig 关键字 - 其他
     And,
-    /// `or` keyword.
     Or,
-    /// `anyframe` keyword.
     AnyFrame,
-    /// `anytype` keyword.
     AnyType,
-    /// `threadlocal` keyword.
     ThreadLocal,
 
-    /// `bool` type.
+    // 基本类型
     Bool,
-    /// `i8` type.
     I8,
-    /// `i16` type.
     I16,
-    /// `i32` type.
     I32,
-    /// `i64` type.
     I64,
-    /// `i128` type.
     I128,
-    /// `isize` type.
     Isize,
-    /// `u8` type.
     U8,
-    /// `u16` type.
     U16,
-    /// `u32` type.
     U32,
-    /// `u64` type.
     U64,
-    /// `u128` type.
     U128,
-    /// `usize` type.
     Usize,
-    /// `f16` type.
     F16,
-    /// `f32` type.
     F32,
-    /// `f64` type.
     F64,
-    /// `f80` type.
     F80,
-    /// `f128` type.
     F128,
-    /// `c_short` type.
     CShort,
-    /// `c_ushort` type.
     CUshort,
-    /// `c_int` type.
     CInt,
-    /// `c_uint` type.
     CUint,
-    /// `c_long` type.
     CLong,
-    /// `c_ulong` type.
     CUlong,
-    /// `c_longlong` type.
     CLongLong,
-    /// `c_ulonglong` type.
     CUlongLong,
-    /// `c_longdouble` type.
     CLongDouble,
-    /// `c_void` type.
     CVoid,
-    /// `void` type.
     Void,
-    /// `comptime_int` type.
     ComptimeInt,
-    /// `comptime_float` type.
     ComptimeFloat,
 
-    /// `+` operator.
-    Plus,
-    /// `-` operator.
-    Minus,
-    /// `*` operator.
-    Star,
-    /// `/` operator.
-    Slash,
-    /// `%` operator.
-    Percent,
-    /// `**` operator.
-    StarStar,
-    /// `+%` operator.
-    PlusPercent,
-    /// `-%` operator.
-    MinusPercent,
-    /// `*%` operator.
-    StarPercent,
-    /// `++` operator.
-    PlusPlus,
-    /// `--` operator.
-    MinusMinus,
+    // 操作符
+    Plus,         // +
+    Minus,        // -
+    Star,         // *
+    Slash,        // /
+    Percent,      // %
+    StarStar,     // **
+    PlusPercent,  // +%
+    MinusPercent, // -%
+    StarPercent,  // *%
+    PlusPlus,     // ++
+    MinusMinus,   // --
 
-    /// `&` operator.
-    Ampersand,
-    /// `|` operator.
-    Pipe,
-    /// `^` operator.
-    Caret,
-    /// `~` operator.
-    Tilde,
-    /// `<<` operator.
-    LessLess,
-    /// `>>` operator.
-    GreaterGreater,
+    // 位操作符
+    Ampersand,      // &
+    Pipe,           // |
+    Caret,          // ^
+    Tilde,          // ~
+    LessLess,       // <<
+    GreaterGreater, // >>
 
-    /// `==` operator.
-    Equal,
-    /// `!=` operator.
-    NotEqual,
-    /// `<` operator.
-    Less,
-    /// `>` operator.
-    Greater,
-    /// `<=` operator.
-    LessEqual,
-    /// `>=` operator.
-    GreaterEqual,
+    // 比较操作符
+    Equal,        // ==
+    NotEqual,     // !=
+    Less,         // <
+    Greater,      // >
+    LessEqual,    // <=
+    GreaterEqual, // >=
 
-    /// `and` logical operator.
-    AndAnd,
-    /// `or` logical operator.
-    OrOr,
+    // 逻辑操作符
+    AndAnd, // and
+    OrOr,   // or
 
-    /// `=` operator.
-    Assign,
-    /// `+=` operator.
-    PlusAssign,
-    /// `-=` operator.
-    MinusAssign,
-    /// `*=` operator.
-    StarAssign,
-    /// `/=` operator.
-    SlashAssign,
-    /// `%=` operator.
-    PercentAssign,
-    /// `&=` operator.
-    AmpersandAssign,
-    /// `|=` operator.
-    PipeAssign,
-    /// `^=` operator.
-    CaretAssign,
-    /// `<<=` operator.
-    LessLessAssign,
-    /// `>>=` operator.
-    GreaterGreaterAssign,
+    // 赋值操作符
+    Assign,               // =
+    PlusAssign,           // +=
+    MinusAssign,          // -=
+    StarAssign,           // *=
+    SlashAssign,          // /=
+    PercentAssign,        // %=
+    AmpersandAssign,      // &=
+    PipeAssign,           // |=
+    CaretAssign,          // ^=
+    LessLessAssign,       // <<=
+    GreaterGreaterAssign, // >>=
 
-    /// `(` symbol.
-    LeftParen,
-    /// `)` symbol.
-    RightParen,
-    /// `{` symbol.
-    LeftBrace,
-    /// `}` symbol.
-    RightBrace,
-    /// `[` symbol.
-    LeftBracket,
-    /// `]` symbol.
-    RightBracket,
-    /// `;` symbol.
-    Semicolon,
-    /// `,` symbol.
-    Comma,
-    /// `.` symbol.
-    Dot,
-    /// `..` symbol.
-    DotDot,
-    /// `...` symbol.
-    DotDotDot,
-    /// `.?` operator.
-    DotQuestion,
-    /// `.*` operator.
-    DotStar,
-    /// `:` symbol.
-    Colon,
-    /// `?` symbol.
-    Question,
-    /// `!` symbol.
-    Exclamation,
-    /// `->` operator.
-    Arrow,
-    /// `=>` operator.
-    FatArrow,
+    // 标点符号
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBrace,    // {
+    RightBrace,   // }
+    LeftBracket,  // [
+    RightBracket, // ]
+    Semicolon,    // ;
+    Comma,        // ,
+    Dot,          // .
+    DotDot,       // ..
+    DotDotDot,    // ...
+    DotQuestion,  // .?
+    DotStar,      // .*
+    Colon,        // :
+    Question,     // ?
+    Exclamation,  // !
+    Arrow,        // ->
+    FatArrow,     // =>
 
-    /// `orelse` operator.
-    OrElse,
-    /// `catch` operator.
-    CatchKeyword,
-    /// `try` operator.
-    TryKeyword,
-    /// `await` operator.
-    AwaitKeyword,
+    // 特殊操作符
+    OrElse,       // orelse
+    CatchKeyword, // catch
+    TryKeyword,   // try
+    AwaitKeyword, // await
 
-    /// `@` symbol.
-    At,
-    /// Built-in identifier.
+    // 内置函数前缀
+    At, // ↯
     BuiltinIdentifier,
 
-    /// Start of a string literal.
+    // 字符串插值
     StringStart,
-    /// End of a string literal.
     StringEnd,
-    /// Content of a string literal.
     StringContent,
-    /// Start of string interpolation.
     InterpolationStart,
-    /// End of string interpolation.
     InterpolationEnd,
 
-    /// Start of a multiline string.
+    // 多行字符串
     MultilineStringStart,
-    /// End of a multiline string.
     MultilineStringEnd,
-    /// Content of a multiline string.
     MultilineStringContent,
 
-    /// Compile-time directive.
+    // 编译时指令
     CompileDirective,
 
-    /// Text content.
+    // 其他
     Text,
 
-    /// Variable declaration non-terminal.
+    // 非终结符
     VarDeclaration,
-    /// Function declaration non-terminal.
     FnDeclaration,
-    /// Struct declaration non-terminal.
     StructDeclaration,
-    /// Enum declaration non-terminal.
     EnumDeclaration,
-    /// Union declaration non-terminal.
     UnionDeclaration,
-    /// Block non-terminal.
     Block,
-    /// If statement non-terminal.
     IfStatement,
-    /// While statement non-terminal.
     WhileStatement,
-    /// For statement non-terminal.
     ForStatement,
-    /// Return statement non-terminal.
     ReturnStatement,
 }

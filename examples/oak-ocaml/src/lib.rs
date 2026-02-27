@@ -3,9 +3,9 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![warn(missing_docs)]
+//! Ocaml support for the Oak language framework.
 
 pub mod ast;
-/// Builder module for OCaml.
 pub mod builder;
 pub mod language;
 pub mod lexer;
@@ -15,7 +15,6 @@ pub mod lsp;
 #[cfg(feature = "mcp")]
 pub mod mcp;
 
-/// Parser module for OCaml.
 pub mod parser;
 
 pub use builder::OCamlBuilder;

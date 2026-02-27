@@ -1,29 +1,45 @@
-use crate::{ast::RegexRoot, lexer::RegexTokenType, parser::RegexElementType};
+#![doc = include_str!("readme.md")]
+use crate::ast::RegexRoot;
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Regex language configuration and metadata.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct RegexLanguage;
+/// Configuration for the regular expression language.
+///
+/// This structure defines the language configuration for the regex parser,
+/// including options such as whether to ignore whitespace characters.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct RegexLanguage {
+    /// Whether to ignore whitespace characters
+    pub ignore_whitespace: bool,
+}
 
 impl RegexLanguage {
-    /// Creates a new Regex language configuration.
+    /// Creates a new RegexLanguage instance.
     pub fn new() -> Self {
-        Self
+        Self::default()
     }
 }
 
+/// Default implementation for RegexLanguage.
+///
+/// Creates a RegexLanguage instance with default settings.
 impl Default for RegexLanguage {
     fn default() -> Self {
-        Self::new()
+        Self { ignore_whitespace: false }
     }
 }
 
+/// Implementation of the Language trait for RegexLanguage.
+///
+/// This connects the language configuration to the specific syntax kinds
+/// and AST root type used for regex parsing.
 impl Language for RegexLanguage {
     const NAME: &'static str = "regex";
-    const CATEGORY: LanguageCategory = LanguageCategory::Programming;
+    const CATEGORY: LanguageCategory = LanguageCategory::Dsl;
 
-    type TokenType = RegexTokenType;
-    type ElementType = RegexElementType;
+    type TokenType = crate::lexer::token_type::RegexTokenType;
+    type ElementType = crate::parser::element_type::RegexElementType;
     type TypedRoot = RegexRoot;
 }

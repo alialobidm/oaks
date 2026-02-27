@@ -4,11 +4,11 @@ pub mod token_type;
 use crate::{language::FortranLanguage, lexer::token_type::FortranTokenType};
 use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, FortranLanguage>;
+type State<'a, S> = LexerState<'a, S, FortranLanguage>;
 
 #[derive(Clone)]
 pub struct FortranLexer<'config> {
-    config: &'config FortranLanguage,
+    _config: &'config FortranLanguage,
 }
 
 impl<'config> Lexer<FortranLanguage> for FortranLexer<'config> {
@@ -24,7 +24,7 @@ impl<'config> Lexer<FortranLanguage> for FortranLexer<'config> {
 
 impl<'config> FortranLexer<'config> {
     pub fn new(config: &'config FortranLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> Result<(), OakError> {

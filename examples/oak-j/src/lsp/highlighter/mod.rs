@@ -1,29 +1,30 @@
 #![doc = include_str!("readme.md")]
+//! J 语法高亮器
 
-/// Local definition of highlight kinds.
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keywords (corresponding to primitives in J).
+    /// 关键字 (J 中对应原始操作符)
     Keyword,
-    /// Strings.
+    /// 字符串
     String,
-    /// Numbers.
+    /// 数字
     Number,
-    /// Comments.
+    /// 注释
     Comment,
-    /// Identifiers.
+    /// 标识符
     Identifier,
 }
 
-/// Highlighter trait.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// J syntax highlighter.
+/// J 语法高亮器
 pub struct JHighlighter {
-    /// Whether to use parser-based highlighting.
+    /// 是否使用基于解析器的高亮
     pub use_parser: bool,
 }
 
@@ -34,15 +35,15 @@ impl Default for JHighlighter {
 }
 
 impl JHighlighter {
-    /// Creates a new J highlighter instance.
+    /// 创建一个一个新的 J 高亮器实例
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Highlights J primitives (corresponding to keywords in other languages).
+    /// 高亮 J 原始操作符 (对应其他语言的关键字)
     fn highlight_keywords(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
-        // J assignment symbols.
+        // J 的赋值符号
         for op in ["=:", "=."] {
             let mut start = 0;
             while let Some(pos) = text[start..].find(op) {
@@ -58,8 +59,8 @@ impl Highlighter for JHighlighter {
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = self.highlight_keywords(text);
 
-        // Simple regex or manual scanning logic can be added here.
-        // For simplicity, we currently rely mainly on the lexer for highlighting.
+        // 简单的正则表达式或手动扫描逻辑可以在这里添加
+        // 为了保持简单，我们目前主要依赖词法分析器进行高亮
 
         highlights.sort_by_key(|h| h.0);
         highlights

@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// The token type module for VHDL.
 pub mod token_type;
 
 use crate::{language::VhdlLanguage, lexer::token_type::VhdlTokenType};
@@ -9,11 +8,9 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
-/// VHDL lexer implementation.
 #[derive(Clone, Debug)]
 pub struct VhdlLexer<'config> {
-    /// The VHDL language configuration.
-    config: &'config VhdlLanguage,
+    _config: &'config VhdlLanguage,
 }
 
 impl<'config> Lexer<VhdlLanguage> for VhdlLexer<'config> {
@@ -28,17 +25,16 @@ impl<'config> Lexer<VhdlLanguage> for VhdlLexer<'config> {
 }
 
 impl<'config> VhdlLexer<'config> {
-    /// Creates a new `VhdlLexer` with the given configuration.
     pub fn new(config: &'config VhdlLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// The main lexical analysis loop.
+    /// 主要的词法分析循环
     fn run<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
 
-            // Try various lexical rules
+            // 尝试各种词法规则
             if self.skip_whitespace(state) {
                 continue;
             }
@@ -67,7 +63,7 @@ impl<'config> VhdlLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip current character and mark as error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -80,7 +76,7 @@ impl<'config> VhdlLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> bool {
         let start_pos = state.get_position();
 
@@ -100,11 +96,11 @@ impl<'config> VhdlLexer<'config> {
         }
     }
 
-    /// Skips comments.
+    /// 跳过注释
     fn skip_comment<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> bool {
         let start_pos = state.get_position();
 
-        // VHDL line comment --
+        // VHDL 行注释 --
         if state.consume_if_starts_with("--") {
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
@@ -119,18 +115,18 @@ impl<'config> VhdlLexer<'config> {
         false
     }
 
-    /// Handles string literals
+    /// 处理字符串字面量
     fn lex_string_literal<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> bool {
         let start_pos = state.get_position();
 
-        // VHDL string literal "..."
+        // VHDL 字符串字面量 "..."
         if let Some('"') = state.peek() {
             state.advance(1);
 
             while let Some(ch) = state.peek() {
                 if ch == '"' {
                     state.advance(1);
-                    // Check if it's an escaped double quote
+                    // 检查是否是双引号转义
                     if let Some('"') = state.peek() {
                         state.advance(1);
                         continue;
@@ -139,19 +135,19 @@ impl<'config> VhdlLexer<'config> {
                     return true;
                 }
                 else if ch == '\n' || ch == '\r' {
-                    break; // Strings cannot span multiple lines
+                    break; // 字符串不能跨行
                 }
                 else {
                     state.advance(ch.len_utf8());
                 }
             }
 
-            // Unterminated string
+            // 未闭合的字符串
             state.add_token(VhdlTokenType::Error, start_pos, state.get_position());
             return true;
         }
 
-        // VHDL character literal '.'
+        // VHDL 字符字面量 '.'
         if let Some('\'') = state.peek() {
             state.advance(1);
 
@@ -164,16 +160,16 @@ impl<'config> VhdlLexer<'config> {
                 }
             }
 
-            // Unterminated character literal
+            // 未闭合的字符字面量
             state.add_token(VhdlTokenType::Error, start_pos, state.get_position());
             return true;
         }
 
-        // Bit string literals B"...", O"...", X"..."
+        // 位字符串字面量 B"...", O"...", X"..."
         if let Some(prefix) = state.peek() {
             if matches!(prefix, 'B' | 'O' | 'X' | 'b' | 'o' | 'x') {
                 if let Some('"') = state.peek_next_n(1) {
-                    state.advance(2); // Skip prefix and quote
+                    state.advance(2); // 跳过前缀和引号
 
                     while let Some(ch) = state.peek() {
                         if ch == '"' {
@@ -192,7 +188,7 @@ impl<'config> VhdlLexer<'config> {
                         }
                     }
 
-                    // Unterminated bit string
+                    // 未闭合的位字符串
                     state.add_token(VhdlTokenType::Error, start_pos, state.get_position());
                     return true;
                 }
@@ -202,13 +198,13 @@ impl<'config> VhdlLexer<'config> {
         false
     }
 
-    /// Handles number literals
+    /// 处理数字字面量
     fn lex_number_literal<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> bool {
         let start_pos = state.get_position();
 
         if let Some(ch) = state.peek() {
             if ch.is_ascii_digit() {
-                // Integer part
+                // 整数部分
                 while let Some(digit) = state.peek() {
                     if digit.is_ascii_digit() || digit == '_' {
                         state.advance(1);
@@ -218,7 +214,7 @@ impl<'config> VhdlLexer<'config> {
                     }
                 }
 
-                // Check if it's a based literal (16#FF#)
+                // 检查是否是基数字面量 (16#FF#)
                 if let Some('#') = state.peek() {
                     state.advance(1);
                     while let Some(ch) = state.peek() {
@@ -234,16 +230,16 @@ impl<'config> VhdlLexer<'config> {
                             break;
                         }
                     }
-                    // Unterminated based literal
+                    // 未闭合的基数字面量
                     state.add_token(VhdlTokenType::Error, start_pos, state.get_position());
                     return true;
                 }
 
-                // Check if it's a real number
+                // 检查是否是实数
                 if let Some('.') = state.peek() {
                     if let Some(next_ch) = state.peek_next_n(1) {
                         if next_ch.is_ascii_digit() {
-                            state.advance(1); // Skip '.'
+                            state.advance(1); // 跳过 '.'
                             while let Some(digit) = state.peek() {
                                 if digit.is_ascii_digit() || digit == '_' {
                                     state.advance(1);
@@ -253,7 +249,7 @@ impl<'config> VhdlLexer<'config> {
                                 }
                             }
 
-                            // Check scientific notation
+                            // 检查科学计数法
                             if let Some(e) = state.peek() {
                                 if e == 'e' || e == 'E' {
                                     state.advance(1);
@@ -287,7 +283,7 @@ impl<'config> VhdlLexer<'config> {
         false
     }
 
-    /// Handles identifiers and keywords
+    /// 处理标识符和关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> bool {
         let start_pos = state.get_position();
 
@@ -304,10 +300,10 @@ impl<'config> VhdlLexer<'config> {
                     }
                 }
 
-                // Check if it's a keyword (VHDL is case-insensitive)
+                // 检查是否是关键字 (VHDL 不区分大小写)
                 let text = state.get_text_in((start_pos..state.get_position()).into()).to_lowercase();
                 let token_kind = match text.as_str() {
-                    // VHDL keywords
+                    // VHDL 关键字
                     "entity" => VhdlTokenType::EntityKw,
                     "architecture" => VhdlTokenType::ArchitectureKw,
                     "begin" => VhdlTokenType::BeginKw,
@@ -369,7 +365,7 @@ impl<'config> VhdlLexer<'config> {
                     "assert" => VhdlTokenType::AssertKw,
                     "report" => VhdlTokenType::ReportKw,
                     "severity" => VhdlTokenType::SeverityKw,
-                    // Basic types
+                    // 基本类型
                     "bit" => VhdlTokenType::BitKw,
                     "bit_vector" => VhdlTokenType::BitVectorKw,
                     "boolean" => VhdlTokenType::BooleanKw,
@@ -384,7 +380,7 @@ impl<'config> VhdlLexer<'config> {
                     "std_logic_vector" => VhdlTokenType::StdLogicVectorKw,
                     "unsigned" => VhdlTokenType::UnsignedKw,
                     "signed" => VhdlTokenType::SignedKw,
-                    // Logic operators
+                    // 逻辑操作符
                     "and" => VhdlTokenType::And,
                     "or" => VhdlTokenType::Or,
                     "nand" => VhdlTokenType::Nand,
@@ -412,7 +408,7 @@ impl<'config> VhdlLexer<'config> {
         false
     }
 
-    /// Handles operators
+    /// 处理操作符
     fn lex_operators<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> bool {
         let start_pos = state.get_position();
 
@@ -519,7 +515,7 @@ impl<'config> VhdlLexer<'config> {
         }
     }
 
-    /// Handles single character tokens
+    /// 处理单字符标记
     fn lex_single_char_tokens<'a, S: Source + ?Sized>(&self, state: &mut LexerState<'a, S, VhdlLanguage>) -> bool {
         let start_pos = state.get_position();
 

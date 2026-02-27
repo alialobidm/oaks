@@ -3,5 +3,5 @@ mod parser;
 
 #[test]
 fn ready() {
-    // Basic preparation test
+    // 基本的准备测试
 }

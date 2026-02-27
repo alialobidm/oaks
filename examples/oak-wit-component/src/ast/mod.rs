@@ -1,11 +1,11 @@
 #![doc = include_str!("readme.md")]
-/// WIT root node
+/// WIT 根节点
 #[derive(Clone, Debug)]
 pub struct WitRoot {
     pub items: Vec<WitItem>,
 }
 
-/// WIT item
+/// WIT 项目
 #[derive(Clone, Debug)]
 pub enum WitItem {
     Package(WitPackage),
@@ -13,20 +13,20 @@ pub enum WitItem {
     Interface(WitInterface),
 }
 
-/// WIT package
+/// WIT 包
 #[derive(Clone, Debug)]
 pub struct WitPackage {
     pub name: String,
 }
 
-/// WIT world
+/// WIT World
 #[derive(Clone, Debug)]
 pub struct WitWorld {
     pub name: String,
     pub items: Vec<WitWorldItem>,
 }
 
-/// WIT world item
+/// WIT World 项目
 #[derive(Clone, Debug)]
 pub enum WitWorldItem {
     Import(WitImport),
@@ -34,21 +34,21 @@ pub enum WitWorldItem {
     Include(WitInclude),
 }
 
-/// WIT interface
+/// WIT 接口
 #[derive(Clone, Debug)]
 pub struct WitInterface {
     pub name: String,
     pub items: Vec<WitInterfaceItem>,
 }
 
-/// WIT interface item
+/// WIT 接口项目
 #[derive(Clone, Debug)]
 pub enum WitInterfaceItem {
     Type(WitType),
     Func(WitFunc),
 }
 
-/// WIT function
+/// WIT 函数
 #[derive(Clone, Debug)]
 pub struct WitFunc {
     pub name: String,
@@ -56,21 +56,21 @@ pub struct WitFunc {
     pub result: Option<WitTypeKind>,
 }
 
-/// WIT parameter
+/// WIT 参数
 #[derive(Clone, Debug)]
 pub struct WitParam {
     pub name: String,
     pub ty: WitTypeKind,
 }
 
-/// WIT type
+/// WIT 类型
 #[derive(Clone, Debug)]
 pub struct WitType {
     pub name: String,
     pub kind: WitTypeKind,
 }
 
-/// WIT type kind
+/// WIT 类型种类
 #[derive(Clone, Debug)]
 pub enum WitTypeKind {
     Bool,
@@ -79,19 +79,19 @@ pub enum WitTypeKind {
     // ...
 }
 
-/// WIT import
+/// WIT 导入
 #[derive(Clone, Debug)]
 pub struct WitImport {
     pub name: String,
 }
 
-/// WIT export
+/// WIT 导出
 #[derive(Clone, Debug)]
 pub struct WitExport {
     pub name: String,
 }
 
-/// WIT include
+/// WIT 包含
 #[derive(Clone, Debug)]
 pub struct WitInclude {
     pub name: String,

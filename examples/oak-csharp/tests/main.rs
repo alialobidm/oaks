@@ -1,6 +1,4 @@
-mod parser;
-
-// The parser tests are automatically run by the test framework
-fn main() {
-    println!("Run tests with `cargo test`");
-}
+// use oak_core::{Lexer, SourceText};
+// use oak_csharp::{CSharpLanguage, CSharpLexer};
+// ...
+fn main() {}

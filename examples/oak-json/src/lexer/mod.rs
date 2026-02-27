@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token types for JSON.
 pub mod token_type;
 
 use crate::{language::JsonLanguage, lexer::token_type::JsonTokenType};
@@ -10,12 +9,12 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, JsonLanguage>;
+type State<'a, S> = LexerState<'a, S, JsonLanguage>;
 
 static JSON_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: "//", block_start: "/*", block_end: "*/", nested_blocks: false });
 static JSON_SINGLE_QUOTE_STRING: LazyLock<StringConfig> = LazyLock::new(|| StringConfig { quotes: &['\''], escape: Some('\\') });
 
-/// Lexer for JSON.
+/// JSON 词法分析
 #[derive(Clone)]
 pub struct JsonLexer<'config> {
     config: &'config JsonLanguage,
@@ -33,7 +32,6 @@ impl<'config> Lexer<JsonLanguage> for JsonLexer<'config> {
 }
 
 impl<'config> JsonLexer<'config> {
-    /// Creates a new `JsonLexer` with the given language configuration.
     pub fn new(config: &'config JsonLanguage) -> Self {
         Self { config }
     }
@@ -79,7 +77,7 @@ impl<'config> JsonLexer<'config> {
                     }
 
                     if !handled {
-                        // If no rules match, skip current character and mark as error
+                        // 如果所有规则都不匹配，跳过当前字符并标记为错误
                         state.advance(ch.len_utf8());
                         state.add_token(JsonTokenType::Error, safe_point, state.get_position());
                     }
@@ -92,20 +90,20 @@ impl<'config> JsonLexer<'config> {
         Ok(())
     }
 
-    /// Handles number literals.
+    /// 处理数字字面
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
-        // Handle negative sign
+        // 处理负号
         state.consume_if_starts_with("-");
 
         let mut has_digits = false;
 
-        // Handle hexadecimal numbers (if allowed)
+        // 处理十六进制数字（如果配置允许）
         if self.config.hex_numbers && state.starts_with("0") {
             let n1 = state.peek_next_n(1);
             if n1 == Some('x') || n1 == Some('X') {
-                state.advance(2); // Skip '0x'
+                state.advance(2); // 跳过 '0x'
                 let range = state.take_while(|c| c.is_ascii_hexdigit() || c == '_');
                 if range.end > range.start {
                     state.add_token(JsonTokenType::NumberLiteral, start_pos, state.get_position());
@@ -115,13 +113,13 @@ impl<'config> JsonLexer<'config> {
             }
         }
 
-        // Handle integer part
+        // 处理整数部分
         let r1 = state.take_while(|c| c.is_ascii_digit());
         if r1.end > r1.start {
             has_digits = true;
         }
 
-        // Handle decimal point and fractional part
+        // 处理小数点和小数部分
         if state.consume_if_starts_with(".") {
             let r2 = state.take_while(|c| c.is_ascii_digit());
             if r2.end > r2.start {
@@ -129,7 +127,7 @@ impl<'config> JsonLexer<'config> {
             }
         }
 
-        // Handle scientific notation
+        // 处理科学计数
         if let Some(ch) = state.peek() {
             if ch == 'e' || ch == 'E' {
                 state.advance(1);
@@ -151,7 +149,7 @@ impl<'config> JsonLexer<'config> {
         }
     }
 
-    /// Handles keywords (true, false, null).
+    /// 处理布尔值和 null
     fn lex_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
         if state.consume_if_starts_with("true") || state.consume_if_starts_with("false") {
@@ -165,7 +163,7 @@ impl<'config> JsonLexer<'config> {
         false
     }
 
-    /// Handles bare keys (JSON5 feature).
+    /// 处理裸键（JSON5 特性）
     fn lex_bare_key<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
         if let Some(ch) = state.peek() {
@@ -179,7 +177,7 @@ impl<'config> JsonLexer<'config> {
         false
     }
 
-    /// Handles operators and delimiters.
+    /// 处理操作符和分隔
     fn lex_operator_or_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
         if let Some(ch) = state.peek() {
@@ -245,7 +243,7 @@ impl<'config> JsonLexer<'config> {
                 return true;
             }
         }
-        // Unclosed string
+        // 未闭合的字符串
         state.add_token(JsonTokenType::Error, start_pos, state.get_position());
         false
     }

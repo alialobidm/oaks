@@ -1,15 +1,15 @@
 use crate::{ast::TwigRoot, language::TwigLanguage, lexer::TwigLexer, parser::TwigParser};
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, OakError, RedNode, SourceText, TextEdit, source::Source};
 
-/// AST builder for Twig language
+/// Twig 语言的 AST 构建器
 #[derive(Clone)]
 pub struct TwigBuilder<'config> {
-    /// Language configuration
+    /// 语言配置
     config: &'config TwigLanguage,
 }
 
 impl<'config> TwigBuilder<'config> {
-    /// Creates a new Twig builder
+    /// 创建新的 Twig 构建器
     pub fn new(config: &'config TwigLanguage) -> Self {
         Self { config }
     }
@@ -41,7 +41,7 @@ impl<'config> Builder<TwigLanguage> for TwigBuilder<'config> {
 }
 
 impl<'config> TwigBuilder<'config> {
-    /// Builds the root node
+    /// 构建根节点
     pub(crate) fn build_root(&self, green_tree: GreenNode<TwigLanguage>, _source: &SourceText) -> Result<TwigRoot, OakError> {
         let red_root = RedNode::new(&green_tree, 0);
         let span = red_root.span();

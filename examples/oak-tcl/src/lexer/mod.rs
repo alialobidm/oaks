@@ -16,16 +16,14 @@ static TCL_STRING: StringConfig = StringConfig { quotes: &['"'], escape: Some('\
 
 #[derive(Clone)]
 pub struct TclLexer<'config> {
-    config: &'config TclLanguage,
+    _config: &'config TclLanguage,
 }
 
 impl<'config> TclLexer<'config> {
-    /// Creates a new TclLexer with the given configuration.
     pub fn new(config: &'config TclLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Runs the lexer on the given source.
     fn run<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -66,7 +64,7 @@ impl<'config> TclLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip the current character and mark it as an error.
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             if let Some(ch) = state.current() {
                 state.advance(ch.len_utf8());
             }
@@ -88,7 +86,6 @@ impl<'config> Lexer<TclLanguage> for TclLexer<'config> {
 }
 
 impl<'config> TclLexer<'config> {
-    /// Skips whitespace characters.
     fn skip_whitespace<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start = state.get_position();
 
@@ -110,7 +107,6 @@ impl<'config> TclLexer<'config> {
         }
     }
 
-    /// Lexes a newline.
     fn lex_newline<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some(ch) = state.current() {
             if ch == '\n' {
@@ -132,17 +128,14 @@ impl<'config> TclLexer<'config> {
         false
     }
 
-    /// Skips a comment.
     fn skip_comment<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         TCL_COMMENT.scan(state, TclTokenType::Comment, TclTokenType::Comment)
     }
 
-    /// Lexes a string literal.
     fn lex_string_literal<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         TCL_STRING.scan(state, TclTokenType::StringLiteral)
     }
 
-    /// Lexes a brace-enclosed string.
     fn lex_brace_string<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start = state.get_position();
 
@@ -171,7 +164,6 @@ impl<'config> TclLexer<'config> {
         true
     }
 
-    /// Lexes a numeric literal.
     fn lex_numeric_literal<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start = state.get_position();
         let first = match state.current() {
@@ -187,7 +179,7 @@ impl<'config> TclLexer<'config> {
             state.advance(1);
         }
 
-        // Integer part
+        // 整数部分
         while let Some(c) = state.current() {
             if c.is_ascii_digit() {
                 state.advance(1);
@@ -197,7 +189,7 @@ impl<'config> TclLexer<'config> {
             }
         }
 
-        // Fractional part
+        // 小数部分
         if state.current() == Some('.') && state.peek().map_or(false, |c| c.is_ascii_digit()) {
             state.advance(1); // consume '.'
             while let Some(c) = state.current() {
@@ -210,7 +202,7 @@ impl<'config> TclLexer<'config> {
             }
         }
 
-        // Scientific notation
+        // 科学计数法
         if let Some(c) = state.current() {
             if c == 'e' || c == 'E' {
                 let next = state.peek();
@@ -237,7 +229,6 @@ impl<'config> TclLexer<'config> {
         true
     }
 
-    /// Lexes an identifier or keyword.
     fn lex_identifier_or_keyword<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start = state.get_position();
         let ch = match state.current() {
@@ -284,11 +275,10 @@ impl<'config> TclLexer<'config> {
         true
     }
 
-    /// Lexes operators.
     fn lex_operators<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start = state.get_position();
 
-        // Multi-character operators
+        // 多字符操作符
         let patterns: &[(&str, TclTokenType)] = &[("==", TclTokenType::Equal), ("!=", TclTokenType::NotEqual), ("<=", TclTokenType::LessEqual), (">=", TclTokenType::GreaterEqual), ("&&", TclTokenType::AmpersandAmpersand), ("||", TclTokenType::PipePipe)];
 
         for (pat, kind) in patterns {
@@ -307,7 +297,7 @@ impl<'config> TclLexer<'config> {
             }
         }
 
-        // Single-character operators
+        // 单字符操作符
         if let Some(ch) = state.current() {
             let kind = match ch {
                 '+' => Some(TclTokenType::Plus),
@@ -333,7 +323,6 @@ impl<'config> TclLexer<'config> {
         false
     }
 
-    /// Lexes single-character tokens.
     fn lex_single_char_tokens<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start = state.get_position();
 

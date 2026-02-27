@@ -1,33 +1,32 @@
 #![doc = include_str!("readme.md")]
-/// Token types for Lua.
 pub mod token_type;
 
-/// Lua lexer implementation.
+/// Lua 词法分析
 ///
-/// Implements lexical analysis for the Lua language, converting source code into a sequence of tokens.
+/// 实现Lua 语言的词法分析，将源代码转换token 序列
 use crate::language::LuaLanguage;
 pub use crate::lexer::token_type::LuaTokenType;
 use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, LuaLanguage>;
+type State<'a, S> = LexerState<'a, S, LuaLanguage>;
 
-/// Lua lexer.
+/// Lua 词法分析
 #[derive(Clone)]
 pub struct LuaLexer<'config> {
-    config: &'config LuaLanguage,
+    _config: &'config LuaLanguage,
 }
 
 impl<'config> LuaLexer<'config> {
-    /// Creates a new Lua lexer.
+    /// 创建新的 Lua 词法分析
     pub fn new(config: &'config LuaLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
 
-            // Try various lexical rules
+            // 尝试各种词法规则
             if self.skip_whitespace(state) {
                 continue;
             }
@@ -56,7 +55,7 @@ impl<'config> LuaLexer<'config> {
                 continue;
             }
 
-            // If all rules do not match, skip the current character and mark as error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -69,7 +68,7 @@ impl<'config> LuaLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -86,7 +85,7 @@ impl<'config> LuaLexer<'config> {
         }
     }
 
-    /// Handles newline characters.
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -108,22 +107,22 @@ impl<'config> LuaLexer<'config> {
         }
     }
 
-    /// Handles comments.
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some('-') = state.current() {
             if let Some('-') = state.peek() {
-                state.advance(1); // First '-'
-                state.advance(1); // Second '-'
+                state.advance(1); // 第一'-'
+                state.advance(1); // 第二'-'
 
-                // Check if it's a long comment --[[
+                // 检查是否是长注--[[
                 if let Some('[') = state.current() {
                     if let Some('[') = state.peek() {
                         state.advance(1); // '['
                         state.advance(1); // '['
 
-                        // Find ]]
+                        // 寻找 ]]
                         while let Some(ch) = state.current() {
                             if ch == ']' {
                                 if let Some(']') = state.peek() {
@@ -136,7 +135,7 @@ impl<'config> LuaLexer<'config> {
                         }
                     }
                     else {
-                        // Single-line comment, read until the end of the line
+                        // 单行注释，读到行
                         while let Some(ch) = state.current() {
                             if ch == '\n' || ch == '\r' {
                                 break;
@@ -146,7 +145,7 @@ impl<'config> LuaLexer<'config> {
                     }
                 }
                 else {
-                    // Single-line comment, read until the end of the line
+                    // 单行注释，读到行
                     while let Some(ch) = state.current() {
                         if ch == '\n' || ch == '\r' {
                             break;
@@ -167,13 +166,13 @@ impl<'config> LuaLexer<'config> {
         }
     }
 
-    /// Handles string literals.
+    /// 处理字符串字面量
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some(quote_char) = state.current() {
             if quote_char == '"' || quote_char == '\'' {
-                state.advance(1); // Skip start quote
+                state.advance(1); // 跳过开始引
 
                 let mut escaped = false;
                 while let Some(ch) = state.current() {
@@ -186,11 +185,11 @@ impl<'config> LuaLexer<'config> {
                         state.advance(1)
                     }
                     else if ch == quote_char {
-                        state.advance(1); // Skip end quote
+                        state.advance(1); // 跳过结束引号
                         break;
                     }
                     else if ch == '\n' || ch == '\r' {
-                        // Strings cannot span lines unless escaped
+                        // 字符串不能跨行（除非转义
                         break;
                     }
                     else {
@@ -202,12 +201,12 @@ impl<'config> LuaLexer<'config> {
                 true
             }
             else if quote_char == '[' {
-                // Long string [[...]]
+                // 长字符串 [[...]]
                 if let Some('[') = state.peek() {
                     state.advance(1); // '['
                     state.advance(1); // '['
 
-                    // Find ]]
+                    // 寻找 ]]
                     while let Some(ch) = state.current() {
                         if ch == ']' {
                             if let Some(']') = state.peek() {
@@ -235,20 +234,20 @@ impl<'config> LuaLexer<'config> {
         }
     }
 
-    /// Handles numbers.
+    /// 处理数字
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some(ch) = state.current() {
             if ch.is_ascii_digit() {
-                // Check if it's hexadecimal
+                // 检查是否是十六进制
                 if ch == '0' {
                     if let Some(next_ch) = state.peek() {
                         if next_ch == 'x' || next_ch == 'X' {
                             state.advance(1); // '0'
                             state.advance(1); // 'x' 'X'
 
-                            // Read hexadecimal digits
+                            // 读取十六进制数字
                             while let Some(hex_ch) = state.current() {
                                 if hex_ch.is_ascii_hexdigit() { state.advance(1) } else { break }
                             }
@@ -259,7 +258,7 @@ impl<'config> LuaLexer<'config> {
                     }
                 }
 
-                // Normal number
+                // 普通数
                 let mut has_dot = false;
                 let mut has_exp = false;
 
@@ -275,7 +274,7 @@ impl<'config> LuaLexer<'config> {
                         has_exp = true;
                         state.advance(1);
 
-                        // Optional sign
+                        // 可选的符号
                         if let Some(sign_ch) = state.current() {
                             if sign_ch == '+' || sign_ch == '-' {
                                 state.advance(1)
@@ -299,12 +298,12 @@ impl<'config> LuaLexer<'config> {
         }
     }
 
-    /// Handles identifiers or keywords.
+    /// 处理标识符或关键
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         if let Some(ch) = state.current() {
             if ch.is_ascii_alphabetic() || ch == '_' {
                 let range = state.take_while(|c| c.is_ascii_alphanumeric() || c == '_');
-                // Use the get_text_in method of the Source trait
+                // 使用 Source trait 的 get_text_in 方法
                 let text = state.get_text_in(range.clone().into());
                 let token_kind = self.keyword_or_identifier(&text);
                 state.add_token(token_kind, range.start, range.end);
@@ -319,7 +318,7 @@ impl<'config> LuaLexer<'config> {
         }
     }
 
-    /// Recognizes keywords.
+    /// 识别关键
     fn keyword_or_identifier(&self, text: &str) -> LuaTokenType {
         match text {
             "and" => LuaTokenType::And,
@@ -348,7 +347,7 @@ impl<'config> LuaLexer<'config> {
         }
     }
 
-    /// Handles operators and delimiters.
+    /// 处理操作符和分隔
     fn lex_operator_or_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 

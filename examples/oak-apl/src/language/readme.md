@@ -8,9 +8,9 @@ The `AplLanguage` struct defines how the parser and lexer should behave:
 
 ```rust
 pub struct AplLanguage {
-    /// Whether to enable APL extension features
+    /// 是否启用 APL 扩展特性
     pub allow_extensions: bool,
-    /// Whether to enable strict mode
+    /// 是否启用严格模式
     pub strict_mode: bool,
 }
 ```

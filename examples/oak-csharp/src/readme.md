@@ -1,11 +1,5 @@
 # 🛠️ C# Parser Developer Guide
 
-C# support for the Oak language framework.
-
-This crate provides lexing, parsing, and AST building for the C# language,
-integrated into the Oak ecosystem. It supports modern C# features including
-namespaces, classes, structs, records, and more.
-
 This guide is designed to help you quickly get started with developing and integrating `oak-csharp`.
 
 ## 🚦 Quick Start

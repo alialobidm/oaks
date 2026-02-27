@@ -1,263 +1,203 @@
 #![doc = include_str!("readme.md")]
 use core::range::Range;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// TOML document root node.
-///
-/// Represents the entire TOML document, consisting of a list of top-level items.
+/// TOML 文档根节
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlRoot {
-    /// Range of the node in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The items in the TOML document.
     pub items: Vec<TomlItem>,
 }
 
-/// TOML top-level item.
-///
-/// Can be a key-value pair, a standard table, or an array of tables.
+/// TOML 顶级项目
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TomlItem {
-    /// A key-value pair.
     KeyValue(TomlKeyValue),
-    /// A standard table `[table]`.
     Table(TomlTable),
-    /// An array of tables `[[table]]`.
     ArrayOfTables(TomlArrayOfTables),
 }
 
-/// TOML key-value pair.
+/// TOML 键值对
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlKeyValue {
-    /// Range of the key-value pair in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The key part.
     pub key: TomlKey,
-    /// The value part.
     pub value: TomlValue,
 }
 
-/// TOML table `[table]`.
+/// TOML
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlTable {
-    /// Range of the table in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Table header.
     pub header: TomlTableHeader,
-    /// Key-value pairs within the table.
     pub items: Vec<TomlKeyValue>,
 }
 
-/// TOML table header `[key]`.
+/// TOML 表头
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlTableHeader {
-    /// Range of the header in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The key of the table header.
     pub key: TomlKey,
 }
 
-/// TOML array of tables `[[table]]`.
+/// TOML 表数
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlArrayOfTables {
-    /// Range of the array of tables in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Header for the array of tables.
     pub header: TomlArrayOfTablesHeader,
-    /// Key-value pairs within each table entry.
     pub items: Vec<TomlKeyValue>,
 }
 
-/// TOML array of tables header `[[key]]`.
+/// TOML 表数组头
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlArrayOfTablesHeader {
-    /// Range of the header in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The key of the array of tables header.
     pub key: TomlKey,
 }
 
-/// TOML key.
-///
-/// Supports dotted composite keys (e.g., `a.b.c`).
+/// TOML
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlKey {
-    /// Range of the key in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Segments of the key.
     pub segments: Vec<TomlKeySegment>,
 }
 
-/// TOML key segment.
+/// TOML 键段
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TomlKeySegment {
-    /// A bare key (unquoted).
     Bare(TomlBareKey),
-    /// A quoted key.
     Quoted(TomlQuotedKey),
 }
 
-/// TOML bare key (unquoted).
+/// TOML 裸键
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlBareKey {
-    /// Range of the key in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Name of the key.
     pub name: String,
 }
 
-/// TOML quoted key.
+/// TOML 引用
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlQuotedKey {
-    /// Range of the key in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Value of the key.
     pub value: String,
 }
 
-/// TOML value.
+/// TOML
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TomlValue {
-    /// String value.
     String(TomlString),
-    /// Integer value.
     Integer(TomlInteger),
-    /// Floating-point value.
     Float(TomlFloat),
-    /// Boolean value.
     Boolean(TomlBoolean),
-    /// Date-time value.
     DateTime(TomlDateTime),
-    /// Array value.
     Array(TomlArray),
-    /// Inline table `{ a = 1, b = 2 }`.
     InlineTable(TomlInlineTable),
 }
 
-/// TOML string.
+/// TOML 字符
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlString {
-    /// Range of the string in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Value of the string.
     pub value: String,
-    /// Whether it's a multi-line string.
     pub is_multiline: bool,
-    /// Whether it's a literal string (using single quotes).
     pub is_literal: bool,
 }
 
-/// TOML integer.
+/// TOML 整数
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlInteger {
-    /// Range of the integer in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Value of the integer.
     pub value: i64,
-    /// Format of the integer (decimal, hex, etc.).
     pub format: IntegerFormat,
 }
 
-/// Integer format.
+/// 整数格式
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum IntegerFormat {
-    /// Decimal format.
     Decimal,
-    /// Hexadecimal format.
     Hex,
-    /// Octal format.
     Octal,
-    /// Binary format.
     Binary,
 }
 
-/// TOML floating-point number.
+/// TOML 浮点
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlFloat {
-    /// Range of the float in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Value of the float.
     pub value: f64,
 }
 
-/// TOML boolean value.
+/// TOML 布尔
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlBoolean {
-    /// Range of the boolean in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// The boolean value.
     pub value: bool,
 }
 
-/// TOML date-time.
+/// TOML 日期时间
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlDateTime {
-    /// Range of the date-time in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// String representation of the date-time.
-    pub value: String,
+    pub value: String, // 简化处理
 }
 
-/// TOML array.
+/// TOML 数组
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlArray {
-    /// Range of the array in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// List of array items.
     pub items: Vec<TomlValue>,
 }
 
-/// TOML inline table `{ a = 1, b = 2 }`.
+/// TOML 内联表
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TomlInlineTable {
-    /// Range of the inline table in the source code.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-    /// Key-value pairs in the inline table.
     pub items: Vec<TomlKeyValue>,
 }
 
 impl TomlTable {
-    /// Creates a new TOML table.
     pub fn new(span: Range<usize>, header: TomlTableHeader) -> Self {
         Self { span, header, items: Vec::new() }
     }
 
-    /// Gets a value from the table by key name.
     pub fn get(&self, key: &str) -> Option<&TomlValue> {
         for kv in &self.items {
             if kv.key.to_string() == key {
@@ -269,7 +209,6 @@ impl TomlTable {
 }
 
 impl TomlKey {
-    /// Converts a composite key to its string representation (e.g., `a.b.c`).
     pub fn to_string(&self) -> String {
         self.segments
             .iter()
@@ -283,7 +222,6 @@ impl TomlKey {
 }
 
 impl TomlValue {
-    /// Returns the string slice if the value is a string.
     pub fn as_str(&self) -> Option<&str> {
         match self {
             TomlValue::String(s) => Some(&s.value),
@@ -291,7 +229,6 @@ impl TomlValue {
         }
     }
 
-    /// Returns the integer value if the value is an integer.
     pub fn as_integer(&self) -> Option<i64> {
         match self {
             TomlValue::Integer(i) => Some(i.value),
@@ -299,7 +236,6 @@ impl TomlValue {
         }
     }
 
-    /// Returns the boolean value if the value is a boolean.
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             TomlValue::Boolean(b) => Some(b.value),
@@ -307,7 +243,6 @@ impl TomlValue {
         }
     }
 
-    /// Returns a reference to the inline table if the value is an inline table.
     pub fn as_inline_table(&self) -> Option<&TomlInlineTable> {
         match self {
             TomlValue::InlineTable(t) => Some(t),
@@ -315,15 +250,13 @@ impl TomlValue {
         }
     }
 
-    /// Returns a reference to the array if the value is an array.
     pub fn as_array(&self) -> Option<&TomlArray> {
         match self {
             TomlValue::Array(a) => Some(a),
             _ => None,
         }
     }
-
-    /// Gets the source span of the value.
+    /// 获取值的跨度
     pub fn span(&self) -> Range<usize> {
         match self {
             TomlValue::String(s) => s.span.clone(),

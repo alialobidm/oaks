@@ -1,9 +1,11 @@
 use crate::lexer::token_type::BatTokenType;
 use oak_core::{ElementType, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Represents all possible element kinds in the Windows Batch (BAT) scripting language.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum BatElementType {
     /// A wrapper for tokens
     Token(BatTokenType),

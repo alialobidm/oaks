@@ -1,75 +1,44 @@
 use oak_core::{ElementType, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-/// Stylus element types.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum StylusElementType {
-    // Node types
-    /// Root
+    // 节点种类
     Root,
-    /// Document
     Document,
-    /// Rule
     Rule,
-    /// Selector
     Selector,
-    /// Property
     Property,
-    /// Value
     Value,
-    /// Block
     Block,
 
-    // Lexical types
-    /// Identifier
+    // 词法种类
     Identifier,
-    /// Number
     Number,
-    /// String
     String,
-    /// Color
     Color,
-    /// Left brace
     LeftBrace,
-    /// Right brace
     RightBrace,
-    /// Left parenthesis
     LeftParen,
-    /// Right parenthesis
     RightParen,
-    /// Colon
     Colon,
-    /// Semicolon
     Semicolon,
-    /// Comma
     Comma,
-    /// Dot
     Dot,
-    /// Hash
     Hash,
-    /// Ampersand
     Ampersand,
-    /// Plus
     Plus,
-    /// Minus
     Minus,
-    /// Star
     Star,
-    /// Slash
     Slash,
-    /// Percent
     Percent,
-    /// Equal
     Equal,
-    /// Whitespace
     Whitespace,
-    /// Newline
     Newline,
-    /// Comment
     Comment,
-    /// End of file
     Eof,
-    /// Error
     Error,
 }
 

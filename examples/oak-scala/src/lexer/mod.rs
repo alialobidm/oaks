@@ -18,7 +18,7 @@ static SCALA_CHAR: LazyLock<StringConfig> = LazyLock::new(|| StringConfig { quot
 
 #[derive(Clone, Debug)]
 pub struct ScalaLexer<'config> {
-    config: &'config ScalaLanguage,
+    _config: &'config ScalaLanguage,
 }
 
 impl<'config> Lexer<ScalaLanguage> for ScalaLexer<'config> {
@@ -34,7 +34,7 @@ impl<'config> Lexer<ScalaLanguage> for ScalaLexer<'config> {
 
 impl<'config> ScalaLexer<'config> {
     pub fn new(config: &'config ScalaLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> Result<(), OakError> {
@@ -77,7 +77,7 @@ impl<'config> ScalaLexer<'config> {
                 continue;
             }
 
-            // Error handling: if no rules match, skip the current character and mark as error
+            // 错误处理：如果没有匹配任何规则，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -94,9 +94,10 @@ impl<'config> ScalaLexer<'config> {
         SCALA_WHITESPACE.scan(state, ScalaTokenType::Whitespace)
     }
 
-    /// Handles newlines
+    /// 处理换行
     fn lex_newline<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start_pos = state.get_position();
+
         if let Some('\n') = state.peek() {
             state.advance(1);
             state.add_token(ScalaTokenType::Newline, start_pos, state.get_position());
@@ -116,7 +117,7 @@ impl<'config> ScalaLexer<'config> {
     }
 
     fn skip_comment<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
-        // Line & block comments
+        // 行注释 & 块注释
         if SCALA_COMMENT.scan(state, ScalaTokenType::LineComment, ScalaTokenType::BlockComment) {
             return true;
         }
@@ -140,13 +141,13 @@ impl<'config> ScalaLexer<'config> {
         let start = state.get_position();
         let mut len = 0;
 
-        // Skip digits
+        // 跳过数字
         while let Some(ch) = state.source().get_char_at(start + len) {
             if ch.is_ascii_digit() {
                 len += ch.len_utf8();
             }
             else if ch == '.' {
-                // Floating point
+                // 浮点数
                 len += ch.len_utf8();
                 while let Some(ch) = state.source().get_char_at(start + len) {
                     if ch.is_ascii_digit() {
@@ -240,7 +241,7 @@ impl<'config> ScalaLexer<'config> {
     fn lex_operators<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start = state.get_position();
 
-        // Multi-character operators
+        // 多字符操作符
         if state.starts_with("=>") {
             state.advance(2);
             state.add_token(ScalaTokenType::Arrow, start, state.get_position());

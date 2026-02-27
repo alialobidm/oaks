@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token type definitions.
 pub mod token_type;
 
 use crate::{language::WatLanguage, lexer::token_type::WatTokenType};
@@ -10,16 +9,15 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, WatLanguage>;
+type State<'a, S> = LexerState<'a, S, WatLanguage>;
 
 static WAT_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static WAT_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: ";;", block_start: "(;", block_end: ")", nested_blocks: true });
 static WAT_STRING: LazyLock<StringConfig> = LazyLock::new(|| StringConfig { quotes: &['"'], escape: Some('\\') });
 
-/// Lexer for the WebAssembly Text (WAT) language.
 #[derive(Clone)]
 pub struct WatLexer<'config> {
-    config: &'config WatLanguage,
+    _config: &'config WatLanguage,
 }
 
 impl<'config> Lexer<WatLanguage> for WatLexer<'config> {
@@ -31,9 +29,8 @@ impl<'config> Lexer<WatLanguage> for WatLexer<'config> {
 }
 
 impl<'config> WatLexer<'config> {
-    /// Creates a new instance of the WAT lexer.
     pub fn new(config: &'config WatLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
@@ -73,22 +70,22 @@ impl<'config> WatLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         WAT_WHITESPACE.scan(state, WatTokenType::Whitespace)
     }
 
-    /// Skips comments.
+    /// 跳过注释
     fn skip_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         WAT_COMMENT.scan(state, WatTokenType::Comment, WatTokenType::Comment)
     }
 
-    /// Lexes string literals.
+    /// 解析字符串字面量
     fn lex_string_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         WAT_STRING.scan(state, WatTokenType::StringLiteral)
     }
 
-    /// Lexes number literals.
+    /// 解析数字字面量
     fn lex_number_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         if let Some(ch) = state.peek() {
@@ -118,7 +115,7 @@ impl<'config> WatLexer<'config> {
         false
     }
 
-    /// Lexes identifiers or keywords.
+    /// 解析标识符或关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         if let Some(ch) = state.peek() {
@@ -222,7 +219,7 @@ impl<'config> WatLexer<'config> {
         false
     }
 
-    /// Lexes punctuation marks.
+    /// 解析标点符号
     fn lex_punctuation<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         if let Some(ch) = state.peek() {
@@ -242,7 +239,7 @@ impl<'config> WatLexer<'config> {
         false
     }
 
-    /// Lexes plain text.
+    /// 解析普通文本
     fn lex_text<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         if let Some(_ch) = state.peek() {

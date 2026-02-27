@@ -1,11 +1,11 @@
 #![doc = include_str!("readme.md")]
-/// PureScript AST root node.
+/// PureScript AST 根节点
 #[derive(Debug, Clone)]
 pub struct PurescriptRoot {
     pub elements: Vec<Element>,
 }
 
-/// PureScript syntax elements.
+/// PureScript 语法元素
 #[derive(Debug, Clone)]
 pub enum Element {
     Module(String),

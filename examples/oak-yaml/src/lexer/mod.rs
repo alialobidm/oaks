@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token types for YAML.
 pub mod token_type;
 
 use crate::{language::YamlLanguage, lexer::token_type::YamlTokenType};
@@ -15,16 +14,14 @@ static YAML_STRING: StringConfig = StringConfig { quotes: &['"'], escape: Some('
 
 type State<'s, S> = LexerState<'s, S, YamlLanguage>;
 
-/// Lexer for YAML.
 #[derive(Clone)]
 pub struct YamlLexer<'config> {
-    config: &'config YamlLanguage,
+    _config: &'config YamlLanguage,
 }
 
 impl<'config> YamlLexer<'config> {
-    /// Creates a new YAML lexer.
     pub fn new(config: &'config YamlLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> Result<(), OakError> {

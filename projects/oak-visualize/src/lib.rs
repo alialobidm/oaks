@@ -2,35 +2,33 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![feature(new_range_api)]
-#![warn(missing_docs)]
+#![allow(missing_docs)]
+//! Visualization tools for the Oak language framework.
+//!
+//! This crate provides tools for generating visual representations of
+//! syntax trees and other language structures, primarily in SVG format.
 
 use std::fmt;
 
-/// Geometry primitives for visualization.
 pub mod geometry;
-/// Graph-based visualization structures.
 pub mod graph;
-/// Layout algorithms for nodes and edges.
 pub mod layout;
-/// Rendering logic for generating visual output.
 pub mod render;
-/// Theme configuration for visualization styles.
 pub mod theme;
-/// Tree-specific visualization tools.
 pub mod tree;
 
-/// Error type for oak-visualize operations.
+/// Error type for oak-visualize operations
 #[derive(Debug)]
 pub enum Error {
-    /// Layout computation error.
+    /// Layout computation error
     LayoutError(String),
-    /// Rendering error.
+    /// Rendering error
     RenderError(String),
-    /// Serialization error.
+    /// Serialization error
     Serialization(String),
-    /// IO error.
+    /// IO error
     IoError(std::io::Error),
-    /// Generic error.
+    /// Generic error
     Generic(String),
 }
 

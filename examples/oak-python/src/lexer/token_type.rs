@@ -1,6 +1,8 @@
 //! Python token types.
 
 use oak_core::{Token, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Type alias for Python tokens.
 pub type PythonToken = Token<PythonTokenType>;
@@ -61,7 +63,7 @@ impl TokenType for PythonTokenType {
     const END_OF_STREAM: Self = Self::Error;
 
     fn is_ignored(&self) -> bool {
-        self.is_trivia()
+        false
     }
 
     fn role(&self) -> Self::Role {
@@ -72,7 +74,7 @@ impl TokenType for PythonTokenType {
 }
 
 /// Python token types.
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u16)]
 pub enum PythonTokenType {

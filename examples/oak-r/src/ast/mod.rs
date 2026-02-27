@@ -1,26 +1,28 @@
 #![doc = include_str!("readme.md")]
 use core::range::Range;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::lexer::token_type::RTokenType;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Identifier {
     pub name: String,
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
 
-/// The root node of the R language AST.
+/// R 语言的根节点
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RRoot {
     pub statements: Vec<Statement>,
 }
 
-/// R statement
+/// R 语句
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Statement {
     Assignment {
         name: Identifier,
@@ -42,9 +44,9 @@ pub enum Statement {
     },
 }
 
-/// R expression
+/// R 表达式
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Expr {
     Ident(Identifier),
     Literal {

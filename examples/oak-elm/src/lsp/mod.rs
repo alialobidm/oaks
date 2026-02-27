@@ -4,16 +4,12 @@ use core::range::Range;
 use oak_core::tree::RedNode;
 #[cfg(feature = "lsp")]
 use {futures::Future, oak_lsp::service::LanguageService, oak_lsp::types::Hover as LspHover, oak_vfs::Vfs};
-/// Language service implementation for Elm.
 #[cfg(feature = "lsp")]
 pub struct ElmLanguageService<V: Vfs> {
-    /// The virtual file system.
-    pub vfs: V,
-    /// The workspace manager.
-    pub workspace: oak_lsp::workspace::WorkspaceManager,
+    vfs: V,
+    workspace: oak_lsp::workspace::WorkspaceManager,
 }
 impl<V: Vfs> ElmLanguageService<V> {
-    /// Creates a new Elm language service.
     pub fn new(vfs: V) -> Self {
         Self { vfs, workspace: oak_lsp::workspace::WorkspaceManager::new() }
     }

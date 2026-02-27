@@ -1,71 +1,46 @@
 use oak_core::{ElementType, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// INI element types used in the syntax tree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum IniElementType {
-    /// Whitespace characters.
+    // Basic kinds (mirrored from tokens for convenience)
     Whitespace,
-    /// Newline character.
     Newline,
-    /// Comment.
     Comment,
-    /// Error element.
     Error,
-    /// End of file.
     Eof,
 
-    /// `{` symbol.
+    // Tokens (mirrored)
     LeftBrace,
-    /// `}` symbol.
     RightBrace,
-    /// `[` symbol.
     LeftBracket,
-    /// `]` symbol.
     RightBracket,
-    /// `[[` symbol.
     DoubleLeftBracket,
-    /// `]]` symbol.
     DoubleRightBracket,
-    /// `,` symbol.
     Comma,
-    /// `.` symbol.
     Dot,
-    /// `=` operator.
     Equal,
 
-    /// Identifier.
+    // Values (mirrored)
     Identifier,
-    /// String literal.
     String,
-    /// Integer literal.
     Integer,
-    /// Floating-point literal.
     Float,
-    /// Boolean literal.
     Boolean,
-    /// Date and time literal.
     DateTime,
 
-    /// Root of the INI document.
+    // Structures (Nodes)
     Root,
-    /// The entire INI document.
     Document,
-    /// A section in the INI file.
     Section,
-    /// A table definition.
     Table,
-    /// An array of tables definition.
     ArrayOfTables,
-    /// A key-value pair.
     KeyValue,
-    /// The key part of a key-value pair.
     Key,
-    /// The value part of a key-value pair.
     Value,
-    /// An array value.
     Array,
-    /// An inline table value.
     InlineTable,
 }
 

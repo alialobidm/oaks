@@ -4,7 +4,7 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// SQL highlighter.
+/// SQL 高亮
 pub struct SqlHighlighter;
 
 impl Highlighter for SqlHighlighter {

@@ -84,7 +84,7 @@ impl<'config> ElixirLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace.
+    /// 跳过空白字符
     fn skip_whitespace<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         ELIXIR_WHITESPACE.scan(state, ElixirTokenType::Whitespace)
     }

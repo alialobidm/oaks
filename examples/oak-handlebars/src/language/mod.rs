@@ -1,30 +1,15 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Handlebars language definition.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct HandlebarsLanguage {
-    /// Variable tag start
-    pub variable_start: String,
-    /// Variable tag end
-    pub variable_end: String,
-    /// Unescaped variable tag start
-    pub unescaped_start: String,
-    /// Unescaped variable tag end
-    pub unescaped_end: String,
-}
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct HandlebarsLanguage {}
 
 impl HandlebarsLanguage {
-    /// Creates a new `HandlebarsLanguage` instance.
     pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl Default for HandlebarsLanguage {
-    fn default() -> Self {
-        Self { variable_start: "{{".to_string(), variable_end: "}}".to_string(), unescaped_start: "{{{".to_string(), unescaped_end: "}}}".to_string() }
+        Self {}
     }
 }
 

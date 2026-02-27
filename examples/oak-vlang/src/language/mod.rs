@@ -1,13 +1,14 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// V language configuration and metadata.
+/// V 语言定义
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct VLangLanguage {}
 
 impl VLangLanguage {
-    /// Creates a new `VLangLanguage`.
     pub fn new() -> Self {
         Self {}
     }
@@ -19,5 +20,5 @@ impl Language for VLangLanguage {
 
     type TokenType = crate::lexer::token_type::VLangTokenType;
     type ElementType = crate::parser::element_type::VLangElementType;
-    type TypedRoot = crate::ast::VRoot;
+    type TypedRoot = ();
 }

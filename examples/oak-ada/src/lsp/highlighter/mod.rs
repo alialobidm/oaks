@@ -1,29 +1,30 @@
 #![doc = include_str!("readme.md")]
+//! Ada 语法高亮器
 
-/// Local definition of highlight kinds
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword
+    /// 关键字
     Keyword,
-    /// String
+    /// 字符串
     String,
-    /// Number
+    /// 数字
     Number,
-    /// Comment
+    /// 注释
     Comment,
-    /// Identifier
+    /// 标识符
     Identifier,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlight the given text
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Ada syntax highlighter
+/// Ada 语法高亮器
 pub struct AdaHighlighter {
-    /// Whether to use parser-based highlighting
+    /// 是否使用基于解析器的高亮
     pub use_parser: bool,
 }
 
@@ -34,12 +35,12 @@ impl Default for AdaHighlighter {
 }
 
 impl AdaHighlighter {
-    /// Creates a new Ada highlighter instance
+    /// 创建一个新的 Ada 高亮器实例
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Highlight Ada keywords
+    /// 高亮 Ada 关键字
     fn highlight_keywords(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let keywords = [
@@ -138,7 +139,7 @@ impl AdaHighlighter {
         highlights
     }
 
-    /// Highlight string literals
+    /// 高亮字符串字面量
     fn highlight_strings(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut chars = text.char_indices().peekable();
@@ -166,7 +167,7 @@ impl AdaHighlighter {
         highlights
     }
 
-    /// Highlight number literals
+    /// 高亮数字字面量
     fn highlight_numbers(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut chars = text.char_indices().peekable();
@@ -191,7 +192,7 @@ impl AdaHighlighter {
         highlights
     }
 
-    /// Highlight comments
+    /// 高亮注释
     fn highlight_comments(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut pos = 0;

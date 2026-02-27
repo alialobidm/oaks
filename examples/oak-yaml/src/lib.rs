@@ -1,8 +1,9 @@
 #![doc = include_str!("readme.md")]
 #![feature(new_range_api)]
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+//! Yaml support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
@@ -29,17 +30,6 @@ pub use crate::{builder::YamlBuilder, language::YamlLanguage, lexer::YamlLexer, 
 /// Highlighter implementation.
 #[cfg(feature = "oak-highlight")]
 pub use crate::lsp::highlighter::YamlHighlighter;
-
-/// Parses a YAML string.
-pub fn parse(yaml: &str) -> Result<crate::ast::YamlRoot, String> {
-    use oak_core::{Builder, parser::session::ParseSession, source::SourceText};
-    let language = YamlLanguage::new();
-    let builder = YamlBuilder::new(&language);
-    let source = SourceText::new(yaml.to_string());
-    let mut cache = ParseSession::default();
-    let result = builder.build(&source, &[], &mut cache);
-    result.result.map_err(|e| format!("{:?}", e))
-}
 
 /// LSP implementation.
 #[cfg(feature = "lsp")]

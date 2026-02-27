@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-pub mod formatter;
 #[cfg(feature = "oak-highlight")]
 pub mod highlighter;
 
@@ -35,11 +34,8 @@ impl HoverProvider<PerlLanguage> for PerlHoverProvider {
 /// for the Perl language, utilizing the VFS for file management.
 #[cfg(feature = "lsp")]
 pub struct PerlLanguageService<V: Vfs> {
-    /// Virtual file system.
     vfs: V,
-    /// Workspace manager.
     workspace: oak_lsp::workspace::WorkspaceManager,
-    /// Hover provider.
     hover_provider: PerlHoverProvider,
 }
 impl<V: Vfs> PerlLanguageService<V> {

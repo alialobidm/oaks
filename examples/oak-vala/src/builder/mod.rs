@@ -1,13 +1,12 @@
-use crate::{ast::*, language::ValaLanguage, parser::ValaParser};
-use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, Parser, SourceText, TextEdit, source::Source};
+use crate::{ast::*, language::ValaLanguage, lexer::ValaLexer, parser::ValaParser};
+use oak_core::{Builder, BuilderCache, GreenNode, Lexer, OakDiagnostics, OakError, Parser, RedNode, SourceText, TextEdit, source::Source};
 
-/// AST builder for Vala language.
+/// Vala 语言的 AST 构建器
 pub struct ValaBuilder<'config> {
     config: &'config ValaLanguage,
 }
 
 impl<'config> ValaBuilder<'config> {
-    /// Creates a new `ValaBuilder` with the given language configuration.
     pub fn new(config: &'config ValaLanguage) -> Self {
         Self { config }
     }
@@ -37,9 +36,9 @@ impl<'config> Builder<ValaLanguage> for ValaBuilder<'config> {
 }
 
 impl<'config> ValaBuilder<'config> {
-    /// Builds the root AST node from the syntax tree.
+    /// 从语法树构建 AST 根节点
     pub fn build_root(&self, _green: &GreenNode<ValaLanguage>, _source: &SourceText) -> Result<ValaRoot, oak_core::OakError> {
-        // Simplified AST building logic
+        // 简化的 AST 构建逻辑
         Ok(ValaRoot { span: (0.._source.len()).into(), items: vec![] })
     }
 }

@@ -11,13 +11,13 @@ use oak_core::{
 
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, VerilogLanguage>;
+type State<'a, S> = LexerState<'a, S, VerilogLanguage>;
 
 static VL_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 
 #[derive(Clone, Debug)]
 pub struct VerilogLexer<'config> {
-    config: &'config VerilogLanguage,
+    _config: &'config VerilogLanguage,
 }
 
 impl<'config> Lexer<VerilogLanguage> for VerilogLexer<'config> {
@@ -29,12 +29,11 @@ impl<'config> Lexer<VerilogLanguage> for VerilogLexer<'config> {
 }
 
 impl<'config> VerilogLexer<'config> {
-    /// Creates a new VerilogLexer with the given configuration.
     pub fn new(config: &'config VerilogLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Main lexical analysis loop
+    /// 主要词法分析循环
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -70,23 +69,23 @@ impl<'config> VerilogLexer<'config> {
             state.advance_if_dead_lock(safe_point);
         }
 
-        // Add EOF token
+        // 添加 EOF token
         let eof_pos = state.get_position();
         state.add_token(VerilogKind::Eof, eof_pos, eof_pos);
         Ok(())
     }
 
-    /// Skips whitespace
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         VL_WHITESPACE.scan(state, VerilogKind::Whitespace)
     }
 
-    /// Skips comments
+    /// 跳过注释
     fn skip_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         let rest = state.rest();
 
-        // Line comment: // ... until newline
+        // 行注释: // ... until newline
         if rest.starts_with("//") {
             state.advance(2);
             while let Some(ch) = state.peek() {
@@ -99,7 +98,7 @@ impl<'config> VerilogLexer<'config> {
             return true;
         }
 
-        // Block comment: /* ... */
+        // 块注释: /* ... */
         if rest.starts_with("/*") {
             state.advance(2);
             while let Some(ch) = state.peek() {
@@ -116,7 +115,7 @@ impl<'config> VerilogLexer<'config> {
         false
     }
 
-    /// Handles string literals
+    /// 处理字符串字面量
     fn lex_string_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
 
@@ -147,7 +146,7 @@ impl<'config> VerilogLexer<'config> {
         false
     }
 
-    /// Handles number literals
+    /// 处理数字字面量
     fn lex_number_literal<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         let first = match state.current() {
@@ -159,7 +158,7 @@ impl<'config> VerilogLexer<'config> {
             return false;
         }
 
-        // Basic number parsing
+        // 基本数字解析
         state.advance(1);
         while let Some(c) = state.peek() {
             if c.is_ascii_digit() || c == '_' {
@@ -170,7 +169,7 @@ impl<'config> VerilogLexer<'config> {
             }
         }
 
-        // Check for base prefix (e.g., 'b, 'h, 'o, 'd)
+        // 检查是否有进制前缀 (如 'b, 'h, 'o, 'd)
         if state.peek() == Some('\'') {
             state.advance(1);
             if let Some(base_char) = state.peek() {
@@ -192,7 +191,7 @@ impl<'config> VerilogLexer<'config> {
         true
     }
 
-    /// Handles identifiers and keywords
+    /// 处理标识符和关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         let ch = match state.current() {
@@ -244,12 +243,12 @@ impl<'config> VerilogLexer<'config> {
         true
     }
 
-    /// Handles operators
+    /// 处理操作符
     fn lex_operators<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
         let rest = state.rest();
 
-        // Match longer operators first
+        // 优先匹配长操作符
         let patterns: &[(&str, VerilogKind)] = &[
             ("==", VerilogKind::EqualEqual),
             ("!=", VerilogKind::NotEqual),
@@ -296,7 +295,7 @@ impl<'config> VerilogLexer<'config> {
         false
     }
 
-    /// Handles single-character tokens
+    /// 处理单字符标记
     fn lex_single_char_tokens<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
 

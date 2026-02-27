@@ -1,37 +1,36 @@
 #![doc = include_str!("readme.md")]
+//! LLVM IR 语法高亮器
 
-/// Local definition of highlight kinds
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword
+    /// 关键字
     Keyword,
-    /// String
+    /// 字符串
     String,
-    /// Number
+    /// 数字
     Number,
-    /// Comment
+    /// 注释
     Comment,
-    /// Local variable
+    /// 本地变量
     LocalVar,
-    /// Global variable
+    /// 全局变量
     GlobalVar,
-    /// Metadata
+    /// 元数据
     Metadata,
-    /// Identifier
+    /// 标识符
     Identifier,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Highlighter implementation for LLVM IR.
 pub struct LLirHighlighter;
 
 impl LLirHighlighter {
-    /// Creates a new `LLirHighlighter`.
     pub fn new() -> Self {
         Self
     }
@@ -39,7 +38,7 @@ impl LLirHighlighter {
 
 impl Highlighter for LLirHighlighter {
     fn highlight(&self, _text: &str) -> Vec<(usize, usize, HighlightKind)> {
-        // TODO: Implement highlighting
+        // TODO: 实现高亮
         Vec::new()
     }
 }

@@ -1,16 +1,15 @@
 use crate::{
-    DejavuLanguage,
-    ast::{ClassDeclaration, EnumDeclaration, FlagsDeclaration, IdentifierNode, ItemNode, TraitDeclaration, VariantDefinition, WidgetDeclaration},
-    builder::{DejavuBuilder, text},
-    lexer::token_type::DejavuTokenType,
-    parser::element_type::DejavuElementType,
+    DejavuLanguage, DejavuParser,
+    ast::{Class, Enums, Flags, Identifier, Item, Trait, Variant, Widget},
+    builder::text,
+    lexer::token_type::DejavuSyntaxKind,
 };
-use oak_core::{OakError, RedNode, RedTree, Source};
+use oak_core::{OakError, RedNode, RedTree, source::SourceText};
 
-impl<'config> DejavuBuilder<'config> {
-    pub(crate) fn build_class<S: Source + ?Sized>(&self, node: RedNode<DejavuLanguage>, source: &S) -> Result<ClassDeclaration, OakError> {
+impl<'config> DejavuParser<'config> {
+    pub(crate) fn build_class(&self, node: RedNode<DejavuLanguage>, source: &SourceText) -> Result<Class, OakError> {
         let span = node.span();
-        let mut name = IdentifierNode { name: String::new(), span: Default::default() };
+        let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut annotations = Vec::new();
         let mut parents = Vec::new();
         let mut items = Vec::new();
@@ -18,74 +17,74 @@ impl<'config> DejavuBuilder<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    DejavuTokenType::Whitespace | DejavuTokenType::LineComment | DejavuTokenType::BlockComment => continue,
-                    DejavuTokenType::Identifier => {
+                    DejavuSyntaxKind::Whitespace | DejavuSyntaxKind::Newline | DejavuSyntaxKind::LineComment | DejavuSyntaxKind::BlockComment => continue,
+                    DejavuSyntaxKind::Identifier => {
                         let t_text = text(source, t.span.clone().into());
-                        name = IdentifierNode { name: t_text, span: t.span.clone() };
+                        name = Identifier { name: t_text, span: t.span.clone() };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    DejavuElementType::Attribute => {
+                    DejavuSyntaxKind::Attribute => {
                         annotations.push(self.build_attribute(n, source)?);
                     }
-                    DejavuElementType::NamePath => {
+                    DejavuSyntaxKind::NamePath => {
                         parents.push(self.build_name_path(n, source)?);
                     }
-                    DejavuElementType::Type => {
+                    DejavuSyntaxKind::Type => {
                         for child in n.children() {
                             if let RedTree::Node(inner) = child {
-                                if inner.green.kind == DejavuElementType::NamePath {
+                                if inner.green.kind == DejavuSyntaxKind::NamePath {
                                     parents.push(self.build_name_path(inner, source)?);
                                 }
                             }
                         }
                     }
-                    DejavuElementType::Namespace => {
+                    DejavuSyntaxKind::Namespace => {
                         let ns = self.build_namespace(n, source)?;
-                        items.push(ItemNode::Namespace(ns));
+                        items.push(Item::Namespace(ns));
                     }
-                    DejavuElementType::Class => {
+                    DejavuSyntaxKind::Class => {
                         let class = self.build_class(n, source)?;
-                        items.push(ItemNode::Class(class));
+                        items.push(Item::Class(class));
                     }
-                    DejavuElementType::Flags => {
+                    DejavuSyntaxKind::Flags => {
                         let flags = self.build_flags(n, source)?;
-                        items.push(ItemNode::Flags(flags));
+                        items.push(Item::Flags(flags));
                     }
-                    DejavuElementType::Enums => {
+                    DejavuSyntaxKind::Enums => {
                         let enums = self.build_enums(n, source)?;
-                        items.push(ItemNode::Enum(enums));
+                        items.push(Item::Enums(enums));
                     }
-                    DejavuElementType::Trait => {
+                    DejavuSyntaxKind::Trait => {
                         let trait_node = self.build_trait(n, source)?;
-                        items.push(ItemNode::Trait(trait_node));
+                        items.push(Item::Trait(trait_node));
                     }
-                    DejavuElementType::Widget => {
+                    DejavuSyntaxKind::Widget => {
                         let widget = self.build_widget(n, source)?;
-                        items.push(ItemNode::Widget(widget));
+                        items.push(Item::Widget(widget));
                     }
-                    DejavuElementType::UsingStatement => {
+                    DejavuSyntaxKind::UsingStatement => {
                         let us = self.build_using(n, source)?;
-                        items.push(ItemNode::Using(us));
+                        items.push(Item::Using(us));
                     }
-                    DejavuElementType::Micro => {
+                    DejavuSyntaxKind::Micro => {
                         let micro = self.build_micro(n, source)?;
-                        items.push(ItemNode::Micro(micro));
+                        items.push(Item::Micro(micro));
                     }
-                    DejavuElementType::LetStatement => {
+                    DejavuSyntaxKind::LetStatement => {
                         let stmt = self.build_let(n, source)?;
-                        items.push(ItemNode::Statement(stmt));
+                        items.push(Item::Statement(stmt));
                     }
-                    DejavuElementType::ExprStatement => {
+                    DejavuSyntaxKind::ExpressionStatement => {
                         let stmt = self.build_expr_stmt(n, source)?;
-                        items.push(ItemNode::Statement(stmt));
+                        items.push(Item::Statement(stmt));
                     }
-                    DejavuElementType::Variant => {
+                    DejavuSyntaxKind::Variant => {
                         let variant = self.build_variant(n, source)?;
-                        items.push(ItemNode::Variant(variant));
+                        items.push(Item::Variant(variant));
                     }
-                    DejavuElementType::BlockExpression => {
+                    DejavuSyntaxKind::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
                                 if let Ok(item) = self.build_item(inner_n, source) {
@@ -98,32 +97,32 @@ impl<'config> DejavuBuilder<'config> {
                 },
             }
         }
-        Ok(ClassDeclaration { name, annotations, parents, items, span })
+        Ok(Class { name, annotations, parents, items, span })
     }
 
-    pub(crate) fn build_flags<S: Source + ?Sized>(&self, node: RedNode<DejavuLanguage>, source: &S) -> Result<FlagsDeclaration, OakError> {
+    pub(crate) fn build_flags(&self, node: RedNode<DejavuLanguage>, source: &SourceText) -> Result<Flags, OakError> {
         let span = node.span();
-        let mut name = IdentifierNode { name: String::new(), span: Default::default() };
+        let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut annotations = Vec::new();
         let mut items = Vec::new();
 
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    DejavuTokenType::Whitespace | DejavuTokenType::LineComment | DejavuTokenType::BlockComment => continue,
-                    DejavuTokenType::Identifier => {
+                    DejavuSyntaxKind::Whitespace | DejavuSyntaxKind::Newline | DejavuSyntaxKind::LineComment | DejavuSyntaxKind::BlockComment => continue,
+                    DejavuSyntaxKind::Identifier => {
                         let t_text = text(source, t.span.clone().into());
-                        name = IdentifierNode { name: t_text, span: t.span.clone() };
+                        name = Identifier { name: t_text, span: t.span.clone() };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    DejavuElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    DejavuElementType::Variant => {
+                    DejavuSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    DejavuSyntaxKind::Variant => {
                         let variant = self.build_variant(n, source)?;
-                        items.push(ItemNode::Variant(variant));
+                        items.push(Item::Variant(variant));
                     }
-                    DejavuElementType::BlockExpression => {
+                    DejavuSyntaxKind::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
                                 if let Ok(item) = self.build_item(inner_n, source) {
@@ -136,32 +135,32 @@ impl<'config> DejavuBuilder<'config> {
                 },
             }
         }
-        Ok(FlagsDeclaration { name, annotations, items, span })
+        Ok(Flags { name, annotations, items, span })
     }
 
-    pub(crate) fn build_enums<S: Source + ?Sized>(&self, node: RedNode<DejavuLanguage>, source: &S) -> Result<EnumDeclaration, OakError> {
+    pub(crate) fn build_enums(&self, node: RedNode<DejavuLanguage>, source: &SourceText) -> Result<Enums, OakError> {
         let span = node.span();
-        let mut name = IdentifierNode { name: String::new(), span: Default::default() };
+        let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut annotations = Vec::new();
         let mut items = Vec::new();
 
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    DejavuTokenType::Whitespace | DejavuTokenType::LineComment | DejavuTokenType::BlockComment => continue,
-                    DejavuTokenType::Identifier => {
+                    DejavuSyntaxKind::Whitespace | DejavuSyntaxKind::Newline | DejavuSyntaxKind::LineComment | DejavuSyntaxKind::BlockComment => continue,
+                    DejavuSyntaxKind::Identifier => {
                         let t_text = text(source, t.span.clone().into());
-                        name = IdentifierNode { name: t_text, span: t.span.clone() }
+                        name = Identifier { name: t_text, span: t.span.clone() }
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    DejavuElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    DejavuElementType::Variant => {
+                    DejavuSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    DejavuSyntaxKind::Variant => {
                         let variant = self.build_variant(n, source)?;
-                        items.push(ItemNode::Variant(variant))
+                        items.push(Item::Variant(variant))
                     }
-                    DejavuElementType::BlockExpression => {
+                    DejavuSyntaxKind::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
                                 if let Ok(item) = self.build_item(inner_n, source) {
@@ -174,37 +173,37 @@ impl<'config> DejavuBuilder<'config> {
                 },
             }
         }
-        Ok(EnumDeclaration { name, annotations, items, span })
+        Ok(Enums { name, annotations, items, span })
     }
 
-    pub(crate) fn build_variant<S: Source + ?Sized>(&self, node: RedNode<DejavuLanguage>, source: &S) -> Result<VariantDefinition, OakError> {
+    pub(crate) fn build_variant(&self, node: RedNode<DejavuLanguage>, source: &SourceText) -> Result<Variant, OakError> {
         let span = node.span();
-        let mut name = IdentifierNode { name: String::new(), span: Default::default() };
+        let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut annotations = Vec::new();
         let mut value = None;
 
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    DejavuTokenType::Whitespace | DejavuTokenType::LineComment | DejavuTokenType::BlockComment => continue,
-                    DejavuTokenType::Identifier => {
+                    DejavuSyntaxKind::Whitespace | DejavuSyntaxKind::Newline | DejavuSyntaxKind::LineComment | DejavuSyntaxKind::BlockComment => continue,
+                    DejavuSyntaxKind::Identifier => {
                         let t_text = text(source, t.span.clone().into());
-                        name = IdentifierNode { name: t_text, span: t.span.clone() };
+                        name = Identifier { name: t_text, span: t.span.clone() };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    DejavuElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    DejavuSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
                     _ => value = Some(self.build_expr(n, source)?),
                 },
             }
         }
-        Ok(VariantDefinition { name, annotations, value, span })
+        Ok(Variant { name, annotations, value, span })
     }
 
-    pub(crate) fn build_trait<S: Source + ?Sized>(&self, node: RedNode<DejavuLanguage>, source: &S) -> Result<TraitDeclaration, OakError> {
+    pub(crate) fn build_trait(&self, node: RedNode<DejavuLanguage>, source: &SourceText) -> Result<Trait, OakError> {
         let span = node.span();
-        let mut name = IdentifierNode { name: String::new(), span: Default::default() };
+        let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut annotations = Vec::new();
         let mut parents = Vec::new();
         let mut items = Vec::new();
@@ -212,66 +211,66 @@ impl<'config> DejavuBuilder<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    DejavuTokenType::Whitespace | DejavuTokenType::LineComment | DejavuTokenType::BlockComment => continue,
-                    DejavuTokenType::Identifier => {
+                    DejavuSyntaxKind::Whitespace | DejavuSyntaxKind::Newline | DejavuSyntaxKind::LineComment | DejavuSyntaxKind::BlockComment => continue,
+                    DejavuSyntaxKind::Identifier => {
                         let t_text = text(source, t.span.clone().into());
-                        name = IdentifierNode { name: t_text, span: t.span.clone() };
+                        name = Identifier { name: t_text, span: t.span.clone() };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    DejavuElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    DejavuElementType::NamePath => parents.push(self.build_name_path(n, source)?),
-                    DejavuElementType::Type => {
+                    DejavuSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    DejavuSyntaxKind::NamePath => parents.push(self.build_name_path(n, source)?),
+                    DejavuSyntaxKind::Type => {
                         for child in n.children() {
                             if let RedTree::Node(inner) = child {
-                                if inner.green.kind == DejavuElementType::NamePath {
+                                if inner.green.kind == DejavuSyntaxKind::NamePath {
                                     parents.push(self.build_name_path(inner, source)?)
                                 }
                             }
                         }
                     }
-                    DejavuElementType::Namespace => {
+                    DejavuSyntaxKind::Namespace => {
                         let ns = self.build_namespace(n, source)?;
-                        items.push(ItemNode::Namespace(ns))
+                        items.push(Item::Namespace(ns))
                     }
-                    DejavuElementType::Class => {
+                    DejavuSyntaxKind::Class => {
                         let class = self.build_class(n, source)?;
-                        items.push(ItemNode::Class(class))
+                        items.push(Item::Class(class))
                     }
-                    DejavuElementType::Flags => {
+                    DejavuSyntaxKind::Flags => {
                         let flags = self.build_flags(n, source)?;
-                        items.push(ItemNode::Flags(flags))
+                        items.push(Item::Flags(flags))
                     }
-                    DejavuElementType::Enums => {
+                    DejavuSyntaxKind::Enums => {
                         let enums = self.build_enums(n, source)?;
-                        items.push(ItemNode::Enum(enums))
+                        items.push(Item::Enums(enums))
                     }
-                    DejavuElementType::Trait => {
+                    DejavuSyntaxKind::Trait => {
                         let trait_node = self.build_trait(n, source)?;
-                        items.push(ItemNode::Trait(trait_node))
+                        items.push(Item::Trait(trait_node))
                     }
-                    DejavuElementType::Widget => {
+                    DejavuSyntaxKind::Widget => {
                         let widget = self.build_widget(n, source)?;
-                        items.push(ItemNode::Widget(widget))
+                        items.push(Item::Widget(widget))
                     }
-                    DejavuElementType::UsingStatement => {
+                    DejavuSyntaxKind::UsingStatement => {
                         let us = self.build_using(n, source)?;
-                        items.push(ItemNode::Using(us))
+                        items.push(Item::Using(us))
                     }
-                    DejavuElementType::Micro => {
+                    DejavuSyntaxKind::Micro => {
                         let micro = self.build_micro(n, source)?;
-                        items.push(ItemNode::Micro(micro))
+                        items.push(Item::Micro(micro))
                     }
-                    DejavuElementType::LetStatement => {
+                    DejavuSyntaxKind::LetStatement => {
                         let stmt = self.build_let(n, source)?;
-                        items.push(ItemNode::Statement(stmt))
+                        items.push(Item::Statement(stmt))
                     }
-                    DejavuElementType::ExprStatement => {
+                    DejavuSyntaxKind::ExpressionStatement => {
                         let stmt = self.build_expr_stmt(n, source)?;
-                        items.push(ItemNode::Statement(stmt))
+                        items.push(Item::Statement(stmt))
                     }
-                    DejavuElementType::BlockExpression => {
+                    DejavuSyntaxKind::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
                                 if let Ok(item) = self.build_item(inner_n, source) {
@@ -284,66 +283,66 @@ impl<'config> DejavuBuilder<'config> {
                 },
             }
         }
-        Ok(TraitDeclaration { name, annotations, parents, items, span })
+        Ok(Trait { name, annotations, parents, items, span })
     }
 
-    pub(crate) fn build_widget<S: Source + ?Sized>(&self, node: RedNode<DejavuLanguage>, source: &S) -> Result<WidgetDeclaration, OakError> {
+    pub(crate) fn build_widget(&self, node: RedNode<DejavuLanguage>, source: &SourceText) -> Result<Widget, OakError> {
         let span = node.span();
-        let mut name = IdentifierNode { name: String::new(), span: Default::default() };
+        let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut annotations = Vec::new();
         let mut items = Vec::new();
 
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    DejavuTokenType::Whitespace | DejavuTokenType::LineComment | DejavuTokenType::BlockComment => continue,
-                    DejavuTokenType::Identifier => {
-                        name = IdentifierNode { name: text(source, t.span.clone().into()), span: t.span.clone() };
+                    DejavuSyntaxKind::Whitespace | DejavuSyntaxKind::Newline | DejavuSyntaxKind::LineComment | DejavuSyntaxKind::BlockComment => continue,
+                    DejavuSyntaxKind::Identifier => {
+                        name = Identifier { name: text(source, t.span.clone().into()), span: t.span.clone() };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    DejavuElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    DejavuElementType::Namespace => {
+                    DejavuSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    DejavuSyntaxKind::Namespace => {
                         let ns = self.build_namespace(n, source)?;
-                        items.push(ItemNode::Namespace(ns))
+                        items.push(Item::Namespace(ns))
                     }
-                    DejavuElementType::Class => {
+                    DejavuSyntaxKind::Class => {
                         let class = self.build_class(n, source)?;
-                        items.push(ItemNode::Class(class))
+                        items.push(Item::Class(class))
                     }
-                    DejavuElementType::Flags => {
+                    DejavuSyntaxKind::Flags => {
                         let flags = self.build_flags(n, source)?;
-                        items.push(ItemNode::Flags(flags))
+                        items.push(Item::Flags(flags))
                     }
-                    DejavuElementType::Trait => {
+                    DejavuSyntaxKind::Trait => {
                         let trait_node = self.build_trait(n, source)?;
-                        items.push(ItemNode::Trait(trait_node))
+                        items.push(Item::Trait(trait_node))
                     }
-                    DejavuElementType::Widget => {
+                    DejavuSyntaxKind::Widget => {
                         let widget = self.build_widget(n, source)?;
-                        items.push(ItemNode::Widget(widget))
+                        items.push(Item::Widget(widget))
                     }
-                    DejavuElementType::UsingStatement => {
+                    DejavuSyntaxKind::UsingStatement => {
                         let us = self.build_using(n, source)?;
-                        items.push(ItemNode::Using(us))
+                        items.push(Item::Using(us))
                     }
-                    DejavuElementType::Micro => {
+                    DejavuSyntaxKind::Micro => {
                         let micro = self.build_micro(n, source)?;
-                        items.push(ItemNode::Micro(micro))
+                        items.push(Item::Micro(micro))
                     }
-                    DejavuElementType::LetStatement => {
+                    DejavuSyntaxKind::LetStatement => {
                         let stmt = self.build_let(n, source)?;
-                        items.push(ItemNode::Statement(stmt))
+                        items.push(Item::Statement(stmt))
                     }
-                    DejavuElementType::ExprStatement => {
+                    DejavuSyntaxKind::ExpressionStatement => {
                         let stmt = self.build_expr_stmt(n, source)?;
-                        items.push(ItemNode::Statement(stmt))
+                        items.push(Item::Statement(stmt))
                     }
                     _ => {}
                 },
             }
         }
-        Ok(WidgetDeclaration { name, annotations, items, span })
+        Ok(Widget { name, annotations, items, span })
     }
 }

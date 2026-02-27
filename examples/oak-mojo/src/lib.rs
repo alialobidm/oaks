@@ -18,7 +18,6 @@ use oak_core::Language;
 
 /// Mojo language definition.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MojoLanguage;
 
 impl Language for MojoLanguage {

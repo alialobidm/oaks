@@ -33,7 +33,7 @@ impl<'config> Parser<WitLanguage> for WitParser<'config> {
 
             while state.not_at_end() {
                 let _token = state.advance();
-                // TODO: Complete WIT parsing logic
+                // TODO: 完整的 WIT 解析逻辑
             }
 
             Ok(state.finish_at(checkpoint, crate::parser::element_type::WitElementType::Root))

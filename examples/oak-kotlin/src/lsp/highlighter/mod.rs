@@ -8,9 +8,9 @@ pub enum HighlightKind {
     Identifier,
 }
 
-/// Highlighter trait.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 

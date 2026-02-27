@@ -8,7 +8,6 @@ use oak_core::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum TestToken {
     Id,
     End,
@@ -23,7 +22,6 @@ impl TokenType for TestToken {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum TestElement {
     Root,
 }

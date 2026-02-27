@@ -1,72 +1,28 @@
-use crate::{ast::DejavuRoot, lexer::DejavuTokenType, parser::DejavuElementType};
+#![doc = include_str!("readme.md")]
+use crate::{ast::DejavuRoot, lexer::token_type::DejavuSyntaxKind};
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Dejavu language configuration and metadata.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct DejavuLanguage {
-    /// The syntax mode.
-    pub syntax_mode: SyntaxMode,
-    /// The template configuration.
-    pub template: TemplateConfig,
-}
-
-/// Syntax mode for Dejavu.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+/// Syntax modes for Dejavu parser.
 pub enum SyntaxMode {
-    /// Programming mode (pure code).
+    /// Programming mode: Standard .vk file
     Programming,
-    /// Template mode (text with interpolations).
-    Template,
 }
 
-/// Template configuration.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct TemplateConfig {
-    /// Control flow start delimiter.
-    pub control_start: String,
-    /// Control flow end delimiter.
-    pub control_end: String,
-    /// Interpolation start delimiter.
-    pub interpolation_start: String,
-    /// Interpolation end delimiter.
-    pub interpolation_end: String,
-    /// Comment start delimiter.
-    pub comment_start: String,
-    /// Comment end delimiter.
-    pub comment_end: String,
-}
-
-impl Default for TemplateConfig {
-    fn default() -> Self {
-        Self { control_start: "<%".to_string(), control_end: "%>".to_string(), interpolation_start: "<%".to_string(), interpolation_end: "%>".to_string(), comment_start: "<*".to_string(), comment_end: "*>".to_string() }
-    }
-}
-
-impl DejavuLanguage {
-    /// Creates a new Dejavu language configuration.
-    pub fn new() -> Self {
-        Self { syntax_mode: SyntaxMode::Template, template: TemplateConfig::default() }
-    }
-
-    /// Sets the syntax mode.
-    pub fn with_mode(mut self, mode: SyntaxMode) -> Self {
-        self.syntax_mode = mode;
-        self
-    }
-
-    /// Sets the template configuration.
-    pub fn with_template(mut self, template: TemplateConfig) -> Self {
-        self.template = template;
-        self
-    }
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+/// The Dejavu programming language definition.
+pub struct DejavuLanguage {
+    /// Current syntax mode
+    pub syntax_mode: SyntaxMode,
 }
 
 impl Default for DejavuLanguage {
     fn default() -> Self {
-        Self::new()
+        Self { syntax_mode: SyntaxMode::Programming }
     }
 }
 
@@ -74,7 +30,7 @@ impl Language for DejavuLanguage {
     const NAME: &'static str = "dejavu";
     const CATEGORY: LanguageCategory = LanguageCategory::Programming;
 
-    type TokenType = DejavuTokenType;
-    type ElementType = DejavuElementType;
+    type TokenType = DejavuSyntaxKind;
+    type ElementType = DejavuSyntaxKind;
     type TypedRoot = DejavuRoot;
 }

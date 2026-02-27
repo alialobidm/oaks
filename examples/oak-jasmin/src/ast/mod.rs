@@ -1,82 +1,69 @@
 #![doc = include_str!("readme.md")]
+#[cfg(feature = "serde")]
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Jasmin root node.
+/// Jasmin 根节点
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct JasminRoot {
-    /// Class definition.
     pub class: JasminClass,
 }
 
-/// Jasmin class declaration AST node.
+/// Jasmin 类声明的 AST 节点
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct JasminClass {
-    /// Access modifiers (public, private, etc.).
+    /// 访问修饰符（public, private 等）
     pub modifiers: Vec<String>,
-    /// Class name.
+    /// 类名
     pub name: String,
-    /// Version info (e.g., 65:0).
+    /// 版本信息（如 65:0）
     pub version: Option<String>,
-    /// Method list.
+    /// 方法列表
     pub methods: Vec<JasminMethod>,
-    /// Field list.
+    /// 字段列表
     pub fields: Vec<JasminField>,
-    /// Source file info.
+    /// 源文件信息
     pub source_file: Option<String>,
 }
 
-/// Jasmin method declaration AST node.
+/// Jasmin 方法声明的 AST 节点
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct JasminMethod {
-    /// Access modifiers (public, static, etc.).
+    /// 访问修饰符（public, static 等）
     pub modifiers: Vec<String>,
-    /// Method name and type descriptor (e.g., "main:([Ljava/lang/String;)V").
+    /// 方法名和类型描述符（"main":"([Ljava/lang/String)V"）
     pub name_and_descriptor: String,
-    /// Stack size.
+    /// 栈大小
     pub stack_size: Option<u32>,
-    /// Local variables count.
+    /// 局部变量数量
     pub locals_count: Option<u32>,
-    /// Instruction list.
+    /// 指令列表
     pub instructions: Vec<JasminInstruction>,
 }
 
-/// Jasmin field declaration AST node.
+/// Jasmin 字段声明的 AST 节点
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct JasminField {
-    /// Access modifiers (public, static, etc.).
+    /// 访问修饰符（public, static 等）
     pub modifiers: Vec<String>,
-    /// Field name and type descriptor (e.g., "value:I").
+    /// 字段名和类型描述符（"value":"I"）
     pub name_and_descriptor: String,
 }
 
-/// Jasmin instruction AST node.
+/// Jasmin 指令的 AST 节点
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum JasminInstruction {
-    /// Simple instruction (e.g., aload_0, return).
+    /// 简单指令（aload_0, return）
     Simple(String),
-    /// Instruction with argument (e.g., ldc "Hello").
-    WithArgument {
-        /// Instruction name.
-        instruction: String,
-        /// Argument.
-        argument: String,
-    },
-    /// Method call instruction (e.g., invokespecial Method java/lang/Object."<init>":"()V").
-    MethodCall {
-        /// Instruction name.
-        instruction: String,
-        /// Method reference.
-        method_ref: String,
-    },
-    /// Field access instruction (e.g., getstatic Field java/lang/System.out:"Ljava/io/PrintStream;").
-    FieldAccess {
-        /// Instruction name.
-        instruction: String,
-        /// Field reference.
-        field_ref: String,
-    },
+    /// 带参数的指令（如 ldc "Hello"）
+    WithArgument { instruction: String, argument: String },
+    /// 方法调用指令（如 invokespecial Method java/lang/Object."<init>":"()V"）
+    MethodCall { instruction: String, method_ref: String },
+    /// 字段访问指令（如 getstatic Field java/lang/System.out:"Ljava/io/PrintStream;"）
+    FieldAccess { instruction: String, field_ref: String },
 }

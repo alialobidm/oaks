@@ -6,11 +6,11 @@
 //! regions in source code, such as functions, comments, or imports.
 use core::range::Range;
 use oak_core::{language::Language, tree::RedNode};
+use serde::{Deserialize, Serialize};
 
 /// Enum of folding range kinds.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum FoldingRangeKind {
     /// A comment block.
     Comment,
@@ -21,11 +21,10 @@ pub enum FoldingRangeKind {
 }
 
 /// Represents a folding range in a document.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FoldingRange {
     /// The span of the range to fold.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range", bound(serialize = "", deserialize = "")))]
+    #[serde(with = "oak_core::serde_range", bound(serialize = "", deserialize = ""))]
     pub range: Range<usize>,
     /// The kind of folding range (e.g., 'comment', 'imports').
     pub kind: Option<FoldingRangeKind>,

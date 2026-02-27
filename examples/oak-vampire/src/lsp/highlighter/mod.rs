@@ -2,7 +2,7 @@
 use oak_core::errors::ParseResult;
 use oak_highlight::{HighlightResult, Highlighter, OakHighlighter, themes::Theme};
 
-/// Vampire syntax highlighter
+/// Vampire 语法高亮器
 pub struct VampireHighlighter;
 
 impl Highlighter for VampireHighlighter {

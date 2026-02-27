@@ -5,13 +5,12 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// JASM syntax highlighter.
+/// JASM 高亮器
 pub struct JasmHighlighter {
     use_parser: bool,
 }
 
 impl JasmHighlighter {
-    /// Creates a new instance of `JasmHighlighter`.
     pub fn new(use_parser: bool) -> Self {
         Self { use_parser }
     }

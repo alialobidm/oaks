@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// J element type definitions
 pub mod element_type;
 
 pub use element_type::JElementType;
@@ -13,23 +12,38 @@ use oak_core::{
 
 pub(crate) type State<'a, S> = ParserState<'a, JLanguage, S>;
 
-/// J language parser
 pub struct JParser<'config> {
     pub(crate) config: &'config JLanguage,
 }
 
 impl<'config> JParser<'config> {
-    /// Creates a new J parser
     pub fn new(config: &'config JLanguage) -> Self {
         Self { config }
     }
 
-    /// Parses a sentence
+    /// 解析 J 源代码的内部逻辑
+    fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<&'a oak_core::GreenNode<'a, JLanguage>, OakError> {
+        let root_cp = state.checkpoint();
+        let unit_cp = state.checkpoint();
+
+        while state.not_at_end() {
+            if !self.parse_sentence(state) {
+                state.advance();
+            }
+        }
+
+        state.finish_at(unit_cp, JElementType::CompilationUnit);
+        let root = state.finish_at(root_cp, JElementType::Root);
+
+        Ok(root)
+    }
+
+    /// 解析句子 (Sentence)
     fn parse_sentence<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let cp = state.checkpoint();
 
-        // Simple assignment or expression parsing
-        let mut matched;
+        // 简单的赋值或表达式解析
+        let mut matched = false;
         if state.at(JTokenType::Identifier) && (state.peek_kind_at(1) == Some(JTokenType::IsGlobal) || state.peek_kind_at(1) == Some(JTokenType::IsLocal)) {
             matched = self.parse_assignment(state);
         }
@@ -43,7 +57,7 @@ impl<'config> JParser<'config> {
         matched
     }
 
-    /// Parses an assignment
+    /// 解析赋值 (Assignment)
     fn parse_assignment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let cp = state.checkpoint();
         state.eat(JTokenType::Identifier);
@@ -58,7 +72,7 @@ impl<'config> JParser<'config> {
         true
     }
 
-    /// Parses an expression
+    /// 解析表达式 (Expression)
     fn parse_expression<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let cp = state.checkpoint();
         let mut matched = false;
@@ -85,7 +99,7 @@ impl<'config> JParser<'config> {
                 matched = true;
             }
             else {
-                // Possibly an operator
+                // 可能是操作符
                 state.advance();
                 matched = true;
             }
@@ -101,18 +115,6 @@ impl<'config> JParser<'config> {
 impl<'config> Parser<JLanguage> for JParser<'config> {
     fn parse<'a, S: Source + ?Sized>(&self, text: &'a S, edits: &[TextEdit], cache: &'a mut impl ParseCache<JLanguage>) -> ParseOutput<'a, JLanguage> {
         let lexer = crate::lexer::JLexer::new(self.config);
-        oak_core::parser::parse_with_lexer(&lexer, text, edits, cache, |state| {
-            let root_cp = state.checkpoint();
-            let unit_cp = state.checkpoint();
-
-            while state.not_at_end() {
-                if !self.parse_sentence(state) {
-                    state.advance();
-                }
-            }
-
-            state.finish_at(unit_cp, JElementType::CompilationUnit);
-            Ok(state.finish_at(root_cp, JElementType::Root))
-        })
+        oak_core::parser::parse_with_lexer(&lexer, text, edits, cache, |state| self.run(state))
     }
 }

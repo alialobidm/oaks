@@ -1,52 +1,35 @@
-use oak_core::{ElementType, UniversalElementRole};
+use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Element types for the Protobuf language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ProtobufElementType {
-    /// Root node.
     Root,
-    /// Whitespace.
+    // 基础 kind
     Whitespace,
-    /// Newline.
     Newline,
-    /// Comment.
     Comment,
-    /// Error node.
     Error,
-    /// End of stream.
     Eof,
 
-    /// Syntax definition.
+    // 语法结构
     SyntaxDef,
-    /// Package definition.
     PackageDef,
-    /// Import definition.
     ImportDef,
-    /// Option definition.
     OptionDef,
-    /// Message definition.
     MessageDef,
-    /// Enum definition.
     EnumDef,
-    /// Service definition.
     ServiceDef,
-    /// RPC definition.
     RpcDef,
-    /// Field definition.
     FieldDef,
-    /// Map field definition.
     MapFieldDef,
-    /// Oneof definition.
     OneofDef,
 
-    /// Identifier.
+    // 标记
     Identifier,
-    /// String literal.
     StringLiteral,
-    /// Number literal.
     NumberLiteral,
-    /// Boolean literal.
     BooleanLiteral,
 }
 

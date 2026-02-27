@@ -1,218 +1,166 @@
 #![doc = include_str!("readme.md")]
 use core::range::Range;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Ruby AST root node
+/// Ruby AST 根节点
 pub type RubyAst = RubyRoot;
 
-/// Program node
+/// 程序节点
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RubyRoot {
-    /// List of statements
     pub statements: Vec<StatementNode>,
-    /// Source code span
-    #[serde(with = "oak_core::serde_range")]
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
 
-/// Ruby statement node
+/// Ruby 语句节点
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum StatementNode {
-    /// Expression statement
+    /// 表达式语句
     Expression(ExpressionNode),
-    /// Method definition
+    /// 方法定义
     MethodDef {
-        /// Method name
         name: String,
-        /// Parameter list
         params: Vec<String>,
-        /// Method body
         body: Vec<StatementNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Class definition
+    /// 类定义
     ClassDef {
-        /// Class name
         name: String,
-        /// Superclass name
         superclass: Option<String>,
-        /// Class body
         body: Vec<StatementNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Assignment statement
+    /// 赋值语句
     Assignment {
-        /// Assignment target
         target: String,
-        /// Assignment value
         value: ExpressionNode,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Conditional statement
+    /// 条件语句
     If {
-        /// Condition expression
         condition: ExpressionNode,
-        /// then branch
         then_body: Vec<StatementNode>,
-        /// else branch
         else_body: Option<Vec<StatementNode>>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Loop statement
+    /// 循环语句
     While {
-        /// Condition expression
         condition: ExpressionNode,
-        /// Loop body
         body: Vec<StatementNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Return statement
+    /// 返回语句
     Return {
-        /// Return value
         value: Option<ExpressionNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
 }
 
-/// Ruby expression node
+/// Ruby 表达式节点
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ExpressionNode {
-    /// Identifier
+    /// 标识符
     Identifier {
-        /// Identifier name
         name: String,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Literal
+    /// 字面量
     Literal(LiteralNode),
-    /// Method call
+    /// 方法调用
     MethodCall {
-        /// Receiver
         receiver: Option<Box<ExpressionNode>>,
-        /// Method name
         method: String,
-        /// Argument list
         args: Vec<ExpressionNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Binary operation
+    /// 二元操作
     BinaryOp {
-        /// Left operand
         left: Box<ExpressionNode>,
-        /// Operator
         operator: String,
-        /// Right operand
         right: Box<ExpressionNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Unary operation
+    /// 一元操作
     UnaryOp {
-        /// Operator
         operator: String,
-        /// Operand
         operand: Box<ExpressionNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Array
+    /// 数组
     Array {
-        /// Array element list
         elements: Vec<ExpressionNode>,
-        /// Source code span
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Hash
+    /// 哈希
     Hash {
-        /// The key-value pairs in the hash.
         pairs: Vec<(ExpressionNode, ExpressionNode)>,
-        /// The source span of the hash.
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
 }
 
-/// Literal node
+/// 字面量节点
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LiteralNode {
-    /// Integer literal
+    /// 整数
     Integer {
-        /// The integer value.
         value: i64,
-        /// The source span of the integer.
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Float literal
+    /// 浮点数
     Float {
-        /// The floating-point value.
         value: f64,
-        /// The source span of the float.
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// String literal
+    /// 字符串
     String {
-        /// The string value.
         value: String,
-        /// The source span of the string.
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Symbol literal
+    /// 符号
     Symbol {
-        /// The symbol value.
         value: String,
-        /// The source span of the symbol.
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
-    /// Boolean literal
+    /// 布尔值
     Boolean {
-        /// The boolean value.
         value: bool,
-        /// The source span of the boolean.
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
     /// nil
     Nil {
-        /// The source span of the nil literal.
-        #[serde(with = "oak_core::serde_range")]
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
 }
 
-/// Ruby AST visitor trait
+/// Ruby AST 访问者 trait
 pub trait RubyAstVisitor {
-    /// Visits the root program node.
     fn visit_program(&mut self, node: &RubyRoot);
-    /// Visits a statement node.
     fn visit_statement(&mut self, stmt: &StatementNode);
-    /// Visits an expression node.
     fn visit_expression(&mut self, expr: &ExpressionNode);
-    /// Visits a literal node.
     fn visit_literal(&mut self, literal: &LiteralNode);
 }

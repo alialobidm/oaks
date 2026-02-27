@@ -4,7 +4,7 @@ use oak_highlight::{
     themes::Theme,
 };
 
-/// RBQ highlighter.
+/// RBQ 高亮
 pub struct RbqHighlighter;
 
 impl Highlighter for RbqHighlighter {

@@ -58,10 +58,10 @@ mod lex;
 /// ```
 #[derive(Clone)]
 pub struct RustLexer<'config> {
-    config: &'config RustLanguage,
+    _config: &'config RustLanguage,
 }
 
-pub(crate) type State<'a, S> = LexerState<'a, S, RustLanguage>;
+type State<'a, S> = LexerState<'a, S, RustLanguage>;
 
 impl<'config> Lexer<RustLanguage> for RustLexer<'config> {
     fn lex<'a, S: Source + ?Sized>(&self, source: &'a S, _edits: &[oak_core::TextEdit], cache: &'a mut impl LexerCache<RustLanguage>) -> LexOutput<RustLanguage> {
@@ -91,7 +91,7 @@ impl<'config> RustLexer<'config> {
     /// let lexer = RustLexer::new(&language);
     /// ```
     pub fn new(config: &'config RustLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     /// Internal method to run the lexer on the given state.

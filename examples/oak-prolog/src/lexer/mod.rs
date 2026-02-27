@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token type definitions.
 pub mod token_type;
 pub use token_type::PrologTokenType;
 
@@ -8,16 +7,14 @@ use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source
 
 type State<'s, S> = LexerState<'s, S, PrologLanguage>;
 
-/// Prolog lexer.
 #[derive(Clone, Debug)]
 pub struct PrologLexer<'config> {
-    config: &'config PrologLanguage,
+    _config: &'config PrologLanguage,
 }
 
 impl<'config> PrologLexer<'config> {
-    /// Creates a new `PrologLexer` with the given configuration.
     pub fn new(config: &'config PrologLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> Result<(), OakError> {
@@ -56,7 +53,7 @@ impl<'config> PrologLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip the current character
+            // 如果没有匹配任何规则，跳过当前字符
             if let Some(ch) = state.peek() {
                 let start_pos = state.get_position();
                 state.advance(ch.len_utf8());
@@ -111,7 +108,7 @@ impl<'config> PrologLexer<'config> {
 
         if let Some('%') = state.peek() {
             state.advance(1);
-            // Single-line comment
+            // 单行注释
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -125,7 +122,7 @@ impl<'config> PrologLexer<'config> {
             state.advance(1);
             if let Some('*') = state.peek() {
                 state.advance(1);
-                // Multi-line comment /* ... */
+                // 多行注释 /* ... */
                 while let Some(ch) = state.peek() {
                     if ch == '*' {
                         state.advance(1);
@@ -142,7 +139,7 @@ impl<'config> PrologLexer<'config> {
                 true
             }
             else {
-                // Backtrack, this is not a comment
+                // 回退，这不是注释
                 state.set_position(start_pos);
                 false
             }
@@ -157,7 +154,7 @@ impl<'config> PrologLexer<'config> {
 
         if let Some(quote_char) = state.peek() {
             if quote_char == '"' || quote_char == '\'' {
-                state.advance(1); // Skip start quote
+                state.advance(1); // 跳过开始引号
 
                 let mut escaped = false;
                 while let Some(ch) = state.peek() {
@@ -170,11 +167,11 @@ impl<'config> PrologLexer<'config> {
                         state.advance(1)
                     }
                     else if ch == quote_char {
-                        state.advance(1); // Skip end quote
+                        state.advance(1); // 跳过结束引号
                         break;
                     }
                     else if ch == '\n' || ch == '\r' {
-                        // Strings cannot span lines
+                        // 字符串不能跨行
                         break;
                     }
                     else {
@@ -199,21 +196,21 @@ impl<'config> PrologLexer<'config> {
             if ch.is_ascii_digit() {
                 let start_pos = state.get_position();
 
-                // Read integer part
+                // 读取整数部分
                 while let Some(ch) = state.peek() {
                     if ch.is_ascii_digit() { state.advance(1) } else { break }
                 }
 
-                // Check decimal point
+                // 检查小数点
                 if let Some('.') = state.peek() {
                     state.advance(1);
-                    // Read fractional part
+                    // 读取小数部分
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_digit() { state.advance(1) } else { break }
                     }
                 }
 
-                // Check scientific notation
+                // 检查科学记数法
                 if let Some(ch) = state.peek() {
                     if ch == 'e' || ch == 'E' {
                         state.advance(1);
@@ -246,7 +243,7 @@ impl<'config> PrologLexer<'config> {
                 let start_pos = state.get_position();
                 let mut text = String::new();
 
-                // Read atom
+                // 读取原子
                 while let Some(ch) = state.peek() {
                     if ch.is_alphanumeric() || ch == '_' {
                         text.push(ch);
@@ -257,7 +254,7 @@ impl<'config> PrologLexer<'config> {
                     }
                 }
 
-                // Check if it's a keyword
+                // 检查是否是关键字
                 let kind = match text.as_str() {
                     "is" => PrologTokenType::Is,
                     "mod" => PrologTokenType::Modulo,
@@ -281,7 +278,7 @@ impl<'config> PrologLexer<'config> {
             if ch.is_ascii_uppercase() || ch == '_' {
                 let start_pos = state.get_position();
 
-                // Read variable name
+                // 读取变量名
                 while let Some(ch) = state.peek() {
                     if ch.is_alphanumeric() || ch == '_' { state.advance(ch.len_utf8()) } else { break }
                 }
@@ -344,7 +341,7 @@ impl<'config> PrologLexer<'config> {
                             PrologTokenType::ArithEqual
                         }
                         else {
-                            // Backtrack
+                            // 回退
                             state.set_position(start_pos + 1);
                             PrologTokenType::Unify
                         }
@@ -356,7 +353,7 @@ impl<'config> PrologLexer<'config> {
                             PrologTokenType::NotUnify
                         }
                         else {
-                            // Backtrack
+                            // 回退
                             state.set_position(start_pos + 1);
                             PrologTokenType::Unify
                         }

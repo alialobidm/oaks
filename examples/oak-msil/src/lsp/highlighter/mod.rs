@@ -1,40 +1,43 @@
 #![doc = include_str!("readme.md")]
+//! MSIL 语法高亮器
+//!
+//! 这个模块提供了 MSIL 源代码的语法高亮功能，支持关键字、指令、指令码、注释等的高亮显示。
 
-/// Local definition of highlight kinds.
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keywords (e.g., public, private, static).
+    /// 关键字 (如 public, private, static)
     Keyword,
-    /// Directives (starting with ., e.g., .assembly, .class, .method).
+    /// 指令 (以 . 开头的，如 .assembly, .class, .method)
     Directive,
-    /// Opcodes (e.g., ldstr, call, ret).
+    /// 指令码 (如 ldstr, call, ret)
     Instruction,
-    /// Strings.
+    /// 字符串
     String,
-    /// Numbers.
+    /// 数字
     Number,
-    /// Comments.
+    /// 注释
     Comment,
-    /// Identifiers.
+    /// 标识符
     Identifier,
 }
 
-/// Highlighter trait.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// MSIL syntax highlighter.
+/// MSIL 语法高亮器
 pub struct MsilHighlighter;
 
 impl MsilHighlighter {
-    /// Creates a new MSIL highlighter instance.
+    /// 创建一个新的 MSIL 高亮器实例
     pub fn new() -> Self {
         Self
     }
 
-    /// Highlights MSIL keywords.
+    /// 高亮 MSIL 关键字
     fn highlight_keywords(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let keywords = ["public", "private", "static", "hidebysig", "cil", "managed", "instance", "void", "extends", "implements"];
@@ -57,7 +60,7 @@ impl MsilHighlighter {
         highlights
     }
 
-    /// Highlights directives (starting with .).
+    /// 高亮指令 (以 . 开头)
     fn highlight_directives(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut chars = text.char_indices().peekable();
@@ -95,7 +98,7 @@ impl Highlighter for MsilHighlighter {
         highlights.extend(self.highlight_keywords(text));
         highlights.extend(self.highlight_directives(text));
 
-        // Sort by position
+        // 按位置排序
         highlights.sort_by_key(|&(start, _, _)| start);
         highlights
     }

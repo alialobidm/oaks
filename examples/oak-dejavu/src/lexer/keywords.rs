@@ -1,6 +1,10 @@
-/// Keywords or soft keywords for the DejaVu language.
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+/// Keywords or soft keywords
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[allow(missing_docs)]
 pub enum DejavuKeywords {
     /// Declare a namespace in Dejavu.
     ///

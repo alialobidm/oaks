@@ -1,49 +1,47 @@
-use oak_core::{Arc, Range, language::UniversalElementRole};
-pub use oak_folding::FoldingRange;
+use oak_core::{Arc, language::UniversalElementRole};
+use serde::{Deserialize, Serialize};
 
-/// A range in the source code.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub use core::range::Range;
+pub use oak_folding::{FoldingRange, FoldingRangeKind};
+
+/// Represents a position in a source file (line and character).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Position {
+    /// Line number (0-indexed).
+    pub line: u32,
+    /// Character offset in the line (0-indexed).
+    pub character: u32,
+}
+
+/// Represents a range in a source file using line/character positions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct LspRange {
-    /// The start offset.
-    pub start: usize,
-    /// The end offset.
-    pub end: usize,
+    /// The start position of the range.
+    pub start: Position,
+    /// The end position of the range.
+    pub end: Position,
 }
 
-impl From<Range<usize>> for LspRange {
-    fn from(range: Range<usize>) -> Self {
-        Self { start: range.start, end: range.end }
-    }
-}
-
-impl From<LspRange> for Range<usize> {
-    fn from(range: LspRange) -> Self {
-        Self { start: range.start, end: range.end }
-    }
-}
-
-/// A location in a resource.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(bound(serialize = "R: serde::Serialize", deserialize = "R: serde::Deserialize<'de>")))]
+/// Represents a location inside a resource.
+/// Can be either byte-based (Rust model) or line/column based (LSP model).
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(bound(serialize = "R: Serialize", deserialize = "R: Deserialize<'de>"))]
 pub struct Location<R = Range<usize>> {
     /// The URI of the resource.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_arc_str"))]
+    #[serde(with = "oak_core::serde_arc_str")]
     pub uri: Arc<str>,
     /// The range within the resource.
     pub range: R,
 }
 
 /// A specialized location type for byte-based ranges.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct LocationRange {
     /// The URI of the resource.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_arc_str"))]
+    #[serde(with = "oak_core::serde_arc_str")]
     pub uri: Arc<str>,
     /// The byte range within the resource.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub range: Range<usize>,
 }
 
@@ -72,8 +70,7 @@ impl From<oak_navigation::Location> for LocationRange {
 }
 
 /// A source position with line, column, and offset.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SourcePosition {
     /// Line number (1-indexed).
     pub line: u32,
@@ -85,9 +82,8 @@ pub struct SourcePosition {
     pub length: usize,
 }
 
-/// Represents a source location with an optional URL.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// A source location with an optional URL.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SourceLocation {
     /// Line number (1-indexed).
     pub line: u32,
@@ -98,15 +94,15 @@ pub struct SourceLocation {
 }
 
 impl Default for SourceLocation {
-    /// Creates a default `SourceLocation` at line 1, column 1.
     fn default() -> Self {
         Self { line: 1, column: 1, url: None }
     }
 }
 
-/// Represents a document highlight kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// Represents a document highlight is a range inside a text document which deserves
+/// special attention. Usually a document highlight is visualized by changing
+/// the background color of its range.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DocumentHighlightKind {
     /// A textual occurrence.
     Text = 1,
@@ -117,8 +113,7 @@ pub enum DocumentHighlightKind {
 }
 
 /// Represents a document highlight.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct DocumentHighlight {
     /// The range this highlight applies to.
     pub range: LspRange,
@@ -127,8 +122,7 @@ pub struct DocumentHighlight {
 }
 
 /// Represents a color in RGBA space.
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Color {
     /// The red component of this color in the range [0-1].
     pub red: f32,
@@ -141,8 +135,7 @@ pub struct Color {
 }
 
 /// Represents a color range from a document.
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct ColorInformation {
     /// The range in the document where this color appears.
     pub range: LspRange,
@@ -151,49 +144,17 @@ pub struct ColorInformation {
 }
 
 /// Represents hover information.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Hover {
     /// The hover's content as a markdown string.
     pub contents: String,
     /// An optional span to which this hover applies.
-    #[cfg_attr(feature = "serde", serde(with = "serde_range_opt"))]
+    #[serde(with = "oak_core::serde_range::option")]
     pub range: Option<Range<usize>>,
 }
 
-#[cfg(feature = "serde")]
-mod serde_range_opt {
-    use super::*;
-    use serde::{Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S>(value: &Option<Range<usize>>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match value {
-            Some(range) => oak_core::serde_range::serialize(range, serializer),
-            None => serializer.serialize_none(),
-        }
-    }
-
-    #[derive(Deserialize)]
-    struct RangeDef {
-        start: usize,
-        end: usize,
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Range<usize>>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let opt: Option<RangeDef> = Option::deserialize(deserializer)?;
-        Ok(opt.map(|def| Range { start: def.start, end: def.end }))
-    }
-}
-
 /// Represents an item in the document structure (e.g., in an outline or breadcrumbs).
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StructureItem {
     /// The name of this item (e.g., function name, class name).
     pub name: String,
@@ -204,11 +165,11 @@ pub struct StructureItem {
     /// The symbol kind.
     pub kind: SymbolKind,
     /// The range of the entire element in the source code.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub range: Range<usize>,
     /// The range that should be selected when clicking on this item.
     /// Usually the range of the identifier.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub selection_range: Range<usize>,
     /// Whether this item is deprecated.
     pub deprecated: bool,
@@ -217,8 +178,7 @@ pub struct StructureItem {
 }
 
 /// Parameters for the `initialize` request.
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct InitializeParams {
     /// The root URI of the workspace.
     pub root_uri: Option<String>,
@@ -227,8 +187,7 @@ pub struct InitializeParams {
 }
 
 /// A workspace folder.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceFolder {
     /// The URI of the workspace folder.
     pub uri: String,
@@ -237,8 +196,7 @@ pub struct WorkspaceFolder {
 }
 
 /// Represents a symbol kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SymbolKind {
     /// File symbol kind.
     File = 1,
@@ -295,8 +253,7 @@ pub enum SymbolKind {
 }
 
 /// Represents a workspace symbol.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceSymbol {
     /// The name of the symbol.
     pub name: String,
@@ -309,8 +266,7 @@ pub struct WorkspaceSymbol {
 }
 
 /// Represents information about a symbol (e.g., function, variable, class).
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SymbolInformation {
     /// The name of the symbol.
     pub name: String,
@@ -323,27 +279,24 @@ pub struct SymbolInformation {
 }
 
 /// Represents a change to the workspace.
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct WorkspaceEdit {
     /// The changes to the workspace.
     pub changes: std::collections::HashMap<String, Vec<TextEdit>>,
 }
 
 /// Represents a text edit.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextEdit {
     /// The range of the text edit.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub range: Range<usize>,
     /// The new text.
     pub new_text: String,
 }
 
 /// Represents a completion item.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompletionItem {
     /// The label of the completion item.
     pub label: String,
@@ -358,8 +311,7 @@ pub struct CompletionItem {
 }
 
 /// Represents a completion item kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CompletionItemKind {
     /// Text completion.
     Text = 1,
@@ -414,11 +366,10 @@ pub enum CompletionItemKind {
 }
 
 /// Represents a diagnostic.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Diagnostic {
     /// The range of the diagnostic.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub range: Range<usize>,
     /// The severity of the diagnostic.
     pub severity: Option<DiagnosticSeverity>,
@@ -431,8 +382,7 @@ pub struct Diagnostic {
 }
 
 /// Represents a diagnostic severity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DiagnosticSeverity {
     /// Reports an error.
     Error = 1,
@@ -445,8 +395,7 @@ pub enum DiagnosticSeverity {
 }
 
 /// Represents a semantic token.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SemanticToken {
     /// The line delta relative to the previous token.
     pub delta_line: u32,
@@ -461,8 +410,7 @@ pub struct SemanticToken {
 }
 
 /// Represents semantic tokens.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SemanticTokens {
     /// An optional result ID.
     pub result_id: Option<String>,
@@ -471,19 +419,17 @@ pub struct SemanticTokens {
 }
 
 /// Represents a selection range.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SelectionRange {
     /// The range of the selection.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub range: Range<usize>,
     /// The parent selection range.
     pub parent: Option<Box<SelectionRange>>,
 }
 
 /// Represents parameter information.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParameterInformation {
     /// The label of the parameter.
     pub label: String,
@@ -492,8 +438,7 @@ pub struct ParameterInformation {
 }
 
 /// Represents signature information.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignatureInformation {
     /// The label of the signature.
     pub label: String,
@@ -506,8 +451,7 @@ pub struct SignatureInformation {
 }
 
 /// Represents signature help.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignatureHelp {
     /// The signatures.
     pub signatures: Vec<SignatureInformation>,
@@ -518,11 +462,10 @@ pub struct SignatureHelp {
 }
 
 /// Represents an inlay hint.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InlayHint {
     /// The position of the inlay hint.
-    pub position: SourcePosition,
+    pub position: Position,
     /// The label of the inlay hint.
     pub label: String,
     /// The kind of the inlay hint.
@@ -536,8 +479,7 @@ pub struct InlayHint {
 }
 
 /// Represents an inlay hint kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum InlayHintKind {
     /// Type inlay hint.
     Type = 1,
@@ -546,8 +488,7 @@ pub enum InlayHintKind {
 }
 
 /// Represents a code action.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeAction {
     /// The title of the code action.
     pub title: String,
@@ -566,16 +507,14 @@ pub struct CodeAction {
 }
 
 /// Represents a disabled code action.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeActionDisabled {
     /// The reason why the code action is disabled.
     pub reason: String,
 }
 
 /// Represents a command.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Command {
     /// The title of the command.
     pub title: String,

@@ -1,8 +1,10 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Python language definition.
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct PythonLanguage {}
 
@@ -18,6 +20,6 @@ impl Language for PythonLanguage {
     const CATEGORY: LanguageCategory = LanguageCategory::Programming;
 
     type TokenType = crate::lexer::token_type::PythonTokenType;
-    type ElementType = crate::parser::PythonElementType;
+    type ElementType = crate::parser::element_type::PythonElementType;
     type TypedRoot = crate::ast::PythonRoot;
 }

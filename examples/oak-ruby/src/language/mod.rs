@@ -1,13 +1,14 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Ruby language implementation
+/// Ruby 语言实现
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RubyLanguage {}
 
 impl RubyLanguage {
-    /// Creates a new `RubyLanguage` instance.
     pub fn new() -> Self {
         Self {}
     }

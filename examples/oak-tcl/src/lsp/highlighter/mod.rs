@@ -1,31 +1,32 @@
 #![doc = include_str!("readme.md")]
+//! Tcl 语法高亮器
 
-/// Local definition of highlight kinds
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword
+    /// 关键字
     Keyword,
-    /// Variable
+    /// 变量
     Variable,
-    /// String
+    /// 字符串
     String,
-    /// Number
+    /// 数字
     Number,
-    /// Comment
+    /// 注释
     Comment,
-    /// Punctuation
+    /// 符号
     Punctuation,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Tcl syntax highlighter
+/// Tcl 语法高亮器
 pub struct TclHighlighter {
-    /// Whether to use parser-based highlighting
+    /// 是否使用基于解析器的高亮
     pub use_parser: bool,
 }
 

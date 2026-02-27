@@ -1,134 +1,92 @@
-//! Svelte token types.
-
 use oak_core::{Token, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Svelte token.
+pub use crate::language::SvelteLanguage;
+
+/// Represents a token in the Svelte language.
 pub type SvelteToken = Token<SvelteTokenType>;
 
-/// Svelte token types.
+/// Token types for the Svelte language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SvelteTokenType {
-    // --- Lexical Tokens ---
-    /// Whitespace.
+    /// Whitespace characters.
     Whitespace,
-    /// Comment.
+    /// A Svelte or HTML comment.
     Comment,
 
-    // Keywords
-    /// `import` keyword.
-    Import,
-    /// `export` keyword.
-    Export,
-    /// `default` keyword.
-    Default,
-    /// `const` keyword.
-    Const,
-    /// `let` keyword.
-    Let,
-    /// `var` keyword.
-    Var,
-    /// `function` keyword.
-    Function,
+    /// Opening brace `{`.
+    OpenBrace,
+    /// Closing brace `}`.
+    CloseBrace,
+    /// Hash symbol `#` used in control blocks like `{#if}`.
+    Hash,
+    /// Slash symbol `/` used in control blocks like `{/if}`.
+    Slash,
+    /// Colon symbol `:` used in control blocks like `{:else}`.
+    Colon,
+    /// At symbol `@` used in special tags like `{@html}`.
+    At,
+
     /// `if` keyword.
     If,
     /// `else` keyword.
     Else,
-    /// `while` keyword.
-    While,
-    /// `for` keyword.
-    For,
-    /// `return` keyword.
-    Return,
-    /// `true` keyword.
-    True,
-    /// `false` keyword.
-    False,
-    /// `null` keyword.
-    Null,
+    /// `each` keyword.
+    Each,
+    /// `as` keyword.
+    As,
+    /// `await` keyword.
+    Await,
+    /// `then` keyword.
+    Then,
+    /// `catch` keyword.
+    Catch,
+    /// `key` keyword.
+    Key,
+    /// `html` keyword.
+    Html,
+    /// `const` keyword.
+    Const,
+    /// `debug` keyword.
+    Debug,
 
-    // Literals & Identifiers
-    /// Identifier.
-    Identifier,
-    /// String literal.
-    StringLiteral,
-    /// Number literal.
-    NumberLiteral,
-    /// Plain text in template.
+    /// Tag opening symbol `<`.
+    TagOpen,
+    /// Tag closing symbol `>`.
+    TagClose,
+    /// Self-closing tag symbol `/>`.
+    TagSelfClose,
+    /// End tag opening symbol `</`.
+    TagEndOpen,
+    /// Name of an attribute.
+    AttributeName,
+    /// Value of an attribute.
+    AttributeValue,
+    /// Plain text content.
     Text,
 
-    // Operators & Punctuation
-    /// Plus `+`.
-    Plus,
-    /// Minus `-`.
-    Minus,
-    /// Star `*`.
-    Star,
-    /// Slash `/`.
-    Slash,
-    /// Equals `=`.
+    /// An identifier.
+    Identifier,
+    /// A string literal.
+    StringLiteral,
+    /// A number literal.
+    NumberLiteral,
+
+    /// Equals symbol `=`.
     Eq,
-    /// Dot `.`.
+    /// Dot symbol `.`.
     Dot,
-    /// Colon `:`.
-    Colon,
-    /// Comma `,`.
+    /// Comma symbol `,`.
     Comma,
-    /// Semicolon `;`.
+    /// Semicolon symbol `;`.
     Semicolon,
-    /// Hash `#`.
-    Hash,
-    /// At `@`.
-    At,
 
-    // Delimiters
-    /// Left parenthesis `(`.
-    LeftParen,
-    /// Right parenthesis `)`.
-    RightParen,
-    /// Left brace `{`.
-    LeftBrace,
-    /// Right brace `}`.
-    RightBrace,
-    /// Left bracket `[`.
-    LeftBracket,
-    /// Right bracket `]`.
-    RightBraceBracket, // Fix: naming conflict
-
-    // Svelte Blocks
-    /// `{#` start of a block.
-    HashBrace,
-    /// `{/` end of a block.
-    SlashBrace,
-    /// `{:else` or `{:then`.
-    ColonBrace,
-
-    // HTML-like tokens
-    /// `<` start tag.
-    Lt,
-    /// `>` end tag.
-    Gt,
-    /// `/>` self-closing.
-    SlashGt,
-    /// `</` closing tag.
-    LtSlash,
-
-    /// End of file.
+    /// End of file marker.
     Eof,
-    /// Error.
+    /// An error token.
     Error,
-
-    // --- Structural Elements ---
-    /// Root node.
-    Root,
-    /// Element.
-    Element,
-    /// Attribute.
-    Attribute,
-    /// Expression.
-    Expression,
-    /// Block (if, each, await).
-    Block,
 }
 
 impl TokenType for SvelteTokenType {
@@ -141,17 +99,14 @@ impl TokenType for SvelteTokenType {
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Import | Self::Export | Self::Default | Self::Const | Self::Let | Self::Var | Self::Function | Self::If | Self::Else | Self::While | Self::For | Self::Return | Self::True | Self::False | Self::Null => UniversalTokenRole::Keyword,
+            Self::If | Self::Else | Self::Each | Self::Await | Self::Then | Self::Catch | Self::Key | Self::Const => UniversalTokenRole::Keyword,
             Self::Identifier => UniversalTokenRole::Name,
-            Self::StringLiteral => UniversalTokenRole::Literal,
-            Self::NumberLiteral => UniversalTokenRole::Literal,
-            Self::Text => UniversalTokenRole::Literal,
-            Self::Plus | Self::Minus | Self::Star | Self::Slash | Self::Eq | Self::Dot | Self::Colon | Self::Comma | Self::Semicolon | Self::Hash | Self::At => UniversalTokenRole::Operator,
-            Self::LeftParen | Self::RightParen | Self::LeftBrace | Self::RightBrace | Self::LeftBracket | Self::RightBraceBracket => UniversalTokenRole::Punctuation,
-            Self::HashBrace | Self::SlashBrace | Self::ColonBrace | Self::Lt | Self::Gt | Self::SlashGt | Self::LtSlash => UniversalTokenRole::Punctuation,
+            Self::StringLiteral | Self::NumberLiteral | Self::Text => UniversalTokenRole::Literal,
+            Self::OpenBrace | Self::CloseBrace | Self::Hash | Self::Slash | Self::Colon | Self::At | Self::TagOpen | Self::TagClose | Self::TagSelfClose | Self::TagEndOpen | Self::Eq | Self::Dot | Self::Comma | Self::Semicolon => {
+                UniversalTokenRole::Punctuation
+            }
             Self::Whitespace => UniversalTokenRole::Whitespace,
             Self::Comment => UniversalTokenRole::Comment,
-            Self::Error => UniversalTokenRole::Error,
             _ => UniversalTokenRole::None,
         }
     }

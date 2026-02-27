@@ -9,7 +9,6 @@ use oak_core::tree::RedNode;
 use {futures::Future, oak_lsp::service::LanguageService, oak_lsp::types::Hover as LspHover, oak_vfs::Vfs};
 
 #[cfg(feature = "lsp")]
-/// Language service for the Svelte framework.
 pub struct SvelteLanguageService<V: Vfs> {
     vfs: V,
     workspace: oak_lsp::workspace::WorkspaceManager,
@@ -17,7 +16,6 @@ pub struct SvelteLanguageService<V: Vfs> {
 
 #[cfg(feature = "lsp")]
 impl<V: Vfs> SvelteLanguageService<V> {
-    /// Creates a new Svelte language service.
     pub fn new(vfs: V) -> Self {
         Self { vfs, workspace: oak_lsp::workspace::WorkspaceManager::new() }
     }

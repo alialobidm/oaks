@@ -1,18 +1,16 @@
 #![doc = include_str!("readme.md")]
 use crate::ast::TypeScriptRoot;
 
-/// Code formatter for the TypeScript language.
+/// TypeScript 语言的格式化器
 pub struct TypeScriptFormatter;
 
 impl TypeScriptFormatter {
-    /// Creates a new `TypeScriptFormatter`.
     pub fn new() -> Self {
         Self
     }
 
-    /// Formats a TypeScript source tree into a string.
     pub fn format(&self, _root: &TypeScriptRoot) -> String {
-        // TODO: Implement concrete formatting logic
+        // TODO: 实现具体的格式化逻辑
         String::new()
     }
 }

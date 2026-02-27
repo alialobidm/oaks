@@ -1,7 +1,7 @@
 #![doc = include_str!("readme.md")]
 use crate::ast::TypstRoot;
 
-/// Typst language formatter
+/// Typst 语言的格式化器
 pub struct TypstFormatter;
 
 impl TypstFormatter {
@@ -10,7 +10,7 @@ impl TypstFormatter {
     }
 
     pub fn format(&self, _root: &TypstRoot) -> String {
-        // TODO: Implement concrete formatting logic
+        // TODO: 实现具体的格式化逻辑
         String::new()
     }
 }

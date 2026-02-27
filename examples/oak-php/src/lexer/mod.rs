@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token type definitions for the PHP lexer.
 pub mod token_type;
 use crate::language::PhpLanguage;
 use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source::Source};
@@ -12,7 +11,7 @@ type State<'s, S> = LexerState<'s, S, PhpLanguage>;
 /// This lexer transforms a source string into a stream of [`PhpTokenType`] tokens.
 #[derive(Clone, Debug)]
 pub struct PhpLexer<'config> {
-    config: &'config PhpLanguage,
+    _config: &'config PhpLanguage,
 }
 
 impl<'config> Lexer<PhpLanguage> for PhpLexer<'config> {
@@ -29,7 +28,7 @@ impl<'config> Lexer<PhpLanguage> for PhpLexer<'config> {
 impl<'config> PhpLexer<'config> {
     /// Creates a new `PhpLexer` with the given language configuration.
     pub fn new(config: &'config PhpLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> Result<(), OakError> {
@@ -39,10 +38,6 @@ impl<'config> PhpLexer<'config> {
             }
 
             if self.lex_newline(state) {
-                continue;
-            }
-
-            if self.lex_tags(state) {
                 continue;
             }
 
@@ -66,14 +61,14 @@ impl<'config> PhpLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip the current character
+            // 如果没有匹配任何规则，跳过当前字符
             if let Some(ch) = state.peek() {
                 let start_pos = state.get_position();
                 state.advance(ch.len_utf8());
                 state.add_token(PhpTokenType::Error, start_pos, state.get_position())
             }
             else {
-                // Exit the loop if the end of file is reached
+                // 如果已到达文件末尾，退出循环
                 break;
             }
         }
@@ -100,37 +95,6 @@ impl<'config> PhpLexer<'config> {
         else {
             false
         }
-    }
-
-    fn lex_tags<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
-        let start_pos = state.get_position();
-        let rest = state.rest();
-
-        if rest.starts_with(&self.config.tag_start) {
-            state.advance(self.config.tag_start.len());
-            state.add_token(PhpTokenType::OpenTag, start_pos, state.get_position());
-            return true;
-        }
-
-        if rest.starts_with(&self.config.echo_tag_start) {
-            state.advance(self.config.echo_tag_start.len());
-            state.add_token(PhpTokenType::EchoTag, start_pos, state.get_position());
-            return true;
-        }
-
-        if rest.starts_with(&self.config.short_tag_start) {
-            state.advance(self.config.short_tag_start.len());
-            state.add_token(PhpTokenType::OpenTag, start_pos, state.get_position());
-            return true;
-        }
-
-        if rest.starts_with(&self.config.tag_end) {
-            state.advance(self.config.tag_end.len());
-            state.add_token(PhpTokenType::CloseTag, start_pos, state.get_position());
-            return true;
-        }
-
-        false
     }
 
     fn lex_newline<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
@@ -161,7 +125,7 @@ impl<'config> PhpLexer<'config> {
             state.advance(1);
             if let Some('/') = state.peek() {
                 state.advance(1);
-                // Single-line comment
+                // 单行注释
                 while let Some(ch) = state.peek() {
                     if ch == '\n' || ch == '\r' {
                         break;
@@ -173,7 +137,7 @@ impl<'config> PhpLexer<'config> {
             }
             else if let Some('*') = state.peek() {
                 state.advance(1);
-                // Multi-line comment
+                // 多行注释
                 while let Some(ch) = state.peek() {
                     if ch == '*' {
                         state.advance(1);
@@ -190,14 +154,14 @@ impl<'config> PhpLexer<'config> {
                 return true;
             }
             else {
-                // Backtrack, this is not a comment
+                // 回退，这不是注释
                 state.set_position(start_pos);
                 return false;
             }
         }
         else if let Some('#') = state.peek() {
             state.advance(1);
-            // PHP-style single-line comment
+            // PHP 风格的单行注释
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -217,7 +181,7 @@ impl<'config> PhpLexer<'config> {
 
         if let Some(quote_char) = state.peek() {
             if quote_char == '"' || quote_char == '\'' {
-                state.advance(1); // Skip starting quote
+                state.advance(1); // 跳过开始引号
 
                 let mut escaped = false;
                 while let Some(ch) = state.peek() {
@@ -230,11 +194,11 @@ impl<'config> PhpLexer<'config> {
                         state.advance(1)
                     }
                     else if ch == quote_char {
-                        state.advance(1); // Skip ending quote
+                        state.advance(1); // 跳过结束引号
                         break;
                     }
                     else if ch == '\n' || ch == '\r' {
-                        // Strings cannot span multiple lines (unless escaped)
+                        // 字符串不能跨行（除非转义）
                         break;
                     }
                     else {
@@ -259,7 +223,7 @@ impl<'config> PhpLexer<'config> {
             if ch.is_ascii_digit() {
                 let start_pos = state.get_position();
 
-                // Read integer part
+                // 读取整数部分
                 while let Some(ch) = state.peek() {
                     if ch.is_ascii_digit() {
                         state.advance(1)
@@ -269,10 +233,10 @@ impl<'config> PhpLexer<'config> {
                     }
                 }
 
-                // Check for decimal point
+                // 检查小数点
                 if let Some('.') = state.peek() {
                     state.advance(1);
-                    // Read fractional part
+                    // 读取小数部分
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_digit() {
                             state.advance(1)
@@ -283,7 +247,7 @@ impl<'config> PhpLexer<'config> {
                     }
                 }
 
-                // Check for scientific notation
+                // 检查科学记数法
                 if let Some(ch) = state.peek() {
                     if ch == 'e' || ch == 'E' {
                         state.advance(1);
@@ -320,7 +284,7 @@ impl<'config> PhpLexer<'config> {
             if ch.is_alphabetic() || ch == '_' || ch == '$' {
                 let start_pos = state.get_position();
 
-                // Read identifier
+                // 读取标识符
                 while let Some(ch) = state.peek() {
                     if ch.is_alphanumeric() || ch == '_' || ch == '$' {
                         state.advance(ch.len_utf8())
@@ -333,7 +297,7 @@ impl<'config> PhpLexer<'config> {
                 let end_pos = state.get_position();
                 let text = state.source().get_text_in(oak_core::Range { start: start_pos, end: end_pos });
 
-                // Check if it is a keyword
+                // 检查是否是关键字
                 let kind = match text.as_ref() {
                     "abstract" => PhpTokenType::Abstract,
                     "and" => PhpTokenType::And,

@@ -1,104 +1,88 @@
-// Vala Comprehensive Lexer Test
+// Vala test file
 using GLib;
-using Gtk;
 
-namespace Demo {
-
-    // Delegate
-    public delegate void NotificationHandler(string message);
-
-    // Error Domain
-    public errordomain IOError {
-        FILE_NOT_FOUND,
-        PERMISSION_DENIED
+public class Person : Object {
+    public string name { get; set; }
+    public int age { get; set; }
+    
+    public Person(string name, int age) {
+        this.name = name;
+        this.age = age;
     }
-
-    public class Person : Object {
-        // Properties
-        public string name { get; set; default = "Unknown"; }
-        public int age { get; set; construct; }
-        
-        // Signal
-        public signal void mood_changed(string new_mood);
-
-        public Person(string name, int age) {
-            Object(name: name, age: age);
-        }
-
-        // Method with error handling
-        public void load_data(string filename) throws IOError {
-            if (!FileUtils.test(filename, FileTest.EXISTS)) {
-                throw new IOError.FILE_NOT_FOUND("File not found: %s".printf(filename));
-            }
-            // ...
-        }
-
-        // Async method
-        public async void perform_task() {
-            print("Starting task...\n");
-            // yield;
-            print("Task finished.\n");
-        }
+    
+    public void greet() {
+        stdout.printf("Hello, I'm %s and I'm %d years old.\n", name, age);
     }
+}
 
-    public interface Drawable {
-        public abstract void draw();
+public interface Drawable {
+    public abstract void draw();
+}
+
+public class Circle : Object, Drawable {
+    public double radius { get; set; }
+    
+    public Circle(double radius) {
+        this.radius = radius;
     }
-
-    // Generics
-    public class Wrapper<G> : Object {
-        private G data;
-        
-        public void set_data(G data) {
-            this.data = data;
-        }
-        
-        public G get_data() {
-            return this.data;
-        }
+    
+    public void draw() {
+        stdout.printf("Drawing a circle with radius %.2f\n", radius);
     }
-
-    public struct Point {
-        public double x;
-        public double y;
+    
+    public double area() {
+        return Math.PI * radius * radius;
     }
+}
 
-    public enum Color {
-        RED,
-        GREEN,
-        BLUE
+public enum Color {
+    RED,
+    GREEN,
+    BLUE
+}
+
+public struct Point {
+    public double x;
+    public double y;
+    
+    public Point(double x, double y) {
+        this.x = x;
+        this.y = y;
     }
-
-    public static int main(string[] args) {
-        var p = new Person("Alice", 30);
-        
-        // Lambda
-        p.mood_changed.connect((mood) => {
-            print("Mood changed to: %s\n", mood);
-        });
-
-        // Try-Catch
-        try {
-            p.load_data("data.txt");
-        } catch (IOError e) {
-            print("Error: %s\n", e.message);
-        }
-
-        // Collections
-        var list = new List<string>();
-        list.append("Item 1");
-        list.append("Item 2");
-
-        foreach (string item in list) {
-            print("%s\n", item);
-        }
-        
-        // Nullable types
-        string? nullable_str = null;
-        if (nullable_str == null) {
-            print("It is null\n");
-        }
-
-        return 0;
+    
+    public double distance_to(Point other) {
+        double dx = x - other.x;
+        double dy = y - other.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
+}
+
+public static int main(string[] args) {
+    var person = new Person("Alice", 25);
+    person.greet();
+    
+    var circle = new Circle(5.0);
+    circle.draw();
+    stdout.printf("Circle area: %.2f\n", circle.area());
+    
+    var point1 = Point(0.0, 0.0);
+    var point2 = Point(3.0, 4.0);
+    stdout.printf("Distance: %.2f\n", point1.distance_to(point2));
+    
+    // Arrays
+    int[] numbers = {1, 2, 3, 4, 5};
+    foreach (int num in numbers) {
+        stdout.printf("%d ", num);
+    }
+    stdout.printf("\n");
+    
+    // Hash table
+    var map = new HashTable<string, int>(str_hash, str_equal);
+    map.insert("one", 1);
+    map.insert("two", 2);
+    map.insert("three", 3);
+    
+    stdout.printf("Value for 'two': %d\n", map.lookup("two"));
+    
+    return 0;
 }

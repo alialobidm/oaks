@@ -3,13 +3,14 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+//! Jasm support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
 /// Builder module.
 pub mod builder;
 
-pub mod formatter;
+// pub mod formatter;
 
 /// Type definitions module.
 /// Language configuration module.
@@ -32,16 +33,14 @@ pub use crate::{ast::JasmRoot, builder::JasmBuilder, language::JasmLanguage, lex
 #[cfg(feature = "oak-highlight")]
 pub use crate::lsp::highlighter::JasmHighlighter;
 
-#[cfg(feature = "oak-pretty-print")]
-pub use crate::formatter::JasmFormatter;
 /// LSP implementation.
 #[cfg(feature = "lsp")]
 pub use crate::lsp::JasmLanguageService;
+// #[cfg(feature = "oak-pretty-print")]
+// pub use crate::lsp::formatter::JasmFormatter;
 
 /// MCP service implementation.
 #[cfg(feature = "mcp")]
 pub use crate::mcp::serve_jasm_mcp;
-/// Jasm token type.
 pub use lexer::token_type::JasmTokenType;
-/// Jasm element type.
 pub use parser::element_type::JasmElementType;

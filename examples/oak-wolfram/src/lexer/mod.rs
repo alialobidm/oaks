@@ -1,6 +1,4 @@
-//! Wolfram lexer implementation.
-
-/// Wolfram token types.
+#![doc = include_str!("readme.md")]
 pub mod token_type;
 
 use crate::{language::WolframLanguage, lexer::token_type::WolframTokenType};
@@ -11,17 +9,15 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, WolframLanguage>;
+type State<'a, S> = LexerState<'a, S, WolframLanguage>;
 
 static WL_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static WL_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: "", block_start: "(*", block_end: "*)", nested_blocks: true });
 static WL_STRING: LazyLock<StringConfig> = LazyLock::new(|| StringConfig { quotes: &['"'], escape: Some('\\') });
 
-/// A lexer for the Wolfram language.
 #[derive(Clone, Debug)]
 pub struct WolframLexer<'config> {
-    /// The Wolfram language configuration.
-    config: &'config WolframLanguage,
+    _config: &'config WolframLanguage,
 }
 
 impl<'config> Lexer<WolframLanguage> for WolframLexer<'config> {
@@ -36,9 +32,8 @@ impl<'config> Lexer<WolframLanguage> for WolframLexer<'config> {
 }
 
 impl<'config> WolframLexer<'config> {
-    /// Creates a new `WolframLexer` with the given configuration.
     pub fn new(config: &'config WolframLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {

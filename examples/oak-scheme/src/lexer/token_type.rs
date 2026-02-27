@@ -1,4 +1,6 @@
 use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub type SchemeToken = Token<SchemeTokenType>;
 
@@ -21,96 +23,68 @@ impl TokenType for SchemeTokenType {
     }
 }
 
-/// Token types for the Scheme language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SchemeTokenType {
-    /// Whitespace.
+    // 空白字符和换行
     Whitespace,
-    /// A newline.
     Newline,
-    /// A comment.
     Comment,
-    /// A line comment.
+
+    // 注释
     LineComment,
-    /// A numeric literal.
+
+    // 字面量
     NumberLiteral,
-    /// A string literal.
     StringLiteral,
-    /// A character literal.
     CharacterLiteral,
-    /// A boolean literal.
     BooleanLiteral,
-    /// An identifier.
+
+    // 标识符和符号
     Identifier,
-    /// A symbol.
     Symbol,
-    /// A keyword.
+
+    // 关键字
     Keyword,
-    /// `define` keyword.
     Define,
-    /// `lambda` keyword.
     Lambda,
-    /// `if` keyword.
     If,
-    /// `cond` keyword.
     Cond,
-    /// `case` keyword.
     Case,
-    /// `let` keyword.
     Let,
-    /// `let*` keyword.
     LetStar,
-    /// `letrec` keyword.
     Letrec,
-    /// `begin` keyword.
     Begin,
-    /// `do` keyword.
     Do,
-    /// `quote` keyword.
     Quote,
-    /// `quasiquote` keyword.
     Quasiquote,
-    /// `unquote` keyword.
     Unquote,
-    /// `unquote-splicing` keyword.
     UnquoteSplicing,
-    /// `and` keyword.
     And,
-    /// `or` keyword.
     Or,
-    /// `not` keyword.
     Not,
-    /// `set!` keyword.
     Set,
-    /// `(`.
+
+    // 分隔符
     LeftParen,
-    /// `)`.
     RightParen,
-    /// `[`.
     LeftBracket,
-    /// `]`.
     RightBracket,
-    /// `{`.
     LeftBrace,
-    /// `}`.
     RightBrace,
-    /// `.`.
     Dot,
-    /// `#`.
+
+    // 特殊符号
     Hash,
-    /// `'`.
     Quote_,
-    /// `` ` ``.
     Quasiquote_,
-    /// `,`.
     Unquote_,
-    /// `,@`.
     UnquoteSplicing_,
-    /// An error token.
+
+    // 错误和结束
     Error,
-    /// End of stream.
     Eof,
-    /// A source file.
+
+    // 根节点
     SourceFile,
 }

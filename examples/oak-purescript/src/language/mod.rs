@@ -1,10 +1,10 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-/// PureScript language implementation.
+/// PureScript 语言实现
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PurescriptLanguage {
-    /// Language configuration.
+    /// 语言配置
     pub config: (),
 }
 

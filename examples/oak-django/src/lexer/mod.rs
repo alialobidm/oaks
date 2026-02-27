@@ -9,7 +9,7 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, DjangoLanguage>;
+type State<'a, S> = LexerState<'a, S, DjangoLanguage>;
 
 static DJANGO_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static _DJANGO_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: "{#", block_start: "{#", block_end: "#}", nested_blocks: false });
@@ -18,7 +18,7 @@ static DJANGO_STRING_SINGLE: LazyLock<StringConfig> = LazyLock::new(|| StringCon
 
 #[derive(Clone)]
 pub struct DjangoLexer<'config> {
-    config: &'config DjangoLanguage,
+    _config: &'config DjangoLanguage,
 }
 
 impl<'config> Lexer<DjangoLanguage> for DjangoLexer<'config> {
@@ -34,7 +34,7 @@ impl<'config> Lexer<DjangoLanguage> for DjangoLexer<'config> {
 
 impl<'config> DjangoLexer<'config> {
     pub fn new(config: &'config DjangoLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
@@ -82,21 +82,21 @@ impl<'config> DjangoLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace characters
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         DJANGO_WHITESPACE.scan(state, DjangoTokenType::Whitespace)
     }
 
-    /// Skips comments
+    /// 跳过注释
     fn skip_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
-        if state.rest().starts_with(&self.config.comment_start) {
+        if state.rest().starts_with("{#") {
             let start = state.get_position();
-            state.advance(self.config.comment_start.len());
+            state.advance(2); // 跳过 "{#"
 
-            // Find the end of the comment
+            // 查找注释结束标记 "#}"
             while state.not_at_end() {
-                if state.rest().starts_with(&self.config.comment_end) {
-                    state.advance(self.config.comment_end.len());
+                if state.rest().starts_with("#}") {
+                    state.advance(2); // 跳过 "#}"
                     break;
                 }
                 state.advance(1)
@@ -108,12 +108,12 @@ impl<'config> DjangoLexer<'config> {
         false
     }
 
-    /// Lexes strings
+    /// 词法分析字符串
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         DJANGO_STRING_DOUBLE.scan(state, DjangoTokenType::String) || DJANGO_STRING_SINGLE.scan(state, DjangoTokenType::String)
     }
 
-    /// Handles newlines
+    /// 处理换行
     fn _lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -135,7 +135,7 @@ impl<'config> DjangoLexer<'config> {
         }
     }
 
-    /// Handles identifiers and keywords
+    /// 处理标识符和关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -197,8 +197,8 @@ impl<'config> DjangoLexer<'config> {
         }
     }
 
-    /// Handles numbers
-    /// Lexes numbers
+    /// 处理数字
+    /// 词法分析数字
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -206,7 +206,7 @@ impl<'config> DjangoLexer<'config> {
             if ch.is_ascii_digit() {
                 state.advance(ch.len_utf8());
 
-                // Handle the integer part
+                // 处理整数部分
                 while let Some(ch) = state.peek() {
                     if ch.is_ascii_digit() {
                         state.advance(ch.len_utf8());
@@ -216,7 +216,7 @@ impl<'config> DjangoLexer<'config> {
                     }
                 }
 
-                // Handle the decimal part
+                // 处理小数部分
                 if let Some('.') = state.peek() {
                     let dot_pos = state.get_position();
                     state.advance(1);
@@ -233,12 +233,12 @@ impl<'config> DjangoLexer<'config> {
                             }
                         }
                         else {
-                            // Backtrack the dot
+                            // 回退点号
                             state.set_position(dot_pos);
                         }
                     }
                     else {
-                        // Backtrack the dot
+                        // 回退点号
                         state.set_position(dot_pos);
                     }
                 }
@@ -255,7 +255,7 @@ impl<'config> DjangoLexer<'config> {
         }
     }
 
-    /// Handles characters
+    /// 处理字符
 
     fn lex_string_manual<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
@@ -281,7 +281,7 @@ impl<'config> DjangoLexer<'config> {
                     }
                 }
 
-                // Unclosed string
+                // 未闭合的字符
 
                 state.add_token(DjangoTokenType::Error, start_pos, state.get_position());
                 true
@@ -295,47 +295,76 @@ impl<'config> DjangoLexer<'config> {
         }
     }
 
-    /// Handles Django tags
+    /// 处理 Django 标签
     fn lex_django_tags<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
-        let rest = state.rest();
 
-        if rest.starts_with(&self.config.variable_start) {
-            state.advance(self.config.variable_start.len());
-            state.add_token(DjangoTokenType::VariableStart, start_pos, state.get_position());
-            true
+        if let Some('{') = state.peek() {
+            state.advance(1);
+
+            if let Some(next_ch) = state.peek() {
+                match next_ch {
+                    '{' => {
+                        // 变量标签 {{
+                        state.advance(1);
+                        state.add_token(DjangoTokenType::VariableStart, start_pos, state.get_position());
+                        true
+                    }
+                    '%' => {
+                        // 模板标签 {%
+                        state.advance(1);
+                        state.add_token(DjangoTokenType::TagStart, start_pos, state.get_position());
+                        true
+                    }
+                    '#' => {
+                        // 注释标签 {#
+                        state.advance(1);
+                        state.add_token(DjangoTokenType::CommentStart, start_pos, state.get_position());
+                        true
+                    }
+                    _ => {
+                        // 回退
+                        state.set_position(start_pos);
+                        false
+                    }
+                }
+            }
+            else {
+                // 回退
+                state.set_position(start_pos);
+                false
+            }
         }
-        else if rest.starts_with(&self.config.variable_end) {
-            state.advance(self.config.variable_end.len());
-            state.add_token(DjangoTokenType::VariableEnd, start_pos, state.get_position());
-            true
+        else if let Some('%') = state.peek() {
+            state.advance(1);
+            if let Some('}') = state.peek() {
+                state.advance(1);
+                state.add_token(DjangoTokenType::TagEnd, start_pos, state.get_position());
+                true
+            }
+            else {
+                state.set_position(start_pos);
+                false
+            }
         }
-        else if rest.starts_with(&self.config.tag_start) {
-            state.advance(self.config.tag_start.len());
-            state.add_token(DjangoTokenType::TagStart, start_pos, state.get_position());
-            true
-        }
-        else if rest.starts_with(&self.config.tag_end) {
-            state.advance(self.config.tag_end.len());
-            state.add_token(DjangoTokenType::TagEnd, start_pos, state.get_position());
-            true
-        }
-        else if rest.starts_with(&self.config.comment_start) {
-            state.advance(self.config.comment_start.len());
-            state.add_token(DjangoTokenType::CommentStart, start_pos, state.get_position());
-            true
-        }
-        else if rest.starts_with(&self.config.comment_end) {
-            state.advance(self.config.comment_end.len());
-            state.add_token(DjangoTokenType::CommentEnd, start_pos, state.get_position());
-            true
+        else if let Some('}') = state.peek() {
+            state.advance(1);
+            if let Some('}') = state.peek() {
+                state.advance(1);
+                state.add_token(DjangoTokenType::VariableEnd, start_pos, state.get_position());
+                true
+            }
+            else {
+                state.set_position(start_pos);
+                false
+            }
         }
         else {
             false
         }
     }
 
-    /// Handles operators
+    /// 处理操作符
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -430,7 +459,7 @@ impl<'config> DjangoLexer<'config> {
         }
     }
 
-    /// Handles delimiters
+    /// 处理分隔符
     fn lex_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -458,14 +487,21 @@ impl<'config> DjangoLexer<'config> {
         }
     }
 
-    /// Handles HTML text
+    /// 处理 HTML 文本
     fn lex_html_text<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         while let Some(ch) = state.peek() {
-            let rest = state.rest();
-            if rest.starts_with(&self.config.variable_start) || rest.starts_with(&self.config.tag_start) || rest.starts_with(&self.config.comment_start) {
-                break;
+            // 如果遇到 Django 标签的开始，停止
+            if ch == '{' {
+                let current_pos = state.get_position();
+                state.advance(1);
+                if let Some(next_ch) = state.peek() {
+                    if next_ch == '{' || next_ch == '%' || next_ch == '#' {
+                        state.set_position(current_pos);
+                        break;
+                    }
+                }
             }
             state.advance(ch.len_utf8())
         }

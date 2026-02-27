@@ -7,14 +7,14 @@ use crate::language::LeanLanguage;
 use oak_lsp::{LanguageService, MemoryVfs, WorkspaceManager};
 #[cfg(feature = "lsp")]
 pub struct LeanLanguageService {
-    config: LeanLanguage,
+    _config: LeanLanguage,
     vfs: MemoryVfs,
     workspace: WorkspaceManager,
 }
 #[cfg(feature = "lsp")]
 impl LeanLanguageService {
     pub fn new(config: LeanLanguage) -> Self {
-        Self { config, vfs: MemoryVfs::default(), workspace: WorkspaceManager::default() }
+        Self { _config: config, vfs: MemoryVfs::default(), workspace: WorkspaceManager::default() }
     }
 }
 #[cfg(feature = "lsp")]

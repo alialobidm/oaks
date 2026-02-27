@@ -1,31 +1,27 @@
 #![doc = include_str!("readme.md")]
-/// Token types for the Nix language.
 pub mod token_type;
 
 use crate::{language::NixLanguage, lexer::token_type::NixTokenType};
 use oak_core::{
     Source,
-    lexer::{LexOutput, Lexer, LexerCache, LexerState},
+    lexer::{LexOutput, Lexer, LexerCache, LexerState, Token},
     source::TextEdit,
 };
 
-pub(crate) type State<'a, S> = LexerState<'a, S, NixLanguage>;
+type State<'a, S> = LexerState<'a, S, NixLanguage>;
 
-/// Lexer for the Nix language.
 #[derive(Clone, Debug)]
 pub struct NixLexer<'config> {
-    config: &'config NixLanguage,
+    _config: &'config NixLanguage,
 }
 
 impl<'config> NixLexer<'config> {
-    /// Creates a new `NixLexer` with the given configuration.
     pub fn new(config: &'config NixLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 }
 
 impl NixLexer<'_> {
-    /// Runs the lexer on the given state, tokenizing the entire source.
     pub fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), oak_core::OakError> {
         while state.not_at_end() {
             if self.skip_whitespace(state) {
@@ -50,7 +46,7 @@ impl NixLexer<'_> {
                 continue;
             }
 
-            // If no pattern matches, add error kind
+            // 如果没有匹配到任何模式，添加错误 kind
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -73,7 +69,7 @@ impl<'config> Lexer<NixLanguage> for NixLexer<'config> {
 }
 
 impl NixLexer<'_> {
-    /// Skips whitespace characters
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -95,7 +91,7 @@ impl NixLexer<'_> {
         }
     }
 
-    /// Handles newlines
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -117,14 +113,14 @@ impl NixLexer<'_> {
         }
     }
 
-    /// Handles comments
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some('#') = state.peek() {
             state.advance(1);
 
-            // Read to the end of the line
+            // 读取到行
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -140,7 +136,7 @@ impl NixLexer<'_> {
         }
     }
 
-    /// Handles string literals
+    /// 处理字符串字面量
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -171,7 +167,7 @@ impl NixLexer<'_> {
         }
     }
 
-    /// Handles number literals
+    /// 处理数字字面量
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -193,7 +189,7 @@ impl NixLexer<'_> {
         false
     }
 
-    /// Handles identifiers and keywords
+    /// 处理标识符和关键字
     fn lex_identifier<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -237,7 +233,7 @@ impl NixLexer<'_> {
         }
     }
 
-    /// Handles operators
+    /// 处理操作
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 

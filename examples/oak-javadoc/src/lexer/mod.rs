@@ -1,26 +1,25 @@
 #![doc = include_str!("readme.md")]
-/// Javadoc token types
 pub mod token_type;
 
 use crate::{language::JavadocLanguage, lexer::token_type::JavadocTokenType};
 
 use oak_core::{Lexer, LexerCache, LexerState, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, JavadocLanguage>;
+type State<'a, S> = LexerState<'a, S, JavadocLanguage>;
 
-/// Javadoc lexer
+/// Javadoc 词法分析
 #[derive(Clone)]
 pub struct JavadocLexer<'config> {
-    config: &'config JavadocLanguage,
+    _config: &'config JavadocLanguage,
 }
 
 impl<'config> JavadocLexer<'config> {
-    /// Creates a new Javadoc lexer
+    /// 创建新的 Javadoc lexer
     pub fn new(config: &'config JavadocLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Skips whitespace
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -37,7 +36,7 @@ impl<'config> JavadocLexer<'config> {
         }
     }
 
-    /// Handles newlines
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -59,7 +58,7 @@ impl<'config> JavadocLexer<'config> {
         }
     }
 
-    /// Handles Javadoc comment start
+    /// 处理 Javadoc 注释开始
     fn lex_comment_start<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -73,13 +72,13 @@ impl<'config> JavadocLexer<'config> {
                     true
                 }
                 else {
-                    // Backtrack to start position
+                    // 回退到开始位置
                     state.set_position(start_pos);
                     false
                 }
             }
             else {
-                // Backtrack to start position
+                // 回退到开始位置
                 state.set_position(start_pos);
                 false
             }
@@ -89,7 +88,7 @@ impl<'config> JavadocLexer<'config> {
         }
     }
 
-    /// Handles Javadoc comment end
+    /// 处理 Javadoc 注释结束
     fn lex_comment_end<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -101,7 +100,7 @@ impl<'config> JavadocLexer<'config> {
                 true
             }
             else {
-                // Backtrack to start position
+                // 回退到开始位置
                 state.set_position(start_pos);
                 false
             }
@@ -111,7 +110,7 @@ impl<'config> JavadocLexer<'config> {
         }
     }
 
-    /// Handles Javadoc tags
+    /// 处理 Javadoc 标签
     fn lex_tag<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -129,7 +128,7 @@ impl<'config> JavadocLexer<'config> {
                 }
             }
 
-            // Check if it is a known Javadoc tag
+            // 检查是否为已知 Javadoc 标签
             let kind = match text.as_str() {
                 "param" => JavadocTokenType::ParamTag,
                 "return" => JavadocTokenType::ReturnTag,
@@ -146,7 +145,6 @@ impl<'config> JavadocLexer<'config> {
                 "literal" => JavadocTokenType::LiteralTag,
                 "value" => JavadocTokenType::ValueTag,
                 "inheritDoc" => JavadocTokenType::InheritDocTag,
-                "summary" => JavadocTokenType::SummaryTag,
                 _ => JavadocTokenType::Tag,
             };
 
@@ -158,7 +156,7 @@ impl<'config> JavadocLexer<'config> {
         }
     }
 
-    /// Handles HTML tags
+    /// 处理 HTML 标签
     fn lex_html_tag<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -166,13 +164,13 @@ impl<'config> JavadocLexer<'config> {
             state.advance(1);
             let mut is_closing = false;
 
-            // Check if it is a closing tag
+            // 检查是否为闭合标签
             if let Some('/') = state.peek() {
                 is_closing = true;
                 state.advance(1)
             }
 
-            // Read tag name
+            // 读取标签
             let mut tag_name = String::new();
             while let Some(ch) = state.peek() {
                 if ch.is_alphabetic() || ch.is_ascii_digit() || ch == '-' {
@@ -184,14 +182,14 @@ impl<'config> JavadocLexer<'config> {
                 }
             }
 
-            // Skip
+            // 跳过
             while let Some(ch) = state.peek() {
                 if ch == '>' {
                     state.advance(1);
                     break;
                 }
                 else if ch == '<' {
-                    // Unclosed tag
+                    // 未闭合的标签
                     state.set_position(start_pos);
                     return false;
                 }
@@ -228,7 +226,7 @@ impl<'config> JavadocLexer<'config> {
         }
     }
 
-    /// Handles text content
+    /// 处理文本内容
     fn lex_text<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -248,7 +246,7 @@ impl<'config> JavadocLexer<'config> {
         }
     }
 
-    /// Handles asterisk (comment line start)
+    /// 处理星号（注释行开始）
     fn lex_asterisk<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -275,12 +273,12 @@ impl<'config> Lexer<JavadocLanguage> for JavadocLexer<'config> {
 }
 
 impl<'config> JavadocLexer<'config> {
-    /// Main lexer loop
+    /// 主要的词法分析循环
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), oak_core::OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
 
-            // Try various lexical rules
+            // 尝试各种词法规则
             if self.skip_whitespace(state) {
                 continue;
             }
@@ -313,9 +311,9 @@ impl<'config> JavadocLexer<'config> {
                 continue;
             }
 
-            // If no rules match, check if reached end of file
+            // 如果所有规则都不匹配，检查是否到达文件末尾
             if let Some(ch) = state.peek() {
-                // Skip current character and mark as error
+                // 跳过当前字符并标记为错误
                 let start_pos = state.get_position();
                 state.advance(ch.len_utf8());
                 state.add_token(JavadocTokenType::Error, start_pos, state.get_position())

@@ -1,28 +1,20 @@
 #![doc = include_str!("readme.md")]
-/// The kind of highlighting for a range of text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// A keyword.
     Keyword,
-    /// A string literal.
     String,
-    /// A numeric literal.
     Number,
-    /// A comment.
     Comment,
-    /// An identifier.
     Identifier,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// A highlighter for PHP code.
 pub struct PhpHighlighter {
-    /// Whether to use the parser for highlighting.
     pub use_parser: bool,
 }
 
@@ -33,12 +25,10 @@ impl Default for PhpHighlighter {
 }
 
 impl PhpHighlighter {
-    /// Creates a new `PhpHighlighter`.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a new `PhpHighlighter` that uses the parser.
     pub fn with_parser() -> Self {
         Self { use_parser: true }
     }

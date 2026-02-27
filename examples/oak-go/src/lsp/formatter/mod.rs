@@ -1,15 +1,16 @@
 #![doc = include_str!("readme.md")]
+//! Go 语言格式化器
 
 use oak_pretty_print::Document;
 
-/// Formatter trait.
+/// 格式化器 trait
 #[allow(dead_code)]
 pub trait Formatter {
-    /// Formats the given AST.
+    /// 格式化给定的 AST
     fn format(&self, code: &str) -> Document<'_>;
 }
 
-/// Go formatter.
+/// Go 语言格式化器
 pub struct GoFormatter;
 
 impl GoFormatter {

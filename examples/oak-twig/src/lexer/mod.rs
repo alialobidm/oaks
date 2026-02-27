@@ -6,11 +6,11 @@ use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source
 
 #[derive(Clone, Debug)]
 pub struct TwigLexer<'config> {
-    /// Language configuration
-    config: &'config TwigLanguage,
+    /// 语言配置
+    _config: &'config TwigLanguage,
 }
 
-pub(crate) type State<'a, S> = LexerState<'a, S, TwigLanguage>;
+type State<'a, S> = LexerState<'a, S, TwigLanguage>;
 
 impl<'config> Lexer<TwigLanguage> for TwigLexer<'config> {
     fn lex<'a, S: Source + ?Sized>(&self, source: &S, _edits: &[oak_core::TextEdit], cache: &'a mut impl LexerCache<TwigLanguage>) -> LexOutput<TwigLanguage> {
@@ -24,9 +24,9 @@ impl<'config> Lexer<TwigLanguage> for TwigLexer<'config> {
 }
 
 impl<'config> TwigLexer<'config> {
-    /// Creates a new Twig lexer
+    /// 创建新的 Twig 词法分析器
     pub fn new(config: &'config TwigLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
     fn run<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
         while state.not_at_end() {
@@ -56,32 +56,10 @@ impl<'config> TwigLexer<'config> {
                 continue;
             }
 
-            if self.lex_html_text(state) {
-                continue;
-            }
-
             state.advance_if_dead_lock(safe_point)
         }
 
         Ok(())
-    }
-
-    fn lex_html_text<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
-        let start = state.get_position();
-        while let Some(ch) = state.peek() {
-            let rest = state.rest();
-            if rest.starts_with(&self.config.variable_start) || rest.starts_with(&self.config.tag_start) || rest.starts_with(&self.config.comment_start) {
-                break;
-            }
-            state.advance(ch.len_utf8());
-        }
-        if state.get_position() > start {
-            // Here we temporarily borrow Identifier or define a dedicated text Token
-            // Check token_type.rs to see if there is a suitable one
-            state.add_token(TwigTokenType::Identifier, start, state.get_position());
-            return true;
-        }
-        false
     }
 
     fn skip_whitespace<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
@@ -107,9 +85,9 @@ impl<'config> TwigLexer<'config> {
 
     fn skip_comment<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start = state.get_position();
-        if state.consume_if_starts_with(&self.config.comment_start) {
+        if state.consume_if_starts_with("{#") {
             while state.not_at_end() {
-                if state.consume_if_starts_with(&self.config.comment_end) {
+                if state.consume_if_starts_with("#}") {
                     break;
                 }
                 if let Some(ch) = state.peek() {
@@ -181,29 +159,29 @@ impl<'config> TwigLexer<'config> {
         let start = state.get_position();
         let rest = state.rest();
 
-        // Double-character operators
-        if rest.starts_with(&self.config.variable_start) {
-            state.advance(self.config.variable_start.len());
+        // 双字符操作符
+        if rest.starts_with("{{") {
+            state.advance(2);
             state.add_token(TwigTokenType::DoubleLeftBrace, start, state.get_position());
             return true;
         }
-        if rest.starts_with(&self.config.variable_end) {
-            state.advance(self.config.variable_end.len());
+        if rest.starts_with("}}") {
+            state.advance(2);
             state.add_token(TwigTokenType::DoubleRightBrace, start, state.get_position());
             return true;
         }
-        if rest.starts_with(&self.config.tag_start) {
-            state.advance(self.config.tag_start.len());
+        if rest.starts_with("{%") {
+            state.advance(2);
             state.add_token(TwigTokenType::LeftBracePercent, start, state.get_position());
             return true;
         }
-        if rest.starts_with(&self.config.tag_end) {
-            state.advance(self.config.tag_end.len());
+        if rest.starts_with("%}") {
+            state.advance(2);
             state.add_token(TwigTokenType::PercentRightBrace, start, state.get_position());
             return true;
         }
 
-        // Single-character operators
+        // 单字符操作符
         if let Some(ch) = state.peek() {
             let kind = match ch {
                 '{' => TwigTokenType::LeftBrace,
@@ -260,7 +238,7 @@ impl<'config> TwigLexer<'config> {
                 let end = state.get_position();
                 let text = state.get_text_in((start..end).into());
 
-                // Check if it is a boolean keyword
+                // 检查是否为布尔关键字
                 let kind = match text.as_ref() {
                     "true" | "false" => TwigTokenType::Boolean,
                     _ => TwigTokenType::Identifier,

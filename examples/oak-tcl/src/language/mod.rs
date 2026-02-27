@@ -1,10 +1,12 @@
 #![doc = include_str!("readme.md")]
 use crate::ast::TclRoot;
 use oak_core::{Language, LanguageCategory};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Tcl language configuration.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TclLanguage {
     /// Tcl version.
     pub version: TclVersion,
@@ -27,7 +29,7 @@ impl TclLanguage {
 
 /// Tcl version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TclVersion {
     /// Tcl 8.0
     Tcl80,

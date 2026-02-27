@@ -1,9 +1,11 @@
 #![doc = include_str!("readme.md")]
 use core::range::Range;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Root node of the Markdown Abstract Syntax Tree.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MarkdownRoot {
     /// List of blocks in the document.
     pub blocks: Vec<Block>,
@@ -11,7 +13,7 @@ pub struct MarkdownRoot {
 
 /// Block-level elements in Markdown.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Block {
     /// Heading (h1-h6).
     Heading(Heading),
@@ -29,26 +31,11 @@ pub enum Block {
     Table(Table),
     /// HTML block.
     Html(Html),
-    /// Abbreviation definition.
-    AbbreviationDefinition(AbbreviationDefinition),
-}
-
-/// Abbreviation definition element.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct AbbreviationDefinition {
-    /// Abbreviation key.
-    pub key: String,
-    /// Abbreviation definition.
-    pub definition: String,
-    /// Source code range.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
-    pub span: Range<usize>,
 }
 
 /// Heading element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Heading {
     /// Heading level (1-6).
     pub level: u32,
@@ -61,7 +48,7 @@ pub struct Heading {
 
 /// Paragraph element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Paragraph {
     /// Paragraph text content.
     pub content: String,
@@ -72,7 +59,7 @@ pub struct Paragraph {
 
 /// Code block element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct CodeBlock {
     /// Programming language identifier.
     pub language: Option<String>,
@@ -85,7 +72,7 @@ pub struct CodeBlock {
 
 /// List element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct List {
     /// Whether it's an ordered list.
     pub is_ordered: bool,
@@ -98,7 +85,7 @@ pub struct List {
 
 /// List item element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ListItem {
     /// List item content blocks.
     pub content: Vec<Block>,
@@ -113,7 +100,7 @@ pub struct ListItem {
 
 /// Blockquote element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Blockquote {
     /// Blockquote content blocks.
     pub content: Vec<Block>,
@@ -124,7 +111,7 @@ pub struct Blockquote {
 
 /// Horizontal rule element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HorizontalRule {
     /// Source code range.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
@@ -133,7 +120,7 @@ pub struct HorizontalRule {
 
 /// Table element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Table {
     /// Table header row.
     pub header: TableRow,
@@ -146,7 +133,7 @@ pub struct Table {
 
 /// Table row element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TableRow {
     /// List of cells in the row.
     pub cells: Vec<TableCell>,
@@ -157,7 +144,7 @@ pub struct TableRow {
 
 /// Table cell element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TableCell {
     /// Cell content string.
     pub content: String,
@@ -168,50 +155,11 @@ pub struct TableCell {
 
 /// HTML block element.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Html {
     /// HTML content string.
     pub content: String,
     /// Source code range.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-}
-
-/// Inline-level elements in Markdown.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum Inline {
-    /// Plain text.
-    Text(String),
-    /// Bold text.
-    Bold(String),
-    /// Italic text.
-    Italic(String),
-    /// Code span.
-    Code(String),
-    /// Link.
-    Link {
-        /// Link text.
-        text: String,
-        /// Link URL.
-        url: String,
-        /// Link title (optional).
-        title: Option<String>,
-    },
-    /// Image.
-    Image {
-        /// Alt text.
-        alt: String,
-        /// Image URL.
-        url: String,
-        /// Image title (optional).
-        title: Option<String>,
-    },
-    /// Abbreviation usage.
-    Abbreviation {
-        /// Abbreviation key.
-        key: String,
-        /// Abbreviation definition.
-        definition: String,
-    },
 }

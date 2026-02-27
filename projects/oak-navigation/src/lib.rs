@@ -8,14 +8,13 @@ use core::range::Range;
 use oak_core::{Language, TokenType, language::UniversalTokenRole, tree::RedNode, visitor::Visitor};
 
 /// Represents a location in a source file.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct Location {
     /// The URI of the resource.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_arc_str"))]
+    #[serde(with = "oak_core::serde_arc_str")]
     pub uri: oak_core::Arc<str>,
     /// The byte range within the resource.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub range: Range<usize>,
 }
 

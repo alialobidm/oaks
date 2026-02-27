@@ -1,6 +1,7 @@
 use oak_core::{Token, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// A token in the OCaml language.
 pub type OCamlToken = Token<OCamlTokenType>;
 
 impl TokenType for OCamlTokenType {
@@ -26,7 +27,6 @@ impl TokenType for OCamlTokenType {
 }
 
 impl OCamlTokenType {
-    /// Checks if the token is a keyword.
     pub fn is_keyword(&self) -> bool {
         matches!(
             self,
@@ -81,7 +81,6 @@ impl OCamlTokenType {
         )
     }
 
-    /// Checks if the token is an operator.
     pub fn is_operator(&self) -> bool {
         matches!(
             self,
@@ -115,237 +114,129 @@ impl OCamlTokenType {
         )
     }
 
-    /// Checks if the token is a punctuation character.
     pub fn is_punctuation(&self) -> bool {
         matches!(self, Self::Colon | Self::Semicolon | Self::Comma | Self::Dot | Self::LeftParen | Self::RightParen | Self::LeftBracket | Self::RightBracket | Self::LeftBrace | Self::RightBrace)
     }
 }
 
-/// Token types for the OCaml language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OCamlTokenType {
-    /// Whitespace characters.
+    // 空白和注释
     Whitespace,
-    /// Newline characters.
     Newline,
-    /// A comment.
     Comment,
 
-    /// The `and` keyword.
+    // 关键字
     And,
-    /// The `as` keyword.
     As,
-    /// The `assert` keyword.
     Assert,
-    /// The `begin` keyword.
     Begin,
-    /// The `class` keyword.
     Class,
-    /// The `constraint` keyword.
     Constraint,
-    /// The `do` keyword.
     Do,
-    /// The `done` keyword.
     Done,
-    /// The `downto` keyword.
     Downto,
-    /// The `else` keyword.
     Else,
-    /// The `end` keyword.
     End,
-    /// The `exception` keyword.
     Exception,
-    /// The `external` keyword.
     External,
-    /// The `false` keyword.
     False,
-    /// The `for` keyword.
     For,
-    /// The `fun` keyword.
     Fun,
-    /// The `function` keyword.
     Function,
-    /// The `functor` keyword.
     Functor,
-    /// The `if` keyword.
     If,
-    /// The `in` keyword.
     In,
-    /// The `include` keyword.
     Include,
-    /// The `inherit` keyword.
     Inherit,
-    /// The `initializer` keyword.
     Initializer,
-    /// The `lazy` keyword.
     Lazy,
-    /// The `let` keyword.
     Let,
-    /// The `match` keyword.
     Match,
-    /// The `method` keyword.
     Method,
-    /// The `module` keyword.
     Module,
-    /// The `mutable` keyword.
     Mutable,
-    /// The `new` keyword.
     New,
-    /// The `object` keyword.
     Object,
-    /// The `of` keyword.
     Of,
-    /// The `open` keyword.
     Open,
-    /// The `or` keyword.
     Or,
-    /// The `private` keyword.
     Private,
-    /// The `rec` keyword.
     Rec,
-    /// The `sig` keyword.
     Sig,
-    /// The `struct` keyword.
     Struct,
-    /// The `then` keyword.
     Then,
-    /// The `to` keyword.
     To,
-    /// The `true` keyword.
     True,
-    /// The `try` keyword.
     Try,
-    /// The `type` keyword.
     Type,
-    /// The `val` keyword.
     Val,
-    /// The `virtual` keyword.
     Virtual,
-    /// The `when` keyword.
     When,
-    /// The `while` keyword.
     While,
-    /// The `with` keyword.
     With,
 
-    /// An identifier.
+    // 标识符和字面量
     Identifier,
-    /// An integer literal.
     IntegerLiteral,
-    /// A floating-point literal.
     FloatLiteral,
-    /// A string literal.
     StringLiteral,
-    /// A character literal.
     CharLiteral,
 
-    /// The `+` operator.
+    // 操作符
     Plus,
-    /// The `-` operator.
     Minus,
-    /// The `*` operator.
     Star,
-    /// The `/` operator.
     Slash,
-    /// The `%` operator.
     Percent,
-    /// The `=` operator.
     Equal,
-    /// The `==` operator.
     EqualEqual,
-    /// The `!=` operator.
     NotEqual,
-    /// The `<` operator.
     Less,
-    /// The `>` operator.
     Greater,
-    /// The `<=` operator.
     LessEqual,
-    /// The `>=` operator.
     GreaterEqual,
-    /// The `<-` operator.
     LeftArrow,
-    /// The `->` operator.
     RightArrow,
-    /// The `||` operator.
     OrOr,
-    /// The `&&` operator.
     AndAnd,
-    /// The `::` operator.
     ColonColon,
-    /// The `|` operator.
     Pipe,
-    /// The `&` operator.
     Ampersand,
-    /// The `!` operator.
     Bang,
-    /// The `?` operator.
     Question,
-    /// The `:` punctuation.
     Colon,
-    /// The `;` punctuation.
     Semicolon,
-    /// The `,` punctuation.
     Comma,
-    /// The `.` punctuation.
     Dot,
-    /// The `^` operator.
     Caret,
-    /// The `~` operator.
     Tilde,
-    /// The `@` operator.
     At,
-    /// The `#` operator.
     Hash,
-    /// The `$` operator.
     Dollar,
-    /// The `` ` `` operator.
     Backtick,
 
-    /// The `-.` operator.
-    MinusDot,
-    /// The `(` operator.
+    // 分隔符
     LeftParen,
-    /// Right parenthesis `)`.
     RightParen,
-    /// Left bracket `[`.
     LeftBracket,
-    /// Right bracket `]`.
     RightBracket,
-    /// Left brace `{`.
     LeftBrace,
-    /// Right brace `}`.
     RightBrace,
 
-    /// Root node of the OCaml AST.
+    // 特殊
+
+    // Element kinds
     Root,
-    /// A module definition.
     ModuleDef,
-    /// A let binding.
     LetBinding,
-    /// A match expression.
     MatchExpr,
-    /// A function definition.
     FunctionDef,
-    /// A type definition.
     TypeDefinition,
-    /// An expression.
     Expression,
 
-    /// A function call.
-    CallExpr,
-    /// A literal expression.
-    LiteralExpr,
-    /// An identifier expression.
-    IdentifierExpr,
-    /// A binary expression.
-    BinaryExpr,
-    /// A unary expression.
-    UnaryExpr,
-
-    /// An error token.
+    // 错误和结束
     Error,
-    /// End of stream.
     Eof,
 }

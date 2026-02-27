@@ -1,6 +1,3 @@
-//! Parser implementation for the Wolfram language.
-
-/// Wolfram element types.
 pub mod element_type;
 
 use crate::{
@@ -9,22 +6,20 @@ use crate::{
     parser::element_type::WolframElementType,
 };
 use oak_core::{
-    parser::{OperatorInfo, ParseCache, ParseOutput, Parser, ParserState, Pratt, PrattParser, binary, parse_with_lexer, postfix, unary},
+    parser::{Associativity, OperatorInfo, ParseCache, ParseOutput, Parser, ParserState, Pratt, PrattParser, binary, parse_with_lexer, postfix, unary},
     source::{Source, TextEdit},
     tree::GreenNode,
 };
 
 pub(crate) type State<'a, S> = ParserState<'a, WolframLanguage, S>;
 
-/// Parser for the Wolfram language.
+/// Wolfram Parser
 #[derive(Debug, Clone)]
 pub struct WolframParser<'config> {
-    /// The Wolfram language configuration.
     config: &'config WolframLanguage,
 }
 
 impl<'config> WolframParser<'config> {
-    /// Creates a new `WolframParser` with the given configuration.
     pub fn new(config: &'config WolframLanguage) -> Self {
         Self { config }
     }
@@ -95,7 +90,7 @@ impl<'config> Pratt<WolframLanguage> for WolframParser<'config> {
 
         if state.at(WolframTokenType::Identifier) {
             state.bump();
-            // Check if it's a function call f[...]
+            // 检查是否是函数调用 f[...]
             while state.at(WolframTokenType::LeftBracket) {
                 self.parse_arguments(state);
                 state.finish_at(checkpoint, WolframElementType::Call);
@@ -123,7 +118,7 @@ impl<'config> Pratt<WolframLanguage> for WolframParser<'config> {
             state.finish_at(checkpoint, WolframElementType::Expression)
         }
         else {
-            // Error handling
+            // 容错处理
             state.bump();
             state.finish_at(checkpoint, WolframElementType::Error)
         }
@@ -147,7 +142,7 @@ impl<'config> Pratt<WolframLanguage> for WolframParser<'config> {
     fn infix<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>, left: &'a GreenNode<'a, WolframLanguage>, min_precedence: u8) -> Option<&'a GreenNode<'a, WolframLanguage>> {
         let kind = state.peek_kind()?;
 
-        // Postfix operators
+        // 后缀运算符
         let postfix_info = match kind {
             WolframTokenType::Ampersand => Some(OperatorInfo::left(10)),  // body &
             WolframTokenType::Factorial => Some(OperatorInfo::left(160)), // x!
@@ -161,7 +156,7 @@ impl<'config> Pratt<WolframLanguage> for WolframParser<'config> {
             return Some(postfix(state, left, kind, WolframElementType::PostfixExpr));
         }
 
-        // Binary/Infix operators
+        // 二元/中缀运算符
         let info = match kind {
             WolframTokenType::Assign | WolframTokenType::Set | WolframTokenType::SetDelayed => Some(OperatorInfo::right(20)),
             WolframTokenType::Rule | WolframTokenType::RuleDelayed | WolframTokenType::Arrow => Some(OperatorInfo::right(30)),

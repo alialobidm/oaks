@@ -19,14 +19,11 @@ use std::{
 };
 
 /// Errors that can occur during REPL execution.
-///
-/// This enum covers I/O errors from the terminal and custom errors
-/// from the language integration layer.
 #[derive(Debug)]
 pub enum ReplError {
-    /// An I/O error occurred during terminal communication or file access.
+    /// An I/O error occurred.
     Io(std::io::Error),
-    /// A custom error occurred within the language-specific handler.
+    /// A custom error occurred.
     Other(String),
 }
 
@@ -60,80 +57,31 @@ impl From<&str> for ReplError {
 }
 
 /// The result of handling a line in the REPL.
-///
-/// This indicates whether the REPL should continue running or terminate
-/// after processing the current input.
 pub enum HandleResult {
-    /// Continue the REPL session and wait for the next input.
+    /// Continue the REPL session.
     Continue,
-    /// Exit the REPL session immediately.
+    /// Exit the REPL session.
     Exit,
 }
 
 /// Interface for language integration in the REPL.
-///
-/// Implement this trait to provide language-specific behavior like
-/// syntax highlighting, completion checking, and code execution.
-///
-/// # Usage Scenario
-///
-/// The `ReplHandler` is used by [`OakRepl`] to:
-/// 1. Customize the prompt based on whether it's a new command or a continuation.
-/// 2. Provide syntax highlighting for the current input line.
-/// 3. Determine if a multi-line input is complete and ready for execution.
-/// 4. Execute the collected code and decide whether to continue the REPL loop.
-///
-/// # Example
-///
-/// ```rust
-/// use oak_repl::{HandleResult, ReplError, ReplHandler};
-///
-/// struct MyHandler;
-///
-/// impl ReplHandler for MyHandler {
-///     fn prompt(&self, is_continuation: bool) -> &str {
-///         if is_continuation { "... " } else { ">>> " }
-///     }
-///
-///     fn is_complete(&self, code: &str) -> bool {
-///         code.ends_with(';')
-///     }
-///
-///     fn handle_line(&mut self, line: &str) -> Result<HandleResult, ReplError> {
-///         println!("Executing: {}", line);
-///         Ok(HandleResult::Continue)
-///     }
-/// }
-/// ```
 pub trait ReplHandler {
     /// Get syntax highlighting for the given code.
-    ///
-    /// Returns `None` if no highlighting should be applied.
     fn highlight<'a>(&self, _code: &'a str) -> Option<HighlightResult<'a>> {
         None
     }
 
-    /// Returns the prompt string to display.
-    ///
-    /// `is_continuation` is true if the REPL is in multi-line input mode
-    /// (i.e., the previous line was not complete).
+    /// The prompt to display. `is_continuation` is true for multi-line input.
     fn prompt(&self, is_continuation: bool) -> &str;
 
-    /// Checks if the current input buffer represents a complete statement.
-    ///
-    /// If this returns `false`, the REPL will enter multi-line mode and
-    /// allow the user to continue typing.
+    /// Check if the input is complete (e.g., all brackets are closed).
+    /// If it returns false, the REPL will enter multi-line input mode.
     fn is_complete(&self, code: &str) -> bool;
 
-    /// Executes the given line (or multiple lines) of code.
-    ///
-    /// Returns a `HandleResult` indicating whether to continue or exit.
+    /// Execute the given line of code.
     fn handle_line(&mut self, line: &str) -> Result<HandleResult, ReplError>;
 
-    /// Gets the current indentation level for the next line in multi-line mode.
-    ///
-    /// This is used for auto-indentation when the user presses Enter in
-    /// the middle of a multi-line block.
+    /// Get the current indentation level for the next line in multi-line mode.
     fn get_indent(&self, _code: &str) -> usize {
         // No indentation by default
         0
@@ -141,34 +89,28 @@ pub trait ReplHandler {
 }
 
 /// A buffer for managing lines of text in the REPL.
-///
-/// `LineBuffer` handles single and multi-line input, cursor positioning,
-/// and basic editing operations like insertion and backspace.
 pub struct LineBuffer {
     /// The lines of text in the buffer.
     lines: Vec<String>,
     /// The index of the current line being edited.
     current_line: usize,
-    /// The cursor position (character offset) within the current line.
+    /// The cursor position within the current line.
     cursor_pos: usize,
 }
 
 impl LineBuffer {
-    /// Creates a new empty `LineBuffer`.
+    /// Create a new empty line buffer.
     pub fn new() -> Self {
         Self { lines: vec![String::new()], current_line: 0, cursor_pos: 0 }
     }
 
-    /// Inserts a character at the current cursor position.
+    /// Insert a character at the current cursor position.
     pub fn insert(&mut self, ch: char) {
         self.lines[self.current_line].insert(self.cursor_pos, ch);
         self.cursor_pos += 1;
     }
 
-    /// Removes the character before the current cursor position (backspace).
-    ///
-    /// Returns `true` if a character or line was removed, `false` if the
-    /// buffer was already at the very beginning.
+    /// Remove a character before the current cursor position.
     pub fn backspace(&mut self) -> bool {
         if self.cursor_pos > 0 {
             self.cursor_pos -= 1;
@@ -188,69 +130,37 @@ impl LineBuffer {
         }
     }
 
-    /// Returns the full text content of the buffer as a single string.
-    ///
-    /// Multiple lines are joined with newline characters.
+    /// Get the full text content of the buffer.
     pub fn full_text(&self) -> String {
         self.lines.join("\n")
     }
 
-    /// Clears the buffer and resets the cursor to the beginning.
+    /// Clear the buffer.
     pub fn clear(&mut self) {
         self.lines = vec![String::new()];
         self.current_line = 0;
         self.cursor_pos = 0;
     }
 
-    /// Returns `true` if the buffer is completely empty.
+    /// Returns true if the buffer is empty.
     pub fn is_empty(&self) -> bool {
         self.lines.len() == 1 && self.lines[0].is_empty()
     }
 }
 
 /// The main REPL engine.
-///
-/// `OakRepl` manages the terminal interface, handles user input,
-/// and coordinates with a `ReplHandler` to provide language-specific
-/// functionality.
-///
-/// # Example
-///
-/// ```no_run
-/// use oak_repl::{HandleResult, OakRepl, ReplError, ReplHandler};
-///
-/// struct MyHandler;
-/// impl ReplHandler for MyHandler {
-///     fn prompt(&self, _: bool) -> &str {
-///         "> "
-///     }
-///     fn is_complete(&self, code: &str) -> bool {
-///         true
-///     }
-///     fn handle_line(&mut self, line: &str) -> Result<HandleResult, ReplError> {
-///         println!("You typed: {}", line);
-///         Ok(HandleResult::Continue)
-///     }
-/// }
-///
-/// let mut repl = OakRepl::new(MyHandler);
-/// repl.run().expect("REPL failed");
-/// ```
 pub struct OakRepl<H: ReplHandler> {
     /// The handler that implements language-specific logic.
     handler: H,
 }
 
 impl<H: ReplHandler> OakRepl<H> {
-    /// Creates a new `OakRepl` with the given handler.
+    /// Create a new Oak REPL with the given handler.
     pub fn new(handler: H) -> Self {
         Self { handler }
     }
 
-    /// Runs the REPL loop.
-    ///
-    /// This method takes control of the terminal (enabling raw mode)
-    /// and blocks until the user exits or an unrecoverable error occurs.
+    /// Run the REPL loop.
     pub fn run(&mut self) -> Result<(), ReplError> {
         let mut stdout = io::stdout();
         let mut line_buf = LineBuffer::new();

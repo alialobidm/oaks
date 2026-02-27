@@ -2,6 +2,7 @@
 #![warn(missing_docs)]
 #![feature(portable_simd)]
 #![feature(new_range_api)]
+//! Javascript support for the Oak language framework.
 
 #[cfg(any(feature = "lsp", feature = "oak-highlight", feature = "oak-pretty-print"))]
 pub mod lsp;

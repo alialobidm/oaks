@@ -1,352 +1,208 @@
 use oak_core::{ElementType, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Represents an element type in a TeX document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum TexElementType {
-    /// Root node of the AST.
+    // Node types
     Root,
-    /// A source file containing TeX content.
     SourceFile,
-    /// The document body.
     Document,
 
-    /// A TeX command (e.g., \section).
+    // TeX commands and environments
     Command,
-    /// A TeX environment (e.g., \begin{itemize}...\end{itemize}).
     Environment,
-    /// The beginning of an environment.
     BeginEnvironment,
-    /// The end of an environment.
     EndEnvironment,
 
-    /// Mathematical content.
+    // TeX special structures
     MathMode,
-    /// Inline mathematical content ($...$).
     InlineMath,
-    /// Displayed mathematical content ($$...$$).
     DisplayMath,
-    /// A grouped set of elements ({...}).
     Group,
-    /// A superscript expression (^...).
     Superscript,
-    /// A subscript expression (_...).
     Subscript,
 
-    /// A generic command argument.
+    // Arguments and options
     Argument,
-    /// An optional command argument ([...]).
     OptionalArgument,
-    /// A mandatory command argument ({...}).
     MandatoryArgument,
 
-    /// Plain text content.
+    // Text and content
     Text,
-    /// A paragraph of text.
     Paragraph,
-    /// A section heading.
     Section,
-    /// A subsection heading.
     Subsection,
-    /// A subsubsection heading.
     Subsubsection,
 
-    /// A list environment.
+    // Lists and tables
     List,
-    /// An item within a list.
     Item,
-    /// A table environment.
     Table,
-    /// A row within a table.
     Row,
-    /// A cell within a table row.
     Cell,
 
-    /// A label for cross-referencing.
+    // References and labels
     Label,
-    /// A reference to a label.
     Reference,
-    /// A bibliographic citation.
     Citation,
 
-    /// A figure environment.
+    // Figures and floats
     Figure,
-    /// A caption for a figure or table.
     Caption,
 
-    /// An error node representing a syntax error.
+    // Error nodes
     Error,
 
-    /// \documentclass command.
+    // TeX keywords and commands
     DocumentClass,
-    /// \usepackage command.
     UsePackage,
-    /// \begin command.
     Begin,
-    /// \end command.
     End,
-    /// \section command.
     Section_,
-    /// \subsection command.
     Subsection_,
-    /// \subsubsection command.
     Subsubsection_,
-    /// \chapter command.
     Chapter,
-    /// \part command.
     Part,
-    /// \title command.
     Title,
-    /// \author command.
     Author,
-    /// \date command.
     Date,
-    /// \maketitle command.
     MakeTitle,
-    /// \tableofcontents command.
     TableOfContents,
-    /// \newpage command.
     NewPage,
-    /// \clearpage command.
     ClearPage,
 
-    /// \frac command.
+    // Mathematical commands
     Frac,
-    /// \sqrt command.
     Sqrt,
-    /// \sum command.
     Sum,
-    /// \int command.
     Int,
-    /// \lim command.
     Lim,
-    /// \alpha command.
     Alpha,
-    /// \beta command.
     Beta,
-    /// \gamma command.
     Gamma,
-    /// \delta command.
     Delta,
-    /// \epsilon command.
     Epsilon,
-    /// \zeta command.
     Zeta,
-    /// \eta command.
     Eta,
-    /// \theta command.
     Theta,
-    /// \iota command.
     Iota,
-    /// \kappa command.
     Kappa,
-    /// \lambda command.
     Lambda,
-    /// \mu command.
     Mu,
-    /// \nu command.
     Nu,
-    /// \xi command.
     Xi,
-    /// \omicron command.
     Omicron,
-    /// \pi command.
     Pi,
-    /// \rho command.
     Rho,
-    /// \sigma command.
     Sigma,
-    /// \tau command.
     Tau,
-    /// \upsilon command.
     Upsilon,
-    /// \phi command.
     Phi,
-    /// \chi command.
     Chi,
-    /// \psi command.
     Psi,
-    /// \omega command.
     Omega,
-    /// \varepsilon command.
     VarEpsilon,
-    /// \vartheta command.
     VarTheta,
-    /// \varkappa command.
     VarKappa,
-    /// \varpi command.
     VarPi,
-    /// \varrho command.
     VarRho,
-    /// \varsigma command.
     VarSigma,
-    /// \varphi command.
     VarPhi,
-    /// \Gamma command.
     UpperGamma,
-    /// \Delta command.
     UpperDelta,
-    /// \Theta command.
     UpperTheta,
-    /// \Lambda command.
     UpperLambda,
-    /// \Xi command.
     UpperXi,
-    /// \Pi command.
     UpperPi,
-    /// \Sigma command.
     UpperSigma,
-    /// \Upsilon command.
     UpperUpsilon,
-    /// \Phi command.
     UpperPhi,
-    /// \Psi command.
     UpperPsi,
-    /// \Omega command.
     UpperOmega,
 
-    /// \textbf command.
+    // Formatting commands
     TextBf,
-    /// \textit command.
     TextIt,
-    /// \textsc command.
     TextSc,
-    /// \texttt command.
     TextTt,
-    /// \emph command.
     Emph,
-    /// \underline command.
     Underline,
 
-    /// An identifier.
+    // Identifiers and literals
     Identifier,
-    /// A string literal.
     StringLiteral,
-    /// A numeric literal.
     Number,
 
-    /// Backslash character (\).
+    // Operators and punctuation
     Backslash,
-    /// Left brace character ({).
     LeftBrace,
-    /// Right brace character (}).
     RightBrace,
-    /// Left bracket character ([).
     LeftBracket,
-    /// Right bracket character (]).
     RightBracket,
-    /// Left parenthesis character (().
     LeftParen,
-    /// Right parenthesis character ()).
     RightParen,
-    /// Dollar sign character ($).
     Dollar,
-    /// Double dollar sign character ($$).
     DoubleDollar,
-    /// Ampersand character (&).
     Ampersand,
-    /// Percent character (%).
     Percent,
-    /// Hash character (#).
     Hash,
-    /// Caret character (^).
     Caret,
-    /// Underscore character (_).
     Underscore,
-    /// Tilde character (~).
     Tilde,
 
-    /// Equals character (=).
+    // Special characters
     Equal,
-    /// Double equals character (==).
     Equals,
-    /// Plus character (+).
     Plus,
-    /// Minus character (-).
     Minus,
-    /// Asterisk character (*).
     Star,
-    /// Slash character (/).
     Slash,
-    /// Pipe character (|).
     Pipe,
-    /// Less than character (<).
     Less,
-    /// Less than or equal to character (<=).
     LessThan,
-    /// Greater than character (>).
     Greater,
-    /// Greater than or equal to character (>=).
     GreaterThan,
-    /// Exclamation mark character (!).
     Exclamation,
-    /// Question mark character (?).
     Question,
-    /// At sign character (@).
     At,
-    /// Colon character (:).
     Colon,
-    /// Semicolon character (;).
     Semicolon,
-    /// Comma character (,).
     Comma,
-    /// Dot character (.).
     Dot,
 
-    /// A comment starting with %.
+    // Whitespace and comments
     Comment,
-    /// Whitespace characters.
     Whitespace,
-    /// A newline character.
     Newline,
 
-    /// 'begin' keyword.
+    // Keywords
     BeginKeyword,
-    /// 'end' keyword.
     EndKeyword,
-    /// 'documentclass' keyword.
     DocumentclassKeyword,
-    /// 'usepackage' keyword.
     UsepackageKeyword,
-    /// 'section' keyword.
     SectionKeyword,
-    /// 'subsection' keyword.
     SubsectionKeyword,
-    /// 'subsubsection' keyword.
     SubsubsectionKeyword,
-    /// 'chapter' keyword.
     ChapterKeyword,
-    /// 'part' keyword.
     PartKeyword,
-    /// 'title' keyword.
     TitleKeyword,
-    /// 'author' keyword.
     AuthorKeyword,
-    /// 'date' keyword.
     DateKeyword,
-    /// 'maketitle' keyword.
     MaketitleKeyword,
-    /// 'tableofcontents' keyword.
     TableofcontentsKeyword,
-    /// 'item' keyword.
     ItemKeyword,
-    /// 'label' keyword.
     LabelKeyword,
-    /// 'ref' keyword.
     RefKeyword,
-    /// 'cite' keyword.
     CiteKeyword,
-    /// 'includegraphics' keyword.
     IncludegraphicsKeyword,
-    /// \textbf keyword.
     TextbfKeyword,
-    /// \textit keyword.
     TextitKeyword,
-    /// \emph keyword.
     EmphKeyword,
 
-    /// End of file marker.
+    // End of file
     Eof,
 }
 

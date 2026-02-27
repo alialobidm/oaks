@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token types for the Protobuf lexer.
 pub mod token_type;
 pub use token_type::ProtobufTokenType;
 
@@ -10,18 +9,16 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
-pub(crate) type State<'a, S> = LexerState<'a, S, ProtobufLanguage>;
+type State<'a, S> = LexerState<'a, S, ProtobufLanguage>;
 
-/// Lexer for Protobuf files.
 #[derive(Clone)]
 pub struct ProtobufLexer<'config> {
-    config: &'config ProtobufLanguage,
+    _config: &'config ProtobufLanguage,
 }
 
 impl<'config> ProtobufLexer<'config> {
-    /// Creates a new `ProtobufLexer` with the given configuration.
     pub fn new(config: &'config ProtobufLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
@@ -56,14 +53,14 @@ impl<'config> ProtobufLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip the current character
+            // 如果没有匹配任何规则，跳过当前字符
             if let Some(ch) = state.peek() {
                 let start_pos = state.get_position();
                 state.advance(ch.len_utf8());
                 state.add_token(ProtobufTokenType::Error, start_pos, state.get_position())
             }
             else {
-                // If end of file reached, exit loop
+                // 如果已到达文件末尾，退出循环
                 break;
             }
 
@@ -121,7 +118,7 @@ impl<'config> ProtobufLexer<'config> {
             state.advance(1);
             if let Some('/') = state.peek() {
                 state.advance(1);
-                // Single-line comment
+                // 单行注释
                 while let Some(ch) = state.peek() {
                     if ch == '\n' || ch == '\r' {
                         break;
@@ -133,7 +130,7 @@ impl<'config> ProtobufLexer<'config> {
             }
             else if let Some('*') = state.peek() {
                 state.advance(1);
-                // Multi-line comment /* ... */
+                // 多行注释 /* ... */
                 while let Some(ch) = state.peek() {
                     if ch == '*' {
                         state.advance(1);
@@ -150,7 +147,7 @@ impl<'config> ProtobufLexer<'config> {
                 true
             }
             else {
-                // Backtrack, this is not a comment
+                // 回退，这不是注释
                 state.set_position(start_pos);
                 false
             }
@@ -165,7 +162,7 @@ impl<'config> ProtobufLexer<'config> {
 
         if let Some(quote_char) = state.peek() {
             if quote_char == '"' || quote_char == '\'' {
-                state.advance(1); // Skip start quote
+                state.advance(1); // 跳过开始引号
 
                 let mut escaped = false;
                 while let Some(ch) = state.peek() {
@@ -178,11 +175,11 @@ impl<'config> ProtobufLexer<'config> {
                         state.advance(1)
                     }
                     else if ch == quote_char {
-                        state.advance(1); // Skip end quote
+                        state.advance(1); // 跳过结束引号
                         break;
                     }
                     else if ch == '\n' || ch == '\r' {
-                        // Strings cannot span lines
+                        // 字符串不能跨行
                         break;
                     }
                     else {
@@ -207,28 +204,28 @@ impl<'config> ProtobufLexer<'config> {
             if ch.is_ascii_digit() || (ch == '-' && state.peek_next_n(1).map_or(false, |c| c.is_ascii_digit())) {
                 let start_pos = state.get_position();
 
-                // Handle minus sign
+                // 处理负号
                 if ch == '-' {
                     state.advance(1)
                 }
 
-                // Read integer part
+                // 读取整数部分
                 while let Some(ch) = state.peek() {
                     if ch.is_ascii_digit() { state.advance(1) } else { break }
                 }
 
-                // Check decimal point
+                // 检查小数点
                 if let Some('.') = state.peek() {
                     if state.peek_next_n(1).map_or(false, |c| c.is_ascii_digit()) {
                         state.advance(1);
-                        // Read fractional part
+                        // 读取小数部分
                         while let Some(ch) = state.peek() {
                             if ch.is_ascii_digit() { state.advance(1) } else { break }
                         }
                     }
                 }
 
-                // Check scientific notation
+                // 检查科学记数法
                 if let Some(ch) = state.peek() {
                     if ch == 'e' || ch == 'E' {
                         state.advance(1);
@@ -261,7 +258,7 @@ impl<'config> ProtobufLexer<'config> {
                 let start_pos = state.get_position();
                 let mut text = String::new();
 
-                // Read identifier
+                // 读取标识符
                 while let Some(ch) = state.peek() {
                     if ch.is_alphanumeric() || ch == '_' {
                         text.push(ch);
@@ -272,7 +269,7 @@ impl<'config> ProtobufLexer<'config> {
                     }
                 }
 
-                // Check if it's a keyword
+                // 检查是否是关键字
                 let kind = match text.as_str() {
                     "kind" => ProtobufTokenType::Syntax,
                     "package" => ProtobufTokenType::Package,
@@ -295,7 +292,7 @@ impl<'config> ProtobufLexer<'config> {
                     "group" => ProtobufTokenType::Group,
                     "public" => ProtobufTokenType::Public,
                     "weak" => ProtobufTokenType::Weak,
-                    // Data types
+                    // 数据类型
                     "double" => ProtobufTokenType::Double,
                     "float" => ProtobufTokenType::Float,
                     "int32" => ProtobufTokenType::Int32,
@@ -311,7 +308,7 @@ impl<'config> ProtobufLexer<'config> {
                     "bool" => ProtobufTokenType::Bool,
                     "string" => ProtobufTokenType::String,
                     "bytes" => ProtobufTokenType::Bytes,
-                    // Boolean literals
+                    // 布尔字面量
                     "true" | "false" => ProtobufTokenType::BooleanLiteral,
                     _ => ProtobufTokenType::Identifier,
                 };

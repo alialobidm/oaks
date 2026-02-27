@@ -7,9 +7,23 @@ impl<'config> TypeScriptBuilder<'config> {
         let span = red_root.span();
         let mut statements = Vec::new();
 
+        println!("Green tree root: {:?}", green_tree.kind);
+        self.print_tree(&red_root, 0);
+
         self.collect_statements(&red_root, source, &mut statements)?;
 
         Ok(TypeScriptRoot { statements, span: span.into() })
+    }
+
+    pub(crate) fn print_tree(&self, node: &RedNode<TypeScriptLanguage>, indent: usize) {
+        let span = node.span();
+        println!("{:indent$}{:?} {:?}", "", node.green.kind, span, indent = indent);
+        for child in node.children() {
+            match child {
+                RedTree::Node(child_node) => self.print_tree(&child_node, indent + 2),
+                RedTree::Leaf(leaf) => println!("{:indent$}{:?} {:?}", "", leaf.kind, leaf.span, indent = indent + 2),
+            }
+        }
     }
 
     pub(crate) fn collect_statements(&self, node: &RedNode<TypeScriptLanguage>, source: &SourceText, statements: &mut Vec<Statement>) -> Result<(), OakError> {
@@ -18,21 +32,12 @@ impl<'config> TypeScriptBuilder<'config> {
         if kind == TypeScriptElementType::SourceFile || kind == TypeScriptElementType::Root {
             for child in node.children() {
                 if let RedTree::Node(child_node) = child {
-                    if let Some(stmt) = self.build_statement(&child_node, source)? {
-                        statements.push(stmt);
-                    }
+                    self.collect_statements(&child_node, source, statements)?
                 }
             }
         }
         else {
             if let Some(stmt) = self.build_statement(node, source)? {
-                // If erase_types is true, we skip type-only statements.
-                if self.erase_types {
-                    match &stmt {
-                        Statement::Interface(_) | Statement::TypeAlias(_) => return Ok(()),
-                        _ => {}
-                    }
-                }
                 statements.push(stmt)
             }
         }

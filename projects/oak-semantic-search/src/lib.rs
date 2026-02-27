@@ -11,6 +11,7 @@ use oak_core::{
     tree::{RedNode, red_tree::RedLeaf},
     visitor::Visitor,
 };
+use serde::{Deserialize, Serialize};
 
 /// Trait for semantic search implementations.
 pub trait SemanticSearch: Send + Sync {
@@ -33,8 +34,7 @@ impl SemanticSearch for NoSemanticSearch {
 }
 
 /// Represents a chunk of code extracted for semantic indexing.
-#[derive(Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CodeChunk {
     /// The text content of the chunk.
     pub text: String,

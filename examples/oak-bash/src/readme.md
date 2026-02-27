@@ -1,7 +1,5 @@
 # 🛠️ Bash Parser Developer Guide
 
-Bash support for the Oak language framework.
-
 This guide is designed to help you quickly get started with developing and integrating `oak-bash`.
 
 ## 🚦 Quick Start

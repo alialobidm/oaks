@@ -1,101 +1,69 @@
-# Comprehensive Dockerfile Syntax Test
-# Syntax directive
-# syntax=docker/dockerfile:1.4
+# Docker file for testing lexer (alternative format)
+# This file contains various Docker kind elements for oak-dockerfile project
 
-# Base Image
-FROM ubuntu:22.04 AS base
-LABEL maintainer="oak-tester <test@example.com>"
-LABEL version="1.0"
-LABEL description="Comprehensive Dockerfile Test Image"
+FROM ubuntu:22.04
 
-# Arguments and Environment Variables
-ARG DEBIAN_FRONTEND=noninteractive
-ARG APP_VERSION=1.0.0
-ENV NODE_ENV=production \
-    PORT=8080 \
-    PATH="/app/node_modules/.bin:$PATH"
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV APP_HOME=/app
+ENV NODE_VERSION=18.17.0
 
-# Shell selection
-SHELL ["/bin/bash", "-c"]
-
-# Installation (Run commands)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
     curl \
+    wget \
     git \
-    ca-certificates \
+    python3 \
+    python3-pip \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Workdir
-WORKDIR /app
+# Create app directory
+WORKDIR $APP_HOME
 
-# Copy files
+# Copy package files
 COPY package*.json ./
-COPY .npmrc ./
+COPY requirements.txt ./
 
-# Conditional execution (Mounts)
-RUN --mount=type=cache,target=/root/.npm \
-    npm install --ci --only=production
+# Install Python dependencies
+RUN pip3 install -r requirements.txt
 
-# Multi-stage build: Builder
-FROM base AS builder
-ENV NODE_ENV=development
-RUN npm install
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g npm↯latest
+
+# Install Node.js dependencies
+RUN npm ci --only=production
+
+# Copy application code
 COPY . .
+
+# Build application
 RUN npm run build
 
-# Multi-stage build: Final
-FROM base AS final
-WORKDIR /app
+# Create non-root user
+RUN useradd -r -u 1001 -g users -d $APP_HOME -s /sbin/nologin appuser && \
+    chown -R appuser:users $APP_HOME
 
-# Copy from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
-
-# User configuration
-RUN groupadd -r appuser && useradd -r -g appuser -d /app appuser
-RUN chown -R appuser:appuser /app
+# Switch to non-root user
 USER appuser
 
-# Volumes
-VOLUME ["/app/data", "/app/logs"]
+# Expose port
+EXPOSE 8080
 
-# Networking
-EXPOSE 8080 9090
-
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
-# Entrypoint and Cmd
-ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "dist/server.js"]
+# Set environment for production
+ENV NODE_ENV=production
+ENV PYTHON_ENV=production
 
-# Comments with special characters
-# This is a comment with UTF-8: 你好 world
-# This is a comment with URL: https://example.com
+# Start application
+CMD ["python3", "app.py"]
 
-# OnBuild instructions
-ONBUILD COPY . /app/src
-ONBUILD RUN npm install
-
-# Stop Signal
-STOPSIGNAL SIGTERM
-
-# HereDocs (Dockerfile 1.4+)
-RUN <<EOF
-echo "Hello World" > /app/hello.txt
-cat /app/hello.txt
-EOF
-
-RUN <<PYTHON
-import os
-print(f"Current dir: {os.getcwd()}")
-PYTHON
-
-# Add instruction (remote URL)
-ADD https://example.com/config.json /app/config/
-
-# Meta arguments
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-RUN echo "Building on $BUILDPLATFORM, targeting $TARGETPLATFORM"
+# Alternative CMD formats
+# CMD ["npm", "start"]
+# CMD ["node", "server.js"]
+# CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

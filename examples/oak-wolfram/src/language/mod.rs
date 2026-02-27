@@ -1,13 +1,10 @@
-//! Wolfram language definition.
-
+#![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-/// The Wolfram language definition.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct WolframLanguage {}
 
 impl WolframLanguage {
-    /// Creates a new `WolframLanguage`.
     pub fn new() -> Self {
         Self {}
     }

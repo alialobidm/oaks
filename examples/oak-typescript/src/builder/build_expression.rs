@@ -1,5 +1,5 @@
 use crate::{ast::*, builder::TypeScriptBuilder, language::TypeScriptLanguage, lexer::token_type::TypeScriptTokenType, parser::element_type::TypeScriptElementType};
-use oak_core::{OakError, RedNode, RedTree, Source, SourceText, TokenType};
+use oak_core::{OakError, RedNode, RedTree, Source, SourceText};
 
 impl<'config> TypeScriptBuilder<'config> {
     pub(crate) fn build_expression(&self, node: &RedNode<TypeScriptLanguage>, source: &SourceText) -> Result<Option<Expression>, OakError> {
@@ -8,18 +8,7 @@ impl<'config> TypeScriptBuilder<'config> {
 
         match kind {
             TypeScriptElementType::IdentifierName => {
-                let mut name = String::new();
-                for child in node.children() {
-                    if let RedTree::Leaf(leaf) = child {
-                        if leaf.kind == TypeScriptTokenType::IdentifierName {
-                            name = source.get_text_in(leaf.span.into()).trim().to_string();
-                            break;
-                        }
-                    }
-                }
-                if name.is_empty() {
-                    name = source.get_text_in(span.into()).trim().to_string();
-                }
+                let name = source.get_text_in(span.into()).to_string();
                 Ok(Some(Expression::new(ExpressionKind::Identifier(name), span.into())))
             }
             TypeScriptElementType::NumericLiteral => {
@@ -58,50 +47,6 @@ impl<'config> TypeScriptBuilder<'config> {
                 Ok(Some(Expression::new(ExpressionKind::BooleanLiteral(val), span.into())))
             }
             TypeScriptElementType::Null => Ok(Some(Expression::new(ExpressionKind::NullLiteral, span.into()))),
-            TypeScriptElementType::JsxExpressionContainer => {
-                let mut left = None;
-                let mut operator = String::new();
-                let mut right = None;
-
-                for child in node.children() {
-                    match child {
-                        RedTree::Node(child_node) => {
-                            if left.is_none() {
-                                left = self.build_expression(&child_node, source)?
-                            }
-                            else {
-                                right = self.build_expression(&child_node, source)?
-                            }
-                        }
-                        RedTree::Leaf(leaf) => {
-                            if left.is_some() && right.is_none() && !leaf.kind.is_ignored() {
-                                operator = source.get_text_in(leaf.span.into()).to_string()
-                            }
-                        }
-                    }
-                }
-
-                if let (Some(l), Some(r)) = (left, right) {
-                    let is_assignment = matches!(operator.as_str(), "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "**=" | "<<=" | ">>=" | ">>>=" | "&=" | "|=" | "^=" | "&&=" | "||=" | "??=");
-
-                    if is_assignment {
-                        Ok(Some(Expression::new(ExpressionKind::AssignmentExpression { left: Box::new(l), operator, right: Box::new(r) }, span.into())))
-                    }
-                    else {
-                        Ok(Some(Expression::new(ExpressionKind::BinaryExpression { left: Box::new(l), operator, right: Box::new(r) }, span.into())))
-                    }
-                }
-                else {
-                    for child in node.children() {
-                        if let RedTree::Node(child_node) = child {
-                            if let Some(expr) = self.build_expression(&child_node, source)? {
-                                return Ok(Some(expr));
-                            }
-                        }
-                    }
-                    Ok(None)
-                }
-            }
             TypeScriptElementType::BinaryExpression => {
                 let mut left = None;
                 let mut operator = String::new();
@@ -118,46 +63,8 @@ impl<'config> TypeScriptBuilder<'config> {
                             }
                         }
                         RedTree::Leaf(leaf) => {
-                            if left.is_some() && right.is_none() && operator.is_empty() && !leaf.kind.is_ignored() {
-                                operator = match leaf.kind {
-                                    TypeScriptTokenType::Plus => "+".to_string(),
-                                    TypeScriptTokenType::Minus => "-".to_string(),
-                                    TypeScriptTokenType::Star => "*".to_string(),
-                                    TypeScriptTokenType::Slash => "/".to_string(),
-                                    TypeScriptTokenType::Percent => "%".to_string(),
-                                    TypeScriptTokenType::StarStar => "**".to_string(),
-                                    TypeScriptTokenType::Less => "<".to_string(),
-                                    TypeScriptTokenType::Greater => ">".to_string(),
-                                    TypeScriptTokenType::LessEqual => "<=".to_string(),
-                                    TypeScriptTokenType::GreaterEqual => ">=".to_string(),
-                                    TypeScriptTokenType::EqualEqual => "==".to_string(),
-                                    TypeScriptTokenType::EqualEqualEqual => "===".to_string(),
-                                    TypeScriptTokenType::NotEqual => "!=".to_string(),
-                                    TypeScriptTokenType::NotEqualEqual => "!==".to_string(),
-                                    TypeScriptTokenType::AmpersandAmpersand => "&&".to_string(),
-                                    TypeScriptTokenType::PipePipe => "||".to_string(),
-                                    TypeScriptTokenType::Ampersand => "&".to_string(),
-                                    TypeScriptTokenType::Pipe => "|".to_string(),
-                                    TypeScriptTokenType::Caret => "^".to_string(),
-                                    TypeScriptTokenType::LeftShift => "<<".to_string(),
-                                    TypeScriptTokenType::RightShift => ">>".to_string(),
-                                    TypeScriptTokenType::UnsignedRightShift => ">>>".to_string(),
-                                    TypeScriptTokenType::PlusEqual => "+=".to_string(),
-                                    TypeScriptTokenType::MinusEqual => "-=".to_string(),
-                                    TypeScriptTokenType::StarEqual => "*=".to_string(),
-                                    TypeScriptTokenType::SlashEqual => "/=".to_string(),
-                                    TypeScriptTokenType::PercentEqual => "%=".to_string(),
-                                    TypeScriptTokenType::StarStarEqual => "**=".to_string(),
-                                    TypeScriptTokenType::LeftShiftEqual => "<<=".to_string(),
-                                    TypeScriptTokenType::RightShiftEqual => ">>=".to_string(),
-                                    TypeScriptTokenType::UnsignedRightShiftEqual => ">>>=".to_string(),
-                                    TypeScriptTokenType::AmpersandEqual => "&=".to_string(),
-                                    TypeScriptTokenType::PipeEqual => "|=".to_string(),
-                                    TypeScriptTokenType::CaretEqual => "^=".to_string(),
-                                    TypeScriptTokenType::AmpersandAmpersandEqual => "&&=".to_string(),
-                                    TypeScriptTokenType::PipePipeEqual => "||=".to_string(),
-                                    _ => source.get_text_in(leaf.span.into()).to_string(),
-                                };
+                            if left.is_some() && right.is_none() {
+                                operator = source.get_text_in(leaf.span.into()).to_string()
                             }
                         }
                     }
@@ -238,18 +145,12 @@ impl<'config> TypeScriptBuilder<'config> {
                         RedTree::Leaf(leaf) => match leaf.kind {
                             TypeScriptTokenType::LeftBracket => computed = true,
                             TypeScriptTokenType::QuestionDot => optional = true,
-                            TypeScriptTokenType::IdentifierName => {
-                                if object.is_some() && property.is_none() {
-                                    let name = source.get_text_in(leaf.span.into()).trim().to_string();
-                                    property = Some(Expression::new(ExpressionKind::Identifier(name), leaf.span.into()));
-                                }
-                            }
                             _ => {}
                         },
                     }
                 }
 
-                if object.is_some() && property.is_some() { Ok(Some(Expression::new(ExpressionKind::MemberExpression { object: Box::new(object.unwrap()), property: Box::new(property.unwrap()), computed, optional }, span.into()))) } else { Ok(None) }
+                if let (Some(obj), Some(prop)) = (object, property) { Ok(Some(Expression::new(ExpressionKind::MemberExpression { object: Box::new(obj), property: Box::new(prop), computed, optional }, span.into()))) } else { Ok(None) }
             }
             TypeScriptElementType::ArrayExpression => {
                 let mut elements = Vec::new();
@@ -510,16 +411,7 @@ impl<'config> TypeScriptBuilder<'config> {
 
                 if let Some(arg) = argument { Ok(Some(Expression::new(ExpressionKind::UpdateExpression { operator, argument: Box::new(arg), prefix }, span.into()))) } else { Ok(None) }
             }
-            _ => {
-                for child in node.children() {
-                    if let RedTree::Node(child_node) = child {
-                        if let Some(expr) = self.build_expression(&child_node, source)? {
-                            return Ok(Some(expr));
-                        }
-                    }
-                }
-                Ok(None)
-            }
+            _ => Ok(None),
         }
     }
 }

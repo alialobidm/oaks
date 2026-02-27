@@ -1,19 +1,18 @@
 use crate::{
     JsonLanguage,
-    ast::{JsonArray, JsonBoolean, JsonField, JsonNull, JsonNumber, JsonObject, JsonRoot, JsonString, JsonValue},
+    ast::{JsonRoot, JsonValue},
     lexer::JsonLexer,
     parser::JsonParser,
 };
 use oak_core::{Builder, BuilderCache, GreenNode, Lexer, OakDiagnostics, OakError, Parser, SourceText, TextEdit, parser::session::ParseSession, source::Source};
 
-/// AST builder for JSON.
+/// JSON AST 构建器
 #[derive(Clone)]
 pub struct JsonBuilder<'config> {
     config: &'config JsonLanguage,
 }
 
 impl<'config> JsonBuilder<'config> {
-    /// Creates a new JSON builder.
     pub fn new(config: &'config JsonLanguage) -> Self {
         Self { config }
     }
@@ -27,22 +26,21 @@ impl<'config> Builder<JsonLanguage> for JsonBuilder<'config> {
         let mut cache = ParseSession::<JsonLanguage>::default();
         lexer.lex(source, edits, &mut cache);
         let parse_result = parser.parse(source, edits, &mut cache);
-        let OakDiagnostics { result, diagnostics } = parse_result;
 
-        match result {
+        match parse_result.result {
             Ok(green_tree) => {
                 let text = source.get_text_in((0..source.length()).into());
                 let source_text = SourceText::new(text.into_owned());
                 match self.build_root(&green_tree, &source_text) {
-                    Ok(ast_root) => OakDiagnostics { result: Ok(ast_root), diagnostics },
+                    Ok(ast_root) => OakDiagnostics { result: Ok(ast_root), diagnostics: parse_result.diagnostics },
                     Err(build_error) => {
-                        let mut diagnostics = diagnostics;
+                        let mut diagnostics = parse_result.diagnostics;
                         diagnostics.push(build_error.clone());
                         OakDiagnostics { result: Err(build_error), diagnostics }
                     }
                 }
             }
-            Err(parse_error) => OakDiagnostics { result: Err(parse_error), diagnostics },
+            Err(parse_error) => OakDiagnostics { result: Err(parse_error), diagnostics: parse_result.diagnostics },
         }
     }
 }
@@ -60,7 +58,7 @@ impl<'config> JsonBuilder<'config> {
 
     fn build_value<'a>(&self, node: &GreenNode<'a, JsonLanguage>, offset: usize, source: &SourceText) -> Result<JsonValue, OakError> {
         use crate::parser::element_type::JsonElementType;
-        let span: oak_core::Range<usize> = (offset..offset + node.byte_length as usize).into();
+        let span: oak_core::Range<usize> = (offset..offset + node.text_len as usize).into();
 
         match node.kind {
             JsonElementType::Object => {
@@ -72,14 +70,14 @@ impl<'config> JsonBuilder<'config> {
                             if n.kind == JsonElementType::ObjectEntry {
                                 fields.push(self.build_field(n, current_offset, source)?);
                             }
-                            current_offset += n.byte_length as usize;
+                            current_offset += n.text_len as usize;
                         }
                         oak_core::GreenTree::Leaf(l) => {
                             current_offset += l.length as usize;
                         }
                     }
                 }
-                Ok(JsonValue::Object(JsonObject { fields, span }))
+                Ok(JsonValue::Object(crate::ast::JsonObject { fields, span }))
             }
             JsonElementType::Array => {
                 let mut elements = Vec::new();
@@ -93,31 +91,31 @@ impl<'config> JsonBuilder<'config> {
                                 }
                                 _ => {}
                             }
-                            current_offset += n.byte_length as usize;
+                            current_offset += n.text_len as usize;
                         }
                         oak_core::GreenTree::Leaf(l) => {
                             current_offset += l.length as usize;
                         }
                     }
                 }
-                Ok(JsonValue::Array(JsonArray { elements, span }))
+                Ok(JsonValue::Array(crate::ast::JsonArray { elements, span }))
             }
             JsonElementType::String => {
                 let text = source.get_text_in(span.clone());
                 let value = text.trim_matches('"').to_string();
-                Ok(JsonValue::String(JsonString { value, span }))
+                Ok(JsonValue::String(crate::ast::JsonString { value, span }))
             }
             JsonElementType::Number => {
                 let text = source.get_text_in(span.clone());
                 let value = text.parse::<f64>().map_err(|_| OakError::syntax_error(format!("Invalid number: {}", text), span.start, None))?;
-                Ok(JsonValue::Number(JsonNumber { value, span }))
+                Ok(JsonValue::Number(crate::ast::JsonNumber { value, span }))
             }
             JsonElementType::Boolean => {
                 let text = source.get_text_in(span.clone());
                 let value = text == "true";
-                Ok(JsonValue::Boolean(JsonBoolean { value, span }))
+                Ok(JsonValue::Boolean(crate::ast::JsonBoolean { value, span }))
             }
-            JsonElementType::Null => Ok(JsonValue::Null(JsonNull { span })),
+            JsonElementType::Null => Ok(JsonValue::Null(crate::ast::JsonNull { span })),
             JsonElementType::Value | JsonElementType::ArrayElement | JsonElementType::Root => {
                 let mut current_offset = offset;
                 for child in node.children {
@@ -134,9 +132,10 @@ impl<'config> JsonBuilder<'config> {
         }
     }
 
-    fn build_field<'a>(&self, node: &GreenNode<'a, JsonLanguage>, offset: usize, source: &SourceText) -> Result<JsonField, OakError> {
+    fn build_field<'a>(&self, node: &GreenNode<'a, JsonLanguage>, offset: usize, source: &SourceText) -> Result<crate::ast::JsonField, OakError> {
         use crate::{lexer::token_type::JsonTokenType, parser::element_type::JsonElementType};
-        let span: oak_core::Range<usize> = (offset..offset + node.byte_length as usize).into();
+        let span: oak_core::Range<usize> = (offset..offset + node.text_len as usize).into();
+
         let mut name = None;
         let mut value = None;
         let mut seen_colon = false;
@@ -147,9 +146,10 @@ impl<'config> JsonBuilder<'config> {
                 oak_core::GreenTree::Node(n) => {
                     if !seen_colon {
                         if n.kind == JsonElementType::String {
-                            let s_span: oak_core::Range<usize> = (current_offset..current_offset + n.byte_length as usize).into();
+                            let s_span: oak_core::Range<usize> = (current_offset..current_offset + n.text_len as usize).into();
                             let text = source.get_text_in(s_span.clone());
-                            name = Some(JsonString { value: text.trim_matches('"').to_string(), span: s_span });
+                            let val = text.trim_matches('"').to_string();
+                            name = Some(crate::ast::JsonString { value: val, span: s_span });
                         }
                     }
                     else if value.is_none() {
@@ -160,17 +160,29 @@ impl<'config> JsonBuilder<'config> {
                             _ => {}
                         }
                     }
-                    current_offset += n.byte_length as usize;
+                    current_offset += n.text_len as usize;
                 }
                 oak_core::GreenTree::Leaf(l) => {
-                    if l.kind == JsonTokenType::Colon {
-                        seen_colon = true;
+                    match l.kind {
+                        JsonTokenType::Colon => {
+                            seen_colon = true;
+                        }
+                        JsonTokenType::StringLiteral | JsonTokenType::BareKey if !seen_colon => {
+                            let b_span: oak_core::Range<usize> = (current_offset..current_offset + l.length as usize).into();
+                            let text = source.get_text_in(b_span.clone());
+                            let val = if l.kind == JsonTokenType::StringLiteral { text.trim_matches('"').to_string() } else { text.to_string() };
+                            name = Some(crate::ast::JsonString { value: val, span: b_span });
+                        }
+                        _ => {}
                     }
                     current_offset += l.length as usize;
                 }
             }
         }
 
-        Ok(JsonField { name: name.ok_or_else(|| OakError::syntax_error("Missing field name", offset, None))?, value: value.ok_or_else(|| OakError::syntax_error("Missing field value", offset, None))?, span })
+        let name = name.ok_or_else(|| OakError::expected_token("String", span.start, None))?;
+        let value = value.ok_or_else(|| OakError::expected_token("Value", span.start, None))?;
+
+        Ok(crate::ast::JsonField { name, value, span })
     }
 }

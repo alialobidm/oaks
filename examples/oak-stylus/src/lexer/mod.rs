@@ -4,21 +4,19 @@ pub mod token_type;
 use crate::{language::StylusLanguage, lexer::token_type::StylusTokenType};
 use oak_core::{Lexer, LexerCache, LexerState, OakError, TextEdit, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, StylusLanguage>;
+type State<'a, S> = LexerState<'a, S, StylusLanguage>;
 
-/// Stylus lexer implementation.
 #[derive(Clone, Debug)]
 pub struct StylusLexer<'config> {
     config: &'config StylusLanguage,
 }
 
 impl<'config> StylusLexer<'config> {
-    /// Create a new Stylus lexer
     pub fn new(config: &'config StylusLanguage) -> Self {
         Self { config }
     }
 
-    /// Skip whitespace characters (excluding newlines)
+    /// 跳过空白字符（不包括换行符）
     fn skip_whitespace<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -35,7 +33,7 @@ impl<'config> StylusLexer<'config> {
         }
     }
 
-    /// Handle newlines
+    /// 处理换行
     fn lex_newline<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -57,7 +55,7 @@ impl<'config> StylusLexer<'config> {
         }
     }
 
-    /// Handle comments
+    /// 处理注释
     fn lex_comment<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -76,27 +74,27 @@ impl<'config> StylusLexer<'config> {
         }
     }
 
-    /// Handle string literals
+    /// 处理字符串字面量
     fn lex_string<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some(quote) = state.peek() {
             if quote == '"' || quote == '\'' {
-                // Check if it is a multi-line string (three quotes)
+                // 检查是否为多行字符串（三个引号）
                 let mut quote_count = 0;
 
-                // Count consecutive quotes
+                // 计算连续的引号数
                 while let Some(ch) = state.peek_next_n(quote_count) {
                     if ch == quote { quote_count += 1 } else { break }
                 }
 
                 if quote_count >= 3 {
-                    // Multi-line string
-                    state.advance(3); // Skip the starting three quotes
+                    // 多行字符串
+                    state.advance(3); // 跳过开始的三个引号
 
                     while let Some(ch) = state.peek() {
                         if ch == quote {
-                            // Check for closing three quotes
+                            // 检查是否为结束的三个引号
                             let mut end_quote_count = 0;
 
                             while let Some(check_ch) = state.peek_next_n(end_quote_count) {
@@ -104,7 +102,7 @@ impl<'config> StylusLexer<'config> {
                             }
 
                             if end_quote_count >= 3 {
-                                state.advance(3); // Skip the closing three quotes
+                                state.advance(3); // 跳过结束的三个引号
                                 break;
                             }
                             else {
@@ -112,7 +110,7 @@ impl<'config> StylusLexer<'config> {
                             }
                         }
                         else if ch == '\\' && quote == '"' {
-                            // Handle escape characters (only in basic strings)
+                            // 处理转义字符（仅在基本字符串中）
                             state.advance(1);
                             if let Some(_) = state.peek() {
                                 state.advance(1)
@@ -127,19 +125,19 @@ impl<'config> StylusLexer<'config> {
                     true
                 }
                 else {
-                    // Single-line string
-                    state.advance(1); // Skip starting quote
+                    // 单行字符串
+                    state.advance(1); // 跳过开始引号
 
                     while let Some(ch) = state.peek() {
                         if ch == quote {
-                            state.advance(1); // Skip closing quote
+                            state.advance(1); // 跳过结束引号
                             break;
                         }
                         else if ch == '\n' || ch == '\r' {
-                            break; // String cannot span across lines
+                            break; // 字符串不能跨行
                         }
                         else if ch == '\\' && quote == '"' {
-                            // Handle escape characters (only in double-quoted strings)
+                            // 处理转义字符（仅在双引号字符串中）
                             state.advance(1);
                             if let Some(_) = state.peek() {
                                 state.advance(1)
@@ -163,23 +161,23 @@ impl<'config> StylusLexer<'config> {
         }
     }
 
-    /// Handle number literals
+    /// 处理数字字面量
     fn lex_number<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start_pos = state.get_position();
         let mut is_float = false;
 
-        // Handle single sign
+        // 处理符号
         if let Some(ch) = state.peek() {
             if ch == '+' || ch == '-' {
                 state.advance(1)
             }
         }
 
-        // Handle hex numbers (if allowed)
+        // 处理十六进制数字（如果允许）
         if self.config.allow_hex_numbers {
             if state.peek() == Some('0') {
                 if let Some('x') | Some('X') = state.peek_next_n(1) {
-                    state.advance(2); // Skip "0x"
+                    state.advance(2); // 跳过 "0x"
 
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_hexdigit() || ch == '_' { state.advance(1) } else { break }
@@ -191,17 +189,17 @@ impl<'config> StylusLexer<'config> {
             }
         }
 
-        // Handle decimal numbers
+        // 处理十进制数
         while let Some(ch) = state.peek() {
             if ch.is_ascii_digit() || ch == '_' { state.advance(1) } else { break }
         }
 
-        // Handle decimals
+        // 处理小数
         if let Some('.') = state.peek() {
             if let Some(next_ch) = state.peek_next_n(1) {
                 if next_ch.is_ascii_digit() {
                     is_float = true;
-                    state.advance(1); // decimal point
+                    state.advance(1); // 小数点
 
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_digit() || ch == '_' { state.advance(1) } else { break }
@@ -210,7 +208,7 @@ impl<'config> StylusLexer<'config> {
             }
         }
 
-        // Handle scientific notation
+        // 处理科学计数
         if let Some('e') | Some('E') = state.peek() {
             is_float = true;
             state.advance(1);
@@ -230,7 +228,7 @@ impl<'config> StylusLexer<'config> {
         true
     }
 
-    /// Handle identifiers or keywords
+    /// 处理标识符或关键字
     fn lex_identifier_or_keyword<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -257,17 +255,17 @@ impl<'config> StylusLexer<'config> {
         }
     }
 
-    /// Determine if it is a keyword or an identifier
+    /// 判断是关键字还是标识符
     fn keyword_or_identifier(&self, text: &str) -> StylusTokenType {
         match text {
-            // CSS color keywords
+            // CSS 颜色关键字
             "red" | "blue" | "green" | "white" | "black" | "transparent" => StylusTokenType::Color,
-            // Others are identifiers
+            // 其他都是标识符
             _ => StylusTokenType::Identifier,
         }
     }
 
-    /// Handle delimiters and operators
+    /// 处理分隔符和操作符
     fn lex_delimiter<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -303,12 +301,11 @@ impl<'config> StylusLexer<'config> {
 }
 
 impl<'config> StylusLexer<'config> {
-    /// Run the lexer
     fn run<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
 
-            // Try various lexing rules.
+            // 尝试各种词法规则
             if self.skip_whitespace(state) {
                 continue;
             }
@@ -341,7 +338,7 @@ impl<'config> StylusLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip current character and mark as error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());

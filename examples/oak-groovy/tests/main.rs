@@ -9,7 +9,7 @@ fn ready() {
 mod tests {
     #[test]
     fn test_basic_functionality() {
-        // Basic functionality test
+        // 基础功能测试
         assert!(true)
     }
 }

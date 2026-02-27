@@ -1,7 +1,5 @@
 # 🛠️ Objective-C Parser Developer Guide
 
-Objective-c support for the Oak language framework.
-
 This guide is designed to help you quickly get started with developing and integrating `oak-objective-c`.
 
 ## 🚦 Quick Start

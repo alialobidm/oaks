@@ -1,10 +1,10 @@
 use oak_core::{Token, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Type alias for an Erlang token.
 pub type ErlangToken = Token<ErlangTokenType>;
 
 impl ErlangTokenType {
-    /// Returns `true` if the token type is a keyword.
     pub fn is_keyword(&self) -> bool {
         matches!(
             self,
@@ -39,7 +39,6 @@ impl ErlangTokenType {
         )
     }
 
-    /// Returns `true` if the token type is an operator.
     pub fn is_operator(&self) -> bool {
         matches!(
             self,
@@ -63,7 +62,6 @@ impl ErlangTokenType {
         )
     }
 
-    /// Returns `true` if the token type is a punctuation.
     pub fn is_punctuation(&self) -> bool {
         matches!(self, Self::LeftParen | Self::RightParen | Self::LeftBrace | Self::RightBrace | Self::LeftBracket | Self::RightBracket | Self::Comma | Self::Semicolon | Self::Dot | Self::Colon | Self::Arrow | Self::Pipe | Self::PipePipe | Self::Hash)
     }
@@ -71,7 +69,7 @@ impl ErlangTokenType {
 
 impl TokenType for ErlangTokenType {
     type Role = UniversalTokenRole;
-    const END_OF_STREAM: Self = Self::Eof;
+    const END_OF_STREAM: Self = Self::Error;
 
     fn is_ignored(&self) -> bool {
         matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
@@ -79,7 +77,6 @@ impl TokenType for ErlangTokenType {
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Eof => UniversalTokenRole::Eof,
             Self::Whitespace | Self::Newline => UniversalTokenRole::Whitespace,
             Self::Comment => UniversalTokenRole::Comment,
             Self::Identifier | Self::Atom | Self::Variable => UniversalTokenRole::Name,
@@ -87,207 +84,118 @@ impl TokenType for ErlangTokenType {
             _ if self.is_keyword() => UniversalTokenRole::Keyword,
             _ if self.is_operator() => UniversalTokenRole::Operator,
             _ if self.is_punctuation() => UniversalTokenRole::Punctuation,
-            Self::Error => UniversalTokenRole::Error,
             _ => UniversalTokenRole::None,
         }
     }
 }
 
-/// Token types for the Erlang language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum ErlangTokenType {
-    /// Whitespace.
+    // 基本 kind
     Whitespace,
-    /// Newline.
     Newline,
-    /// Comment.
     Comment,
 
-    /// Identifier.
+    // 标识符和字面量
     Identifier,
-    /// Atom.
     Atom,
-    /// Variable.
     Variable,
-    /// Number.
     Number,
-    /// String.
     String,
-    /// Character literal.
     Character,
 
-    /// `after` keyword.
+    // Erlang 关键字
     After,
-    /// `and` keyword.
     And,
-    /// `andalso` keyword.
     Andalso,
-    /// `band` keyword.
     Band,
-    /// `begin` keyword.
     Begin,
-    /// `bnot` keyword.
     Bnot,
-    /// `bor` keyword.
     Bor,
-    /// `bsl` keyword.
     Bsl,
-    /// `bsr` keyword.
     Bsr,
-    /// `bxor` keyword.
     Bxor,
-    /// `case` keyword.
     Case,
-    /// `catch` keyword.
     Catch,
-    /// `cond` keyword.
     Cond,
-    /// `div` keyword.
     Div,
-    /// `end` keyword.
     End,
-    /// `fun` keyword.
     Fun,
-    /// `if` keyword.
     If,
-    /// `let` keyword.
     Let,
-    /// `not` keyword.
     Not,
-    /// `of` keyword.
     Of,
-    /// `or` keyword.
     Or,
-    /// `orelse` keyword.
     Orelse,
-    /// `query` keyword.
     Query,
-    /// `receive` keyword.
     Receive,
-    /// `rem` keyword.
     Rem,
-    /// `try` keyword.
     Try,
-    /// `when` keyword.
     When,
-    /// `xor` keyword.
     Xor,
 
-    /// Plus `+`.
-    Plus,
-    /// Minus `-`.
-    Minus,
-    /// Star `*`.
-    Star,
-    /// Slash `/`.
-    Slash,
-    /// Equal `=`.
-    Equal,
-    /// Double equal `==`.
-    EqualEqual,
-    /// Slash equal `/=`.
-    SlashEqual,
-    /// Equal colon equal `=:=`.
-    EqualColonEqual,
-    /// Equal slash equal `=/=`.
-    EqualSlashEqual,
-    /// Less than `<`.
-    Less,
-    /// Greater than `>`.
-    Greater,
-    /// Less than or equal to `=<`.
-    LessEqual,
-    /// Greater than or equal to `>=`.
-    GreaterEqual,
-    /// Plus plus `++`.
-    PlusPlus,
-    /// Minus minus `--`.
-    MinusMinus,
-    /// Exclamation `!`.
-    Exclamation,
-    /// Question mark `?`.
-    Question,
+    // 操作符
+    Plus,            // +
+    Minus,           // -
+    Star,            // *
+    Slash,           // /
+    Equal,           // =
+    EqualEqual,      // ==
+    SlashEqual,      // /=
+    EqualColonEqual, // =:=
+    EqualSlashEqual, // =/=
+    Less,            // <
+    Greater,         // >
+    LessEqual,       // =<
+    GreaterEqual,    // >=
+    PlusPlus,        // ++
+    MinusMinus,      // --
+    Exclamation,     // !
+    Question,        // ?
 
-    /// Left parenthesis `(`.
-    LeftParen,
-    /// Right parenthesis `)`.
-    RightParen,
-    /// Left brace `{`.
-    LeftBrace,
-    /// Right brace `}`.
-    RightBrace,
-    /// Left bracket `[`.
-    LeftBracket,
-    /// Right bracket `]`.
-    RightBracket,
-    /// Comma `,`.
-    Comma,
-    /// Semicolon `;`.
-    Semicolon,
-    /// Dot `.`.
-    Dot,
-    /// Colon `:`.
-    Colon,
-    /// Arrow `->`.
-    Arrow,
-    /// Pipe `|`.
-    Pipe,
-    /// Double pipe `||`.
-    PipePipe,
-    /// Hash `#`.
-    Hash,
+    // 分隔符
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBrace,    // {
+    RightBrace,   // }
+    LeftBracket,  // [
+    RightBracket, // ]
+    Comma,        // ,
+    Semicolon,    // ;
+    Dot,          // .
+    Colon,        // :
+    Arrow,        // ->
+    Pipe,         // |
+    PipePipe,     // ||
+    Hash,         // #
 
-    /// Root node.
+    // 语法节点类型
     Root,
-    /// Item node.
     Item,
-    /// Module attribute.
     Module,
-    /// Export attribute.
     Export,
-    /// Other attribute.
     Attribute,
-    /// Function definition.
     Function,
-    /// Function clause.
     FunctionClause,
-    /// Pattern.
     Pattern,
-    /// Record pattern.
     RecordPattern,
-    /// Statement.
     Statement,
-    /// Expression.
     Expr,
-    /// Binary expression.
     BinaryExpr,
-    /// Call expression.
     CallExpr,
-    /// Fun expression.
     FunExpr,
-    /// Case expression.
     CaseExpr,
-    /// Case clause.
     CaseClause,
-    /// If expression.
     IfExpr,
-    /// If clause.
     IfClause,
-    /// Try expression.
     TryExpr,
-    /// Catch clause.
     CatchClause,
-    /// Receive expression.
     ReceiveExpr,
-    /// Receive clause.
     ReceiveClause,
-    /// Record expression.
     RecordExpr,
 
-    /// Lexing error.
+    // 特殊
     Error,
-    /// End of file.
-    Eof,
 }

@@ -35,10 +35,10 @@ fn test_rust_builder_single_file() -> Result<(), oak_core::OakError> {
     let language = RustLanguage::default();
     let builder = RustBuilder::new(&language);
 
-    // Test simple function
+    // 测试简单的函数
     let source = SourceText::new("fn add(x: i32, y: i32) -> i32 { x + y }");
 
-    // Create ParseSession
+    // 创建 ParseSession
     let mut cache = ParseSession::<RustLanguage>::default();
 
     let diagnostics = builder.build(&source, &[], &mut cache);
@@ -54,7 +54,7 @@ fn test_rust_builder_complex() -> Result<(), oak_core::OakError> {
     let language = RustLanguage::default();
     let builder = RustBuilder::new(&language);
 
-    // Test complex Rust code
+    // 测试更复杂的 Rust 代码
     let source = SourceText::new(
         r#"
 struct Point {
@@ -81,7 +81,7 @@ fn main() {
 
     println!("Testing builder with complex Rust code");
 
-    // Create ParseSession
+    // 创建 ParseSession
     let mut cache = ParseSession::<RustLanguage>::default();
 
     let diagnostics = builder.build(&source, &[], &mut cache);

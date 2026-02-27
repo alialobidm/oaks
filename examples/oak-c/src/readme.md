@@ -1,18 +1,15 @@
-# 📖 C Parser User Guide
+# 🛠️ C Parser Developer Guide
 
-C support for the Oak language framework.
+This guide is designed to help you quickly get started with developing and integrating `oak-c`.
 
-This guide helps you integrate `oak-c` into your project and perform common parsing tasks efficiently.
-
-## 🚀 Quick Start
+## 🚦 Quick Start
 
 ### Basic Parsing Example
 
 The following is a standard workflow for parsing a C function:
 
 ```rust
-use oak_c::{CParser, language::CLanguage};
-use oak_core::{SourceText, parser::Parser, source::TextEdit, parser::ParseSession};
+use oak_c::{CParser, SourceText, CLanguage};
 
 fn main() {
     // 1. Prepare source code
@@ -27,86 +24,49 @@ fn main() {
     let source = SourceText::new(code);
 
     // 2. Initialize parser
-    let config = CLanguage::default();
+    let config = CLanguage::new();
     let parser = CParser::new(&config);
-    let mut cache = ParseSession::default();
 
     // 3. Execute parsing
-    let result = parser.parse(&source, &[], &mut cache);
+    let result = parser.parse(&source);
 
     // 4. Handle results
-    if result.diagnostics.is_empty() {
-        println!("Parsing successful!");
+    if result.is_success() {
+        println!("Parsing successful! AST node count: {}", result.node_count());
     } else {
         eprintln!("Errors found during parsing.");
     }
 }
 ```
 
-## 🔍 Core Functionality
+## 🔍 Core API Usage
 
 ### 1. Syntax Tree Traversal
-After a successful parse, use the built-in visitor pattern or manually traverse the Green/Red Tree to extract C-specific constructs like function definitions, struct members, or preprocessor directives.
+After a successful parse, you can use the built-in visitor pattern or manually traverse the Green/Red Tree to extract C-specific constructs like function definitions, struct members, or preprocessor directives.
 
 ### 2. Incremental Parsing
-Optimize performance by only re-parsing changed sections:
+No need to re-parse the entire translation unit when small changes occur:
 ```rust
-use oak_c::{CParser, language::CLanguage};
-use oak_core::{SourceText, parser::Parser, source::TextEdit, parser::ParseSession};
+// Assuming you have an old parse result 'old_result' and new source text 'new_source'
+let new_result = parser.reparse(&new_source, &old_result);
+```
 
-fn main() {
-    // Initial parsing
-    let code = r#"
-        int main() {
-            return 0;
-        }
-    "#;
-    let source = SourceText::new(code);
-    let config = CLanguage::default();
-    let parser = CParser::new(&config);
-    let mut cache = ParseSession::default();
-    let old_result = parser.parse(&source, &[], &mut cache);
-
-    // Updated code
-    let new_code = r#"
-        int main() {
-            printf("Hello!");
-            return 0;
-        }
-    "#;
-    let new_source = SourceText::new(new_code);
-    
-    // Re-parsing (simplified example)
-    let new_result = parser.parse(&new_source, &[], &mut cache);
+### 3. Diagnostics
+`oak-c` provides rich error contexts specifically tailored for C developers:
+```rust
+for diag in result.diagnostics() {
+    println!("[{}:{}] {}", diag.line, diag.column, diag.message);
 }
 ```
 
-### 3. Diagnostics & Error Recovery
-`oak-c` provides detailed error contexts tailored for C developers:
-```rust
-use oak_c::{CParser, language::CLanguage};
-use oak_core::{SourceText, parser::Parser, source::TextEdit, parser::ParseSession};
+## 🏗️ Architecture Overview
 
-fn main() {
-    let code = r#"
-        int main() {
-            return;
-        }
-    "#;
-    let source = SourceText::new(code);
-    let config = CLanguage::default();
-    let parser = CParser::new(&config);
-    let mut cache = ParseSession::default();
-    let result = parser.parse(&source, &[], &mut cache);
+- **Lexer**: Tokenizes C source text into a stream of tokens, handling keywords, operators, and literals.
+- **Parser**: Syntax analyzer based on the Pratt parsing algorithm to handle complex C expression precedence and operator associativity.
+- **AST**: A strongly-typed syntax abstraction layer designed for downstream systems analysis tools.
 
-    for error in &result.diagnostics {
-        println!("Error: {}", error);
-    }
-}
-```
+## 🔗 Advanced Resources
 
-## 🛠️ Performance & Reliability
-
-- **High-Fidelity AST**: Retains all trivia (whitespace and comments), making it ideal for code formatting and refactoring tools.
-- **Fault Tolerance**: Automatically recovers from syntax errors to provide as much information as possible from the rest of the file.
-- **Memory Efficiency**: Leverages immutable data structures (Green Trees) for low-overhead tree management.
+- **Full Examples**: Check the [examples/](examples/) folder in the project root.
+- **API Documentation**: Run `cargo doc --open` for detailed type definitions.
+- **Test Cases**: See [tests/](tests/) for handling of various C edge cases and standards.

@@ -1,10 +1,6 @@
 #![doc = include_str!("readme.md")]
-
 use crate::language::CSharpLanguage;
-
-/// Token types and definitions for the C# lexer.
 pub mod token_type;
-
 use oak_core::{
     Lexer, LexerCache, LexerState,
     lexer::LexOutput,
@@ -12,20 +8,18 @@ use oak_core::{
 };
 pub use token_type::CSharpTokenType;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, CSharpLanguage>;
+type State<'a, S> = LexerState<'a, S, CSharpLanguage>;
 
-/// A lexer for the C# language.
 pub struct CSharpLexer<'config> {
-    config: &'config CSharpLanguage,
+    _config: &'config CSharpLanguage,
 }
 
 impl<'config> CSharpLexer<'config> {
-    /// Creates a new C# lexer.
     pub fn new(config: &'config CSharpLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Skips whitespace characters (spaces and tabs).
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -47,7 +41,7 @@ impl<'config> CSharpLexer<'config> {
         }
     }
 
-    /// Lexes a newline character (LF or CRLF).
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -69,14 +63,14 @@ impl<'config> CSharpLexer<'config> {
         }
     }
 
-    /// Lexes a comment (single-line `//` or multi-line `/* ... */`).
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some('/') = state.peek() {
             state.advance(1);
             if let Some('/') = state.peek() {
-                // Single-line comment
+                // 单行注释
                 state.advance(1);
                 while let Some(ch) = state.peek() {
                     if ch == '\n' || ch == '\r' {
@@ -88,7 +82,7 @@ impl<'config> CSharpLexer<'config> {
                 return true;
             }
             else if let Some('*') = state.peek() {
-                // Multi-line comment
+                // 多行注释
                 state.advance(1);
                 while let Some(ch) = state.peek() {
                     if ch == '*' {
@@ -106,7 +100,7 @@ impl<'config> CSharpLexer<'config> {
                 return true;
             }
             else {
-                // Backtrack, not a comment
+                // 回退，这不是注释
                 state.set_position(start_pos);
                 return false;
             }
@@ -114,8 +108,7 @@ impl<'config> CSharpLexer<'config> {
         false
     }
 
-    /// Lexes a string literal (`"..."`) or character literal (`'...'`).
-    /// Handles basic escape sequences.
+    /// 处理字符串字面量
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -140,7 +133,7 @@ impl<'config> CSharpLexer<'config> {
             true
         }
         else if let Some('\'') = state.peek() {
-            // Char literal
+            // 字符字面量
             state.advance(1);
             while let Some(ch) = state.peek() {
                 if ch == '\'' {
@@ -165,13 +158,7 @@ impl<'config> CSharpLexer<'config> {
         }
     }
 
-    /// Lexes a number literal.
-    ///
-    /// Supports:
-    /// - Decimal integers (`123`)
-    /// - Floating-point numbers (`123.45`, `1.2e3`)
-    /// - Underscore separators (`1_000_000`)
-    /// - Type suffixes (`f`, `d`, `m`, `l`, `ul`, etc.)
+    /// 处理数字字面量
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -183,7 +170,7 @@ impl<'config> CSharpLexer<'config> {
                     if ch.is_ascii_digit() || ch == '.' || ch == '_' { state.advance(ch.len_utf8()) } else { break }
                 }
 
-                // Handle suffixes (f, d, m, l, ul, etc.)
+                // 处理后缀 (f, d, m, l, ul, etc.)
                 if let Some(ch) = state.peek() {
                     if ch.is_ascii_alphabetic() {
                         state.advance(ch.len_utf8());
@@ -207,13 +194,7 @@ impl<'config> CSharpLexer<'config> {
         }
     }
 
-    /// Lexes a keyword or identifier.
-    ///
-    /// Identifiers can start with a letter, underscore, or `@` (for verbatim identifiers).
-    /// Subsequent characters can be letters, digits, or underscores.
-    ///
-    /// Keywords are matched against the standard C# keyword list. If a match is found,
-    /// the specific keyword token is returned; otherwise, it is treated as an identifier.
+    /// 处理关键字或标识符
     fn lex_keyword_or_identifier<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -227,7 +208,7 @@ impl<'config> CSharpLexer<'config> {
 
                 let text = state.get_text_in((start_pos..state.get_position()).into());
                 let token_kind = match text.as_ref() {
-                    // C# Keywords
+                    // C# 关键字
                     "abstract" => CSharpTokenType::Abstract,
                     "as" => CSharpTokenType::As,
                     "async" => CSharpTokenType::AsyncKeyword,
@@ -323,15 +304,7 @@ impl<'config> CSharpLexer<'config> {
         }
     }
 
-    /// Lexes an operator.
-    ///
-    /// Handles single-character and multi-character operators, including:
-    /// - Arithmetic: `+`, `-`, `*`, `/`, `%`
-    /// - Assignment: `=`, `+=`, `-=`, `*=`, `/=`, `%=`
-    /// - Increment/Decrement: `++`, `--`
-    /// - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`
-    /// - Logical: `&&`, `||`, `!`
-    /// - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`
+    /// 处理操作符
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -376,7 +349,7 @@ impl<'config> CSharpLexer<'config> {
                     }
                 }
                 '/' => {
-                    // Comments are handled in lex_comment
+                    // 这里不处理注释，因为已经在 lex_comment 中处理了
                     state.advance(1);
                     if let Some('=') = state.peek() {
                         state.advance(1);
@@ -483,13 +456,7 @@ impl<'config> CSharpLexer<'config> {
         }
     }
 
-    /// Lexes a delimiter.
-    ///
-    /// Handles structural characters such as:
-    /// - Parentheses: `(`, `)`
-    /// - Brackets: `[`, `]`
-    /// - Braces: `{`, `}`
-    /// - Punctuation: `;`, `,`, `.`, `:`, `?`
+    /// 处理分隔符
     fn lex_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -518,11 +485,6 @@ impl<'config> CSharpLexer<'config> {
         }
     }
 
-    /// Runs the lexer on the input state.
-    ///
-    /// This method performs the main lexing loop, attempting to match various
-    /// token types (whitespace, comments, literals, keywords, etc.) until the
-    /// end of the input is reached.
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), oak_core::OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -559,7 +521,7 @@ impl<'config> CSharpLexer<'config> {
                 continue;
             }
 
-            // If no pattern matches, handle the error character and advance
+            // 如果没有匹配到任何模式，处理错误字符并前进
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());

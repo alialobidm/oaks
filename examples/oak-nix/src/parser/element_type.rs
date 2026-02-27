@@ -1,156 +1,96 @@
-use oak_core::{ElementType, UniversalElementRole};
+use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Represents the different types of elements and tokens in the Nix language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NixElementType {
-    /// Whitespace characters (spaces, tabs).
+    // 基础 kind
     Whitespace,
-    /// Newline characters (\n, \r\n).
     Newline,
-    /// Comments (single-line # or multi-line /* */).
     Comment,
-    /// String literals, including interpolated strings.
     String,
-    /// Numeric literals (integers and floats).
     Number,
-    /// Boolean literals (true, false).
     Boolean,
-    /// The `true` keyword.
     True,
-    /// The `false` keyword.
     False,
-    /// The `null` keyword.
     Null,
-    /// Identifiers (variable names, attribute names).
     Identifier,
 
-    /// The `let` keyword.
+    // 关键
     Let,
-    /// The `in` keyword.
     In,
-    /// The `if` keyword.
     If,
-    /// The `then` keyword.
     Then,
-    /// The `else` keyword.
     Else,
-    /// The `with` keyword.
     With,
-    /// The `inherit` keyword.
     Inherit,
-    /// The `rec` keyword.
     Rec,
-    /// The `import` keyword.
     Import,
-    /// The `assert` keyword.
     Assert,
-    /// The `or` keyword.
     Or,
-    /// The `and` keyword.
     And,
-    /// The `not` keyword.
     Not,
 
-    /// Plus operator (+).
-    Plus,
-    /// Minus operator (-).
-    Minus,
-    /// Star operator (*).
-    Star,
-    /// Slash operator (/).
-    Slash,
-    /// Percent operator (%).
-    Percent,
-    /// Concatenation operator (++).
-    Concatenation,
-    /// Update operator (//).
-    Update,
-    /// Implication operator (->).
-    Implication,
-    /// Equality operator (==).
-    Equal,
-    /// Inequality operator (!=).
-    NotEqual,
-    /// Less than operator (<).
-    Less,
-    /// Greater than operator (>).
-    Greater,
-    /// Less than or equal operator (<=).
-    LessEqual,
-    /// Greater than or equal operator (>=).
-    GreaterEqual,
-    /// Logical AND operator (&&).
-    LogicalAnd,
-    /// Logical OR operator (||).
-    LogicalOr,
-    /// Assignment operator (=).
-    Assign,
-    /// Question mark operator (?).
-    Question,
+    // 操作
+    Plus,          // +
+    Minus,         // -
+    Star,          // *
+    Slash,         // /
+    Percent,       // %
+    Concatenation, // ++
+    Update,        // //
+    Implication,   // ->
+    Equal,         // ==
+    NotEqual,      // !=
+    Less,          // <
+    Greater,       // >
+    LessEqual,     // <=
+    GreaterEqual,  // >=
+    LogicalAnd,    // &&
+    LogicalOr,     // ||
+    Assign,        // =
+    Question,      // ?
 
-    /// Left parenthesis (().
-    LeftParen,
-    /// Right parenthesis ()).
-    RightParen,
-    /// Left brace ({).
-    LeftBrace,
-    /// Right brace (}).
-    RightBrace,
-    /// Left bracket ([).
-    LeftBracket,
-    /// Right bracket (]).
-    RightBracket,
-    /// Semicolon (;).
-    Semicolon,
-    /// Colon (:).
-    Colon,
-    /// Comma (,).
-    Comma,
-    /// Dot (.).
-    Dot,
-    /// At symbol (@).
-    At,
-    /// Dollar sign ($).
-    Dollar,
-    /// Hash symbol (#).
-    Hash,
+    // 分隔
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBrace,    // {
+    RightBrace,   // }
+    LeftBracket,  // [
+    RightBracket, // ]
+    Semicolon,    // ;
+    Colon,        // :
+    Comma,        // ,
+    Dot,          // .
+    At,           // ↯
+    Dollar,       // $
+    Hash,         // #
 
-    /// The root element of a Nix file.
+    // Element kinds
     Root,
-    /// An attribute set expression ({ ... }).
     Set,
-    /// A list expression ([ ... ]).
     List,
-    /// A lambda expression (x: ... or { x }: ...).
     Lambda,
-    /// A let-in expression (let ... in ...).
     LetIn,
-    /// An if-then-else expression (if ... then ... else ...).
     IfThenElse,
-    /// An attribute path (a.b.c).
     AttrPath,
-    /// A binding in a set or let expression (x = y;).
     Binding,
 
-    /// An error element representing invalid syntax.
+    // 特殊
     Error,
-    /// End of file marker.
     Eof,
 }
 
 impl NixElementType {
-    /// Returns `true` if this element type represents a non-terminal tree node.
     pub fn is_element(&self) -> bool {
         matches!(self, Self::Root | Self::Set | Self::List | Self::Lambda | Self::LetIn | Self::IfThenElse | Self::AttrPath | Self::Binding)
     }
 
-    /// Returns `true` if this element type represents a terminal token.
     pub fn is_token(&self) -> bool {
         !self.is_element()
     }
 
-    /// Returns `true` if this element type represents trivia (whitespace or comments).
     pub fn is_trivia(&self) -> bool {
         matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }

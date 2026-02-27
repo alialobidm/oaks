@@ -39,7 +39,7 @@ impl LanguageService for TexLanguageService {
         let source = self.vfs().get_source(uri);
         async move {
             let _source = source?;
-            // TODO: Implement real parsing logic
+            // TODO: 实现真正的解析逻辑
             None
         }
     }

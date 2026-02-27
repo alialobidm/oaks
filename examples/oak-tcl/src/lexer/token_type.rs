@@ -1,4 +1,6 @@
 use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub type TclToken = Token<TclTokenType>;
 
@@ -19,9 +21,9 @@ impl TokenType for TclTokenType {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u8)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TclTokenType {
-    // Node kinds (These are usually used in ElementType, but sometimes also as tokens)
+    // 节点种类 (这些通常在 ElementType 中使用，但有时也作为标记)
     Root,
     Command,
     Word,
@@ -30,12 +32,12 @@ pub enum TclTokenType {
     ScriptWord,
     BracedWord,
 
-    // Literals
+    // 字面量
     Number,
     StringLiteral,
     Identifier,
 
-    // Keywords
+    // 关键字
     If,
     Else,
     ElseIf,
@@ -52,7 +54,7 @@ pub enum TclTokenType {
     Upvar,
     Variable,
 
-    // Operators
+    // 操作符
     Plus,
     Minus,
     Star,
@@ -70,7 +72,7 @@ pub enum TclTokenType {
     PipePipe,
     Exclamation,
 
-    // Punctuation
+    // 标点符号
     LeftParen,
     RightParen,
     LeftBracket,
@@ -81,7 +83,7 @@ pub enum TclTokenType {
     Comma,
     Dollar,
 
-    // Special
+    // 特殊
     Whitespace,
     Newline,
     Comment,

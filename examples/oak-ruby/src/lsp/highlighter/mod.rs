@@ -1,8 +1,11 @@
 #![doc = include_str!("readme.md")]
+//! Ruby 语法高亮器
+//!
+//! 这个模块提供了 Ruby 源代码的语法高亮功能。
 
-/// Ruby syntax highlighter
+/// Ruby 语法高亮器
 pub struct RubyHighlighter {
-    /// Whether to use parser-based highlighting for better accuracy
+    /// 是否使用基于解析器的高亮以提高准确性
     pub use_parser: bool,
 }
 
@@ -13,12 +16,12 @@ impl Default for RubyHighlighter {
 }
 
 impl RubyHighlighter {
-    /// Creates a new Ruby highlighter instance
+    /// 创建一个新的 Ruby 高亮器实例
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Highlights Ruby keywords
+    /// 高亮 Ruby 关键字
     pub fn highlight(&self, text: &str) -> Vec<(usize, usize, String)> {
         let mut highlights = Vec::new();
         let keywords = [

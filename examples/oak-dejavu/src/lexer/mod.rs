@@ -1,36 +1,40 @@
-use crate::DejavuLanguage;
-use oak_core::{
-    Source, TextEdit,
-    lexer::{LexOutput, Lexer, LexerCache, LexerState},
-};
+#![doc = include_str!("readme.md")]
+pub mod token_type;
+use crate::language::DejavuLanguage;
+pub use crate::lexer::token_type::DejavuSyntaxKind as DejavuTokenType;
 
-pub use token_type::DejavuTokenType;
+use oak_core::{Lexer, LexerCache, LexerState, lexer::LexOutput, source::Source};
+pub mod keywords;
+pub use keywords::DejavuKeywords;
+mod lex;
 
-/// Dejavu lexer.
-pub struct DejavuLexer<'a> {
-    config: &'a DejavuLanguage,
+/// The lexer for the Dejavu programming language.
+#[derive(Clone, Debug)]
+pub struct DejavuLexer<'config> {
+    _config: &'config DejavuLanguage,
 }
 
-impl<'a> DejavuLexer<'a> {
-    /// Create a new Dejavu lexer.
-    pub fn new(config: &'a DejavuLanguage) -> Self {
-        Self { config }
-    }
-}
-
-impl<'a> Lexer<DejavuLanguage> for DejavuLexer<'a> {
-    fn lex<'b, S: Source + ?Sized>(&self, text: &'b S, edits: &[TextEdit], cache: &'b mut impl LexerCache<DejavuLanguage>) -> LexOutput<DejavuLanguage> {
-        let relex_from = if edits.is_empty() { text.length() } else { edits.iter().map(|e| e.span.start).min().unwrap_or(0) };
-
-        let mut state = LexerState::new_with_cache(text, relex_from, cache);
+impl<'config> Lexer<DejavuLanguage> for DejavuLexer<'config> {
+    fn lex<'a, S: Source + ?Sized>(&self, source: &S, _edits: &[oak_core::TextEdit], cache: &'a mut impl LexerCache<DejavuLanguage>) -> LexOutput<DejavuLanguage> {
+        let mut state = LexerState::new_with_cache(source, 0, cache);
         let result = self.run(&mut state);
-
+        if result.is_ok() {
+            state.add_eof()
+        }
         state.finish_with_cache(result, cache)
     }
 }
 
-pub mod keywords;
-pub mod lex;
-pub mod token_type;
+impl<'config> DejavuLexer<'config> {
+    /// Create a new lexer with the given configuration.
+    pub fn new(config: &'config DejavuLanguage) -> Self {
+        Self { _config: config }
+    }
 
-pub use keywords::DejavuKeywords;
+    /// Tokenize the given source code.
+    pub fn tokenize<S: Source + ?Sized>(&self, source: &S) -> impl Iterator<Item = oak_core::lexer::Token<crate::lexer::token_type::DejavuSyntaxKind>> {
+        let mut cache = oak_core::parser::session::ParseSession::<DejavuLanguage>::default();
+        let output = self.lex(source, &[], &mut cache);
+        output.result.unwrap_or_else(|_| oak_core::Arc::from_iter(Vec::new())).to_vec().into_iter()
+    }
+}

@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Ada token type definitions.
 pub mod token_type;
 
 pub use token_type::AdaTokenType;
@@ -12,11 +11,10 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, AdaLanguage>;
+type State<'a, S> = LexerState<'a, S, AdaLanguage>;
 
 static ADA_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 
-/// Ada language lexer.
 #[derive(Clone, Debug)]
 pub struct AdaLexer<'config> {
     config: &'config AdaLanguage,
@@ -34,12 +32,11 @@ impl<'config> Lexer<AdaLanguage> for AdaLexer<'config> {
 }
 
 impl<'config> AdaLexer<'config> {
-    /// Creates a new `AdaLexer` with the given language configuration.
     pub fn new(config: &'config AdaLanguage) -> Self {
         Self { config }
     }
 
-    /// Main lexing logic.
+    /// 主要词法分析逻辑
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -76,7 +73,7 @@ impl<'config> AdaLexer<'config> {
                 continue;
             }
 
-            // If no pattern matches, skip the current character and generate an Error token
+            // 如果没有匹配任何模式，跳过当前字符并生成 Error token
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
                 state.add_token(AdaTokenType::Error, safe_point, state.get_position())
@@ -86,7 +83,7 @@ impl<'config> AdaLexer<'config> {
         Ok(())
     }
 
-    /// Skip whitespace
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         ADA_WHITESPACE.scan(state, AdaTokenType::Whitespace)
     }

@@ -1,6 +1,7 @@
 #![doc = include_str!("readme.md")]
 #![feature(new_range_api)]
 #![warn(missing_docs)]
+//! LLvm-ir support for the Oak language framework.
 
 pub mod ast;
 mod builder;

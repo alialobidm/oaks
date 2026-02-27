@@ -1,33 +1,36 @@
 #![doc = include_str!("readme.md")]
+//! Rust 语法高亮器
+//!
+//! 这个模块提供了 Rust 源代码的语法高亮功能，支持关键字、字符串、数字、注释等的高亮显示。
 
-/// Local definition of highlight kinds
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keywords
+    /// 关键字
     Keyword,
-    /// Strings
+    /// 字符串
     String,
-    /// Numbers
+    /// 数字
     Number,
-    /// Comments
+    /// 注释
     Comment,
-    /// Macros
+    /// 宏
     Macro,
-    /// Identifiers
+    /// 标识符
     Identifier,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Rust syntax highlighter
+/// Rust 语法高亮器
 ///
-/// `RustHighlighter` implements the `Highlighter` trait, providing syntax highlighting for Rust code.
+/// `RustHighlighter` 实现了 `Highlighter` trait，为 Rust 代码提供语法高亮功能。
 pub struct RustHighlighter {
-    /// Whether to use parser-based highlighting for better accuracy
+    /// 是否使用基于解析器的高亮以提高准确性
     pub use_parser: bool,
 }
 
@@ -38,17 +41,17 @@ impl Default for RustHighlighter {
 }
 
 impl RustHighlighter {
-    /// Creates a new Rust highlighter instance
+    /// 创建一个新的 Rust 高亮器实例
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a highlighter instance that uses a parser
+    /// 创建一个使用解析器的高亮器实例
     pub fn with_parser() -> Self {
         Self { use_parser: true }
     }
 
-    /// Highlights Rust keywords
+    /// 高亮 Rust 关键字
     fn highlight_keywords(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let keywords = [
@@ -62,7 +65,7 @@ impl RustHighlighter {
                 let absolute_pos = start + pos;
                 let end_pos = absolute_pos + keyword.len();
 
-                // Ensure this is a full word
+                // 确保这是一个完整的单词
                 let is_word_boundary_before = absolute_pos == 0 || !text.chars().nth(absolute_pos - 1).unwrap_or(' ').is_alphanumeric();
                 let is_word_boundary_after = end_pos >= text.len() || !text.chars().nth(end_pos).unwrap_or(' ').is_alphanumeric();
 
@@ -77,7 +80,7 @@ impl RustHighlighter {
         highlights
     }
 
-    /// Highlights string literals
+    /// 高亮字符串字面量
     fn highlight_strings(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut chars = text.char_indices().peekable();
@@ -131,7 +134,7 @@ impl RustHighlighter {
         highlights
     }
 
-    /// Highlights number literals
+    /// 高亮数字字面量
     fn highlight_numbers(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut chars = text.char_indices().peekable();
@@ -141,7 +144,7 @@ impl RustHighlighter {
                 let start = i;
                 let mut end = i + 1;
 
-                // Continue reading number characters
+                // 继续读取数字字符
                 while let Some(&(j, next_ch)) = chars.peek() {
                     if next_ch.is_ascii_digit() || next_ch == '.' || next_ch == '_' {
                         end = j + next_ch.len_utf8();
@@ -159,7 +162,7 @@ impl RustHighlighter {
         highlights
     }
 
-    /// Highlights comments
+    /// 高亮注释
     fn highlight_comments(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let lines: Vec<&str> = text.lines().collect();
@@ -187,7 +190,7 @@ impl Highlighter for RustHighlighter {
         highlights.extend(self.highlight_numbers(text));
         highlights.extend(self.highlight_comments(text));
 
-        // Sort by position
+        // 按位置排序
         highlights.sort_by_key(|&(start, _, _)| start);
         highlights
     }

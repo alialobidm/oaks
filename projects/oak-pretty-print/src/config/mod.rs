@@ -1,9 +1,8 @@
 use alloc::borrow::Cow;
 
 /// Indent style
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum IndentStyle {
     /// Use spaces
     Spaces(u8),
@@ -18,9 +17,8 @@ impl Default for IndentStyle {
 }
 
 /// Line ending
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum LineEnding {
     /// Unix style (\n)
     Unix,
@@ -37,9 +35,8 @@ impl Default for LineEnding {
 }
 
 /// Formatting configuration
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FormatConfig {
     /// Indent style
     pub indent_style: IndentStyle,

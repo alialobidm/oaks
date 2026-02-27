@@ -1,11 +1,12 @@
-use oak_core::{Token, TokenType, UniversalTokenRole};
+use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// MSIL token.
 pub type MsilToken = Token<MsilTokenType>;
 
 impl TokenType for MsilTokenType {
     type Role = UniversalTokenRole;
-    const END_OF_STREAM: Self = Self::Eof;
+    const END_OF_STREAM: Self = Self::Error;
 
     fn is_ignored(&self) -> bool {
         false
@@ -13,112 +14,63 @@ impl TokenType for MsilTokenType {
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Whitespace => UniversalTokenRole::Whitespace,
-            Self::CommentToken => UniversalTokenRole::Comment,
-            Self::IdentifierToken => UniversalTokenRole::Name,
-            Self::NumberToken => UniversalTokenRole::Literal,
-            Self::StringToken => UniversalTokenRole::Literal,
-            Self::AssemblyKeyword | Self::ExternKeyword | Self::ModuleKeyword | Self::ClassKeyword | Self::MethodKeyword | Self::PublicKeyword | Self::PrivateKeyword | Self::StaticKeyword | Self::Keyword => UniversalTokenRole::Keyword,
-            Self::LeftBrace | Self::RightBrace | Self::LeftParen | Self::RightParen | Self::LeftBracket | Self::RightBracket | Self::Dot | Self::Colon | Self::Semicolon | Self::Comma | Self::Equal | Self::Slash => UniversalTokenRole::Operator,
-            Self::Eof => UniversalTokenRole::Eof,
-            Self::Error | Self::ErrorNode => UniversalTokenRole::Error,
             _ => UniversalTokenRole::None,
         }
     }
 }
 
-/// MSIL token type.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MsilTokenType {
-    /// Root node.
+    // 节点种类
     Root,
-    /// Assembly.
     Assembly,
-    /// External assembly.
     AssemblyExtern,
-    /// Module.
     Module,
-    /// Class.
     Class,
-    /// Method.
     Method,
-    /// Instruction.
     Instruction,
-    /// Label.
     Label,
-    /// Directive.
     Directive,
-    /// Type.
     Type,
-    /// Identifier.
     Identifier,
-    /// Number.
     Number,
-    /// String.
     String,
-    /// Comment.
     Comment,
-    /// Error node.
     ErrorNode,
 
-    /// .assembly keyword
-    AssemblyKeyword,
-    /// extern keyword
-    ExternKeyword,
-    /// .module keyword
-    ModuleKeyword,
-    /// .class keyword
-    ClassKeyword,
-    /// .method keyword
-    MethodKeyword,
-    /// public keyword
-    PublicKeyword,
-    /// private keyword
-    PrivateKeyword,
-    /// static keyword
-    StaticKeyword,
-    /// Other keywords
-    Keyword,
+    // 词法种类 - 关键
+    AssemblyKeyword, // .assembly
+    ExternKeyword,   // extern
+    ModuleKeyword,   // .module
+    ClassKeyword,    // .class
+    MethodKeyword,   // .method
+    PublicKeyword,   // public
+    PrivateKeyword,  // private
+    StaticKeyword,   // static
+    Keyword,         // other keywords
+    // 词法种类 - 符号
+    LeftBrace,    // {
+    RightBrace,   // }
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBracket,  // [
+    RightBracket, // ]
+    Dot,          // .
+    Colon,        // :
+    Semicolon,    // ;
+    Comma,        // ,
+    Equal,        // =
+    Slash,        // /
 
-    /// Left brace ({)
-    LeftBrace,
-    /// Right brace (})
-    RightBrace,
-    /// Left parenthesis (()
-    LeftParen,
-    /// Right parenthesis ())
-    RightParen,
-    /// Left bracket ([)
-    LeftBracket,
-    /// Right bracket (])
-    RightBracket,
-    /// Dot (.)
-    Dot,
-    /// Colon (:)
-    Colon,
-    /// Semicolon (;)
-    Semicolon,
-    /// Comma (,)
-    Comma,
-    /// Equal (=)
-    Equal,
-    /// Slash (/)
-    Slash,
-
-    /// Identifier unit
+    // 词法种类 - 字面
     IdentifierToken,
-    /// Number unit
     NumberToken,
-    /// String unit
     StringToken,
 
-    /// Whitespace
+    // 词法种类 - 其他
     Whitespace,
-    /// Comment unit
     CommentToken,
-    /// End of file
     Eof,
-    /// Error unit
     Error,
 }

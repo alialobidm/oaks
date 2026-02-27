@@ -1,7 +1,7 @@
 use crate::language::ScssLanguage;
 use oak_core::{Builder, BuilderCache, Lexer, OakDiagnostics, Parser, TextEdit, builder::BuildOutput, source::Source};
 
-/// AST builder for SCSS language
+/// SCSS 语言的 AST 构建器
 #[derive(Clone)]
 pub struct ScssBuilder<'config> {
     config: &'config ScssLanguage,

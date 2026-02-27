@@ -1,13 +1,15 @@
 //! JavaScript token types.
 
 use oak_core::{Token, TokenType, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Type alias for JavaScript tokens.
 pub type JavaScriptToken = Token<JavaScriptTokenType>;
 
 /// JavaScript token types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum JavaScriptTokenType {
     // Keywords

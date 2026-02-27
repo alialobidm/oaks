@@ -1,41 +1,82 @@
-use oak_core::{TokenType, UniversalTokenRole};
+use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Smalltalk token types.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum SmalltalkTokenType {
-    /// End of file.
-    Eof,
-    /// Whitespace.
-    Whitespace,
-    /// Comment.
-    Comment,
-    /// Identifier.
-    Identifier,
-    /// String literal.
-    String,
-    /// Number literal.
-    Number,
-    /// Character literal.
-    Character,
-    /// Symbol literal.
-    Symbol,
-}
+pub type SmalltalkToken = Token<SmalltalkTokenType>;
 
 impl TokenType for SmalltalkTokenType {
     type Role = UniversalTokenRole;
-    const END_OF_STREAM: Self = Self::Eof;
+    const END_OF_STREAM: Self = Self::Error;
+
+    fn is_ignored(&self) -> bool {
+        false
+    }
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Eof => UniversalTokenRole::Eof,
-            Self::Whitespace => UniversalTokenRole::Whitespace,
-            Self::Comment => UniversalTokenRole::Comment,
-            Self::Identifier => UniversalTokenRole::Name,
-            Self::String => UniversalTokenRole::Literal,
-            Self::Number => UniversalTokenRole::Literal,
-            Self::Character => UniversalTokenRole::Literal,
-            Self::Symbol => UniversalTokenRole::Literal,
+            _ => UniversalTokenRole::None,
         }
     }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SmalltalkTokenType {
+    // Special
+    Root,
+    SourceFile,
+    Eof,
+    Error,
+
+    // Literals
+    Number,
+    Integer,
+    Float,
+    String,
+    Character,
+    Symbol,
+
+    // Keywords
+    True,
+    False,
+    Nil,
+    Self_,
+    Super,
+
+    // Identifiers
+    Identifier,
+
+    // Operators
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Equal,
+    NotEqual,
+    Less,
+    Greater,
+    LessEqual,
+    GreaterEqual,
+
+    // Delimiters
+    LeftParen,
+    RightParen,
+    LeftBracket,
+    RightBracket,
+    LeftBrace,
+    RightBrace,
+    Dot,
+    Semicolon,
+    Comma,
+    Colon,
+    Pipe,
+    Caret,
+
+    // Comments
+    Comment,
+
+    // Whitespace
+    Whitespace,
+    Newline,
 }

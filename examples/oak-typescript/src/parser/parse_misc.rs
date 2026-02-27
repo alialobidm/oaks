@@ -18,12 +18,22 @@ impl<'config> TypeScriptParser<'config> {
 
     pub(crate) fn expect<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>, kind: TypeScriptTokenType) -> Result<(), OakError> {
         self.skip_trivia(state);
-        state.expect(kind)
+        let cp = state.checkpoint();
+        let res = state.expect(kind.into());
+        if res.is_ok() {
+            state.finish_at(cp, kind.into());
+        }
+        res
     }
 
     pub(crate) fn eat<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>, kind: TypeScriptTokenType) -> bool {
         self.skip_trivia(state);
-        state.eat(kind)
+        let cp = state.checkpoint();
+        let res = state.eat(kind.into());
+        if res {
+            state.finish_at(cp, kind.into());
+        }
+        res
     }
 
     pub(crate) fn at<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>, kind: TypeScriptTokenType) -> bool {

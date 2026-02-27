@@ -9,11 +9,11 @@ type State<'s, S> = LexerState<'s, S, RLanguage>;
 
 #[derive(Clone)]
 pub struct RLexer<'config> {
-    config: &'config RLanguage,
+    _config: &'config RLanguage,
 }
 
 impl<'config> Lexer<RLanguage> for RLexer<'config> {
-    fn lex<'a, S: Source + ?Sized>(&self, source: &'a S, _edits: &[oak_core::TextEdit], cache: &mut impl LexerCache<RLanguage>) -> LexOutput<RLanguage> {
+    fn lex<'a, S: Source + ?Sized>(&self, source: &'a S, _edits: &[oak_core::TextEdit], cache: &'a mut impl LexerCache<RLanguage>) -> LexOutput<RLanguage> {
         let mut state = State::new(source);
         let result = self.run(&mut state);
         if result.is_ok() {
@@ -24,8 +24,8 @@ impl<'config> Lexer<RLanguage> for RLexer<'config> {
 }
 
 impl<'config> RLexer<'config> {
-    pub fn new(config: &'config RLanguage) -> Self {
-        Self { config }
+    pub fn new(_config: &'config RLanguage) -> Self {
+        Self { _config }
     }
 
     fn run<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> Result<(), oak_core::OakError> {
@@ -68,8 +68,8 @@ impl<'config> RLexer<'config> {
         Ok(())
     }
 
-    /// Skip whitespace
-    fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
+    /// 跳过空白符
+    fn skip_whitespace<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some(ch) = state.current() {
             if ch.is_whitespace() {
                 state.advance(ch.len_utf8());
@@ -79,13 +79,13 @@ impl<'config> RLexer<'config> {
         false
     }
 
-    /// Handle comments
+    /// 处理注释
     fn lex_comment<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some('#') = state.current() {
             let start_pos = state.get_position();
-            state.advance(1); // Skip '#'
+            state.advance(1); // 跳过 '#'
 
-            // Read until end of line
+            // 读取到行尾
             while let Some(ch) = state.current() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -99,16 +99,16 @@ impl<'config> RLexer<'config> {
         false
     }
 
-    /// Handle string literals
+    /// 处理字符串字面量
     fn lex_string_literal<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some(quote) = state.current() {
             if quote == '"' || quote == '\'' {
                 let start_pos = state.get_position();
-                state.advance(1); // Skip quote
+                state.advance(1); // 跳过引号
 
                 while let Some(ch) = state.current() {
                     if ch == quote {
-                        state.advance(1); // Skip closing quote
+                        state.advance(1); // 跳过结束引号
                         state.add_token(RTokenType::StringLiteral, start_pos, state.get_position());
                         return true;
                     }
@@ -122,7 +122,7 @@ impl<'config> RLexer<'config> {
                     state.advance(ch.len_utf8())
                 }
 
-                // Unclosed string
+                // 未闭合字符串
                 state.add_token(RTokenType::StringLiteral, start_pos, state.get_position());
                 return true;
             }
@@ -130,7 +130,7 @@ impl<'config> RLexer<'config> {
         false
     }
 
-    /// Handle number literals
+    /// 处理数字字面量
     fn lex_number_literal<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some(ch) = state.current() {
             if ch.is_ascii_digit() || (ch == '.' && state.peek_next_n(1).map_or(false, |c| c.is_ascii_digit())) {
@@ -183,7 +183,7 @@ impl<'config> RLexer<'config> {
         false
     }
 
-    /// Handle identifiers or keywords
+    /// 处理标识符或关键字
     fn lex_identifier_or_keyword<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some(ch) = state.current() {
             if ch.is_alphabetic() || ch == '.' || ch == '_' {
@@ -225,7 +225,7 @@ impl<'config> RLexer<'config> {
         false
     }
 
-    /// Handle operators
+    /// 处理操作符
     fn lex_operators<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         let start_pos = state.get_position();
         if let Some(ch) = state.current() {
@@ -332,7 +332,7 @@ impl<'config> RLexer<'config> {
                             return true;
                         }
                     }
-                    // Unclosed operator
+                    // 未闭合的操作符
                     state.add_token(RTokenType::Operator, start_pos, state.get_position());
                     return true;
                 }
@@ -342,7 +342,7 @@ impl<'config> RLexer<'config> {
         false
     }
 
-    /// Handle single-character tokens
+    /// 处理单字符标记
     fn lex_single_char_tokens<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some(ch) = state.current() {
             let start_pos = state.get_position();
@@ -396,7 +396,7 @@ impl<'config> RLexer<'config> {
         false
     }
 
-    /// Handle other characters
+    /// 处理其他字符
     fn lex_other<'s, S: Source + ?Sized>(&self, state: &mut State<'s, S>) -> bool {
         if let Some(ch) = state.current() {
             let start_pos = state.get_position();

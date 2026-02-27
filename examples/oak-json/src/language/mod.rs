@@ -1,13 +1,11 @@
 #![doc = include_str!("readme.md")]
 use oak_core::language::{Language, LanguageCategory};
 #[cfg(feature = "serde")]
-pub mod serde_impl;
-#[cfg(feature = "serde")]
-pub use serde_impl::{from_value, to_value};
+use serde::{Deserialize, Serialize};
 
 /// JSON language implementation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct JsonLanguage {
     /// Whether to allow trailing commas in objects and arrays
     pub trailing_comma: bool,

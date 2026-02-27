@@ -3,13 +3,12 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+//! Voml support for the Oak language framework.
 
 extern crate alloc;
 
 /// AST module.
 pub mod ast;
-/// Builder module.
-pub mod builder;
 
 /// Type definitions module.
 /// Language configuration module.
@@ -21,18 +20,7 @@ pub mod lexer;
 pub mod lsp;
 /// Parser module.
 pub mod parser;
-pub use crate::{ast::VRoot, builder::VomlBuilder, language::VomlLanguage, lexer::VomlLexer, parser::VomlParser};
-
-/// Parses a Voml string into a `VRoot`.
-pub fn parse(voml: &str) -> Result<crate::ast::VRoot, String> {
-    use oak_core::{Builder, parser::session::ParseSession, source::SourceText};
-    let language = VomlLanguage::default();
-    let builder = VomlBuilder::new(&language);
-    let source = SourceText::new(voml.to_string());
-    let mut cache = ParseSession::default();
-    let result = builder.build(&source, &[], &mut cache);
-    result.result.map_err(|e| format!("{:?}", e))
-}
+pub use crate::{language::VomlLanguage, lexer::VomlLexer, parser::VomlParser};
 /// Syntax module.
 pub use oak_core::{ElementType, TokenType};
 

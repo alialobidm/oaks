@@ -3,12 +3,12 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
+//! Vhdl support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
 
-/// Builder module.
-pub mod builder;
+// pub mod builder;
 
 /// Type definitions module.
 /// Language configuration module.
@@ -20,7 +20,7 @@ pub mod lexer;
 /// Parser module.
 pub mod parser;
 
-pub use crate::{ast::VhdlRoot, builder::VhdlBuilder, language::VhdlLanguage, lexer::VhdlLexer, parser::VhdlParser};
+pub use crate::{language::VhdlLanguage, lexer::VhdlLexer, parser::VhdlParser};
 pub use oak_core::{ElementType, TokenType};
 
 // #[cfg(feature = "oak-highlight")]

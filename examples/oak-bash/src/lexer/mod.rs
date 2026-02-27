@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Bash token types and role definitions.
 pub mod token_type;
 
 pub use token_type::BashTokenType;
@@ -8,12 +7,11 @@ use crate::language::BashLanguage;
 use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source::Source};
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, BashLanguage>;
+type State<'a, S> = LexerState<'a, S, BashLanguage>;
 
-/// Lexer for the Bash language.
 #[derive(Clone)]
 pub struct BashLexer<'config> {
-    config: &'config BashLanguage,
+    _config: &'config BashLanguage,
 }
 
 impl<'config> Lexer<BashLanguage> for BashLexer<'config> {
@@ -28,9 +26,8 @@ impl<'config> Lexer<BashLanguage> for BashLexer<'config> {
 }
 
 impl<'config> BashLexer<'config> {
-    /// Creates a new `BashLexer` instance.
     pub fn new(config: &'config BashLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
@@ -84,7 +81,7 @@ impl<'config> BashLexer<'config> {
                 continue;
             }
 
-            // If no pattern matches, skip one character and generate an Error token
+            // 如果没有匹配任何模式，跳过一个字符并生成 Error token
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -195,16 +192,16 @@ impl<'config> BashLexer<'config> {
         if let Some('$') = state.peek() {
             state.advance(1);
 
-            // Handle special variables like $0, $1, $?, $$, etc.
+            // 处理特殊变量 $0, $1, $?, $$ 等
             if let Some(ch) = state.peek() {
-                if ch.is_ascii_digit() || ch == '?' || ch == '$' || ch == '#' || ch == '@' || ch == '*' {
+                if ch.is_ascii_digit() || ch == '?' || ch == '$' || ch == '#' || ch == '↯' || ch == '*' {
                     state.advance(1);
                     state.add_token(BashTokenType::Variable, start_pos, state.get_position());
                     return true;
                 }
             }
 
-            // Handle ${var} format
+            // 处理 ${var} 形式
             if let Some('{') = state.peek() {
                 state.advance(1);
                 while let Some(ch) = state.peek() {
@@ -218,7 +215,7 @@ impl<'config> BashLexer<'config> {
                 return true;
             }
 
-            // Handle normal variable names
+            // 处理普通变量名
             if let Some(ch) = state.peek() {
                 if ch.is_alphabetic() || ch == '_' {
                     state.advance(ch.len_utf8());
@@ -230,7 +227,7 @@ impl<'config> BashLexer<'config> {
                 }
             }
 
-            // If there is only $ without a valid variable name, backtrack
+            // 如果只有 $ 没有有效变量名，回退
             state.set_position(start_pos);
         }
 
@@ -281,14 +278,14 @@ impl<'config> BashLexer<'config> {
         if let Some(ch) = state.peek() {
             let two_char = if let Some(next_ch) = state.peek_next_n(1) { format!("{}{}", ch, next_ch) } else { String::new() };
 
-            // Check for two-character operators
+            // 检查双字符操作符
             if BASH_TWO_CHAR_OPERATORS.contains(&two_char.as_str()) {
                 state.advance(2);
                 state.add_token(BashTokenType::Operator, start_pos, state.get_position());
                 return true;
             }
 
-            // Check for single-character operators and delimiters
+            // 检查单字符操作符和分隔符
             let ch_str = ch.to_string();
             if BASH_OPERATORS.contains(&ch_str.as_str()) {
                 state.advance(1);
@@ -309,17 +306,17 @@ impl<'config> BashLexer<'config> {
     fn lex_heredoc<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
-        // Check for heredoc starting with <<
+        // 检查 << 开始的 heredoc
         if let Some('<') = state.peek() {
             if let Some('<') = state.peek_next_n(1) {
                 state.advance(2);
 
-                // Skip optional -
+                // 跳过可选的 -
                 if let Some('-') = state.peek() {
                     state.advance(1)
                 }
 
-                // Read identifier
+                // 读取标识符
                 while let Some(ch) = state.peek() {
                     if ch.is_alphanumeric() || ch == '_' { state.advance(ch.len_utf8()) } else { break }
                 }
@@ -340,7 +337,7 @@ impl<'config> BashLexer<'config> {
                 state.advance(1);
 
                 if ch == '[' {
-                    // Handle character classes [abc] or [!abc]
+                    // 处理字符类 [abc] 或 [!abc]
                     if let Some('!') = state.peek() {
                         state.advance(1)
                     }
@@ -403,4 +400,4 @@ static BASH_TWO_CHAR_OPERATORS: LazyLock<&[&str]> = LazyLock::new(|| &["==", "!=
 
 static BASH_DELIMITERS: LazyLock<&[&str]> = LazyLock::new(|| &["(", ")", "{", "}", "[", "]", ";", ",", ":", "."]);
 
-static BASH_SPECIAL_CHARS: LazyLock<&[char]> = LazyLock::new(|| &['\\', '`', '~', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', '{', '}', '[', ']', '|', '\\', ':', ';', '"', '\'', '<', '>', ',', '.', '?', '/', '!', '`']);
+static BASH_SPECIAL_CHARS: LazyLock<&[char]> = LazyLock::new(|| &['\\', '`', '~', '↯', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', '{', '}', '[', ']', '|', '\\', ':', ';', '"', '\'', '<', '>', ',', '.', '?', '/', '!', '`']);

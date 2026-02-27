@@ -11,20 +11,20 @@ use oak_core::{
     source::Source,
     tree::{RedNode, RedTree},
 };
+use serde::{Deserialize, Serialize};
 
 /// Represents information about a symbol (e.g., function, variable, class).
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SymbolInformation {
     /// The name of the symbol.
     pub name: String,
     /// The universal role of the symbol.
     pub role: UniversalElementRole,
     /// The URI of the resource.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_arc_str"))]
+    #[serde(with = "oak_core::serde_arc_str")]
     pub uri: Arc<str>,
     /// The byte range within the resource.
-    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    #[serde(with = "oak_core::serde_range")]
     pub range: Range<usize>,
     /// The name of the container this symbol is in.
     pub container_name: Option<String>,

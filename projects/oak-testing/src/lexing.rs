@@ -9,7 +9,7 @@ use oak_core::{
     Language, Lexer, Source, TokenType,
     errors::{OakDiagnostics, OakError},
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use std::{
     path::{Path, PathBuf},
@@ -34,16 +34,11 @@ pub struct LexerTester {
 ///
 /// This struct represents the expected output of a lexer test, including
 /// success status, token count, token data, and any expected errors.
-#[derive(Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct LexerTestExpected {
-    /// Whether the lexing was expected to succeed.
     pub success: bool,
-    /// The expected number of tokens.
     pub count: usize,
-    /// The expected token data.
     pub tokens: Vec<TokenData>,
-    /// Any expected error messages.
     pub errors: Vec<String>,
 }
 
@@ -51,16 +46,11 @@ pub struct LexerTestExpected {
 ///
 /// Represents a single token with its kind, text content, and position
 /// information used for testing lexer output.
-#[derive(Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct TokenData {
-    /// The kind of the token as a string.
     pub kind: String,
-    /// The text content of the token.
     pub text: String,
-    /// The start position of the token in the source.
     pub start: usize,
-    /// The end position of the token in the source.
     pub end: usize,
 }
 
@@ -75,7 +65,6 @@ impl LexerTester {
         self.extensions.push(extension.to_string());
         self
     }
-
     /// Sets the timeout duration for each test.
     pub fn with_timeout(mut self, time: Duration) -> Self {
         self.timeout = time;
@@ -83,11 +72,10 @@ impl LexerTester {
     }
 
     /// Run tests for the given lexer against all files in the root directory with the specified extensions.
-    #[cfg(feature = "serde")]
     pub fn run_tests<L, Lex>(self, lexer: &Lex) -> Result<(), OakError>
     where
         L: Language + Send + Sync,
-        L::TokenType: serde::Serialize + std::fmt::Debug + Send + Sync,
+        L::TokenType: Serialize + std::fmt::Debug + Send + Sync,
         Lex: Lexer<L> + Send + Sync + Clone,
     {
         let test_files = self.find_test_files()?;
@@ -101,19 +89,11 @@ impl LexerTester {
 
         if regenerated_any && force_regenerated {
             println!("Tests regenerated for: {}", self.root.display());
+            Ok(())
         }
-
-        Ok(())
-    }
-
-    /// Run tests for the given lexer against all files in the root directory with the specified extensions.
-    #[cfg(not(feature = "serde"))]
-    pub fn run_tests<L, Lex>(self, _lexer: &Lex) -> Result<(), OakError>
-    where
-        L: Language + Send + Sync,
-        Lex: Lexer<L> + Send + Sync + Clone,
-    {
-        Ok(())
+        else {
+            Ok(())
+        }
     }
 
     fn find_test_files(&self) -> Result<Vec<PathBuf>, OakError> {
@@ -142,11 +122,10 @@ impl LexerTester {
         Ok(files)
     }
 
-    #[cfg(feature = "serde")]
     fn test_single_file<L, Lex>(&self, file_path: &Path, lexer: &Lex, force_regenerated: bool) -> Result<bool, OakError>
     where
         L: Language + Send + Sync,
-        L::TokenType: serde::Serialize + std::fmt::Debug + Send + Sync,
+        L::TokenType: Serialize + std::fmt::Debug + Send + Sync,
         Lex: Lexer<L> + Send + Sync + Clone,
     {
         let source = source_from_path(file_path)?;
@@ -211,7 +190,7 @@ impl LexerTester {
             Err(e) => {
                 success = false;
                 diagnostics.push(e);
-                oak_core::Tokens::default()
+                triomphe::Arc::from_iter(Vec::new())
             }
         };
 
@@ -256,11 +235,8 @@ impl LexerTester {
         else {
             use std::io::Write;
             let mut file = create_file(&expected_file)?;
-            let mut buf = Vec::new();
-            let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    "); // 4 spaces indentation
-            let mut ser = serde_json::Serializer::with_formatter(&mut buf, formatter);
-            test_result.serialize(&mut ser).map_err(|e| OakError::custom_error(e.to_string()))?;
-            file.write_all(&buf).map_err(|e| OakError::custom_error(e.to_string()))?;
+            let json_val = serde_json::to_string_pretty(&test_result).map_err(|e| OakError::custom_error(e.to_string()))?;
+            file.write_all(json_val.as_bytes()).map_err(|e| OakError::custom_error(e.to_string()))?;
             regenerated = true;
         }
 

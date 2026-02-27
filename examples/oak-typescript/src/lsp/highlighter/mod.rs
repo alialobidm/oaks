@@ -5,40 +5,39 @@ use crate::{
 };
 use oak_core::{Lexer, SourceText, TextEdit, TokenType, UniversalTokenRole};
 
-/// Local definition of highlight kinds.
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// A keyword.
+    /// 关键字
     Keyword,
-    /// A string literal.
+    /// 字符串
     String,
-    /// A numeric literal.
+    /// 数字
     Number,
-    /// A comment.
+    /// 注释
     Comment,
-    /// An identifier.
+    /// 标识符
     Identifier,
-    /// An operator.
+    /// 操作符
     Operator,
-    /// A punctuation mark.
+    /// 标点符号
     Punctuation,
-    /// An error or unknown token.
+    /// 错误
     Error,
 }
 
-/// Highlighter trait for syntax highlighting.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text and returns a list of spans with their corresponding highlight kinds.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Syntax highlighter for TypeScript.
+/// TypeScript 语法高亮器
 pub struct TypeScriptHighlighter<'config> {
     lexer: TypeScriptLexer<'config>,
 }
 
 impl<'config> TypeScriptHighlighter<'config> {
-    /// Creates a new `TypeScriptHighlighter` with the given language configuration.
     pub fn new(config: &'config TypeScriptLanguage) -> Self {
         Self { lexer: TypeScriptLexer::new(config) }
     }

@@ -1,28 +1,21 @@
 #![doc = include_str!("readme.md")]
-/// Represents the kind of highlighting for a syntax element.
+//! PowerShell highlighter
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// A keyword.
     Keyword,
-    /// A string literal.
     String,
-    /// A number literal.
     Number,
-    /// A comment.
     Comment,
-    /// An identifier.
     Identifier,
 }
 
-/// A trait for highlighting text.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text and returns a list of ranges with their highlight kind.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// A highlighter for the PowerShell language.
 pub struct PowerShellHighlighter {
-    /// Whether to use the parser for highlighting.
     pub use_parser: bool,
 }
 
@@ -33,12 +26,10 @@ impl Default for PowerShellHighlighter {
 }
 
 impl PowerShellHighlighter {
-    /// Creates a new `PowerShellHighlighter`.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a new `PowerShellHighlighter` that uses the parser.
     pub fn with_parser() -> Self {
         Self { use_parser: true }
     }

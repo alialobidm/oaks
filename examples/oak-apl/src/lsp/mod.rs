@@ -33,12 +33,9 @@ impl HoverProvider<AplLanguage> for AplHoverProvider {
 /// Language service implementation for APL.
 #[cfg(feature = "lsp")]
 pub struct AplLanguageService<V: Vfs> {
-    /// The virtual file system.
-    pub vfs: V,
-    /// The workspace manager.
-    pub workspace: oak_lsp::workspace::WorkspaceManager,
-    /// The hover provider.
-    pub hover_provider: AplHoverProvider,
+    vfs: V,
+    workspace: oak_lsp::workspace::WorkspaceManager,
+    hover_provider: AplHoverProvider,
 }
 #[cfg(feature = "lsp")]
 impl<V: Vfs> AplLanguageService<V> {

@@ -1,30 +1,26 @@
 #![doc = include_str!("readme.md")]
-
 use oak_core::{
     Lexer, LexerState, Source, TextEdit,
     lexer::{LexOutput, LexerCache},
 };
 
-/// Token types for the VON language.
 pub mod token_type;
 use crate::language::VonLanguage;
 pub use token_type::{VonToken, VonTokenType};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, VonLanguage>;
+type State<'a, S> = LexerState<'a, S, VonLanguage>;
 
-/// A lexer for the VON language.
 #[derive(Clone, Debug)]
 pub struct VonLexer<'config> {
-    config: &'config VonLanguage,
+    _config: &'config VonLanguage,
 }
 
 impl<'config> VonLexer<'config> {
-    /// Creates a new `VonLexer` with the given configuration.
     pub fn new(config: &'config VonLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -46,7 +42,7 @@ impl<'config> VonLexer<'config> {
         }
     }
 
-    /// Lexes a newline.
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -68,15 +64,15 @@ impl<'config> VonLexer<'config> {
         }
     }
 
-    /// Lexes a comment.
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
-        // Single-line comment #
+        // 单行注释 #
         if let Some('#') = state.peek() {
             state.advance(1);
 
-            // Read until end of line
+            // 读取到行尾
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -90,11 +86,11 @@ impl<'config> VonLexer<'config> {
         false
     }
 
-    /// Lexes a string literal or raw string.
+    /// 处理对称引号字符串字面量或原始字符串
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start = state.get_position();
 
-        // Check for raw string raw"..."
+        // 检查原始字符串 raw"..."
         let mut is_raw = false;
         if let Some('r') = state.peek() {
             if let Some('a') = state.peek_next_n(1) {
@@ -102,7 +98,7 @@ impl<'config> VonLexer<'config> {
                     if let Some(c) = state.peek_next_n(3) {
                         if c == '"' || c == '\'' {
                             is_raw = true;
-                            // Note: don't advance directly here, let the subsequent logic handle quotes
+                            // 注意：这里不要直接 advance，而是让后面的逻辑处理引号
                         }
                     }
                 }
@@ -134,7 +130,7 @@ impl<'config> VonLexer<'config> {
             }
         }
 
-        // "" or '' are empty strings
+        // "" 或 '' 是空字符串
         if quote_count == 2 {
             state.add_token(VonTokenType::StringLiteral, start, state.get_position());
             return true;
@@ -177,17 +173,18 @@ impl<'config> VonLexer<'config> {
             }
         }
 
-        // Unclosed string, mark as error but still treat as string for syntax highlighting
+        // 未闭合的字符串，标记为错误以提醒用户，但在语法高亮中仍可视为字符串
         state.add_token(VonTokenType::Error, start, state.get_position());
         true
     }
 
-    /// Handles number literals.
+    /// 处理数字字面量
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some(ch) = state.peek() {
-            // Number must start with a digit, negative sign, or dot (followed by digit)
+            // eprintln!("lex_number peeks '{}' at {}", ch, start_pos);
+            // 数字必须以数字、负号或小数点（后面跟数字）开始
             let is_number_start = ch.is_ascii_digit() || (ch == '-' && state.peek_next_n(1).map_or(false, |c| c.is_ascii_digit())) || (ch == '.' && state.peek_next_n(1).map_or(false, |c| c.is_ascii_digit()));
 
             if !is_number_start {
@@ -198,7 +195,7 @@ impl<'config> VonLexer<'config> {
                 state.advance(1);
             }
 
-            // Integer part
+            // 整数部分
             if let Some(first) = state.peek() {
                 if first.is_ascii_digit() {
                     while let Some(digit) = state.peek() {
@@ -212,7 +209,7 @@ impl<'config> VonLexer<'config> {
                 }
             }
 
-            // Check for dot
+            // 检查小数点
             if let Some('.') = state.peek() {
                 let mut lookahead = 1;
                 while let Some(c) = state.peek_next_n(lookahead) {
@@ -225,7 +222,7 @@ impl<'config> VonLexer<'config> {
                 }
                 if let Some(next_ch) = state.peek_next_n(lookahead) {
                     if next_ch.is_ascii_digit() {
-                        state.advance(1); // Skip dot
+                        state.advance(1); // 跳过小数点
                         while let Some(digit) = state.peek() {
                             if digit.is_ascii_digit() || digit == '_' {
                                 state.advance(1);
@@ -238,10 +235,10 @@ impl<'config> VonLexer<'config> {
                 }
             }
 
-            // Check for exponent
+            // 检查指数
             if let Some(e) = state.peek() {
                 if e == 'e' || e == 'E' {
-                    // Ensure exponent is followed by digits (or sign + digits)
+                    // 确保指数后面跟着数字（或符号+数字）
                     let mut lookahead = 1;
                     if let Some(sign) = state.peek_next_n(lookahead) {
                         if sign == '+' || sign == '-' {
@@ -252,16 +249,16 @@ impl<'config> VonLexer<'config> {
                     let has_digits = state.peek_next_n(lookahead).map_or(false, |c| c.is_ascii_digit() || (c == '_' && state.peek_next_n(lookahead + 1).map_or(false, |n| n.is_ascii_digit())));
 
                     if has_digits {
-                        state.advance(1); // Skip e/E
+                        state.advance(1); // 跳过 e/E
 
-                        // Optional sign
+                        // 可选的符号
                         if let Some(sign) = state.peek() {
                             if sign == '+' || sign == '-' {
                                 state.advance(1);
                             }
                         }
 
-                        // Exponent digits
+                        // 指数数字
                         while let Some(digit) = state.peek() {
                             if digit.is_ascii_digit() || digit == '_' {
                                 state.advance(1);
@@ -274,8 +271,8 @@ impl<'config> VonLexer<'config> {
                 }
             }
 
-            // Only considered a number if at least one digit or negative sign followed by digit is consumed
-            // Also check that it's not immediately followed by a letter, which might be an identifier (e.g. version)
+            // 只有当至少消费了一个数字或者是负号后跟数字时，才认为是数字
+            // 还要检查后面不能直接跟字母，否则可能是标识符（如 version）
             if state.get_position() > start_pos {
                 if let Some(next) = state.peek() {
                     if next.is_ascii_alphabetic() || next == '_' {
@@ -293,19 +290,19 @@ impl<'config> VonLexer<'config> {
         }
     }
 
-    /// Handles identifiers and keywords.
+    /// 处理标识符和关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if let Some(ch) = state.peek() {
             if ch.is_ascii_alphabetic() || ch == '_' {
-                // If it's 'r', it might be 'raw', need to check if it's the start of a raw string
+                // 如果是 'r'，可能是 'raw'，需要检查是否是原始字符串的开始
                 if ch == 'r' {
                     if let Some('a') = state.peek_next_n(1) {
                         if let Some('w') = state.peek_next_n(2) {
                             if let Some(c) = state.peek_next_n(3) {
                                 if c == '"' || c == '\'' {
-                                    // This is a raw string, handled by lex_string
+                                    // 这是原始字符串，由 lex_string 处理
                                     return false;
                                 }
                             }
@@ -336,7 +333,7 @@ impl<'config> VonLexer<'config> {
         false
     }
 
-    /// Handles operators and punctuation.
+    /// 处理操作符和标点符号
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -407,7 +404,7 @@ impl<'config> Lexer<VonLanguage> for VonLexer<'config> {
                 continue;
             }
 
-            // If no match, treat as error and skip one character
+            // 如果都没有匹配，按错误处理并跳过一个字符
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());

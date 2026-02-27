@@ -2,22 +2,22 @@
 use crate::{ast::*, language::JLanguage, parser::JParser};
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, Parser, SourceText, TextEdit, source::Source};
 
-/// AST builder for the J language.
+/// J 语言的 AST 构建器
 #[derive(Clone)]
 pub struct JBuilder<'config> {
-    /// Language configuration.
+    /// 语言配置
     config: &'config JLanguage,
 }
 
 impl<'config> JBuilder<'config> {
-    /// Creates a new J builder.
+    /// 创建新的 J 构建器
     pub fn new(config: &'config JLanguage) -> Self {
         Self { config }
     }
 
-    /// Builds the AST root node from the syntax tree.
+    /// 从语法树构建 AST 根节点
     pub fn build_root(&self, _green: &GreenNode<JLanguage>, _source: &SourceText) -> Result<JRoot, oak_core::OakError> {
-        // Simplified AST building logic.
+        // 简化的 AST 构建逻辑
         Ok(JRoot::new(vec![]))
     }
 }

@@ -1,6 +1,5 @@
 #![doc = include_str!("readme.md")]
 #[cfg(feature = "oak-highlight")]
-/// Highlighter for regular expressions.
 pub mod highlighter;
 
 #[cfg(feature = "lsp")]
@@ -11,7 +10,6 @@ use {
     oak_vfs::Vfs,
 };
 #[cfg(feature = "oak-pretty-print")]
-/// Formatter for regular expressions.
 pub mod formatter;
 use crate::language::RegexLanguage;
 use core::range::Range;

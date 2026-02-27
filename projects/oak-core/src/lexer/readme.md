@@ -58,7 +58,6 @@ use oak_core::{Language, TokenType, SourceText, UniversalTokenRole, UniversalEle
 use core::range::Range;
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum SimpleToken { Identifier, Whitespace, End }
 
 impl TokenType for SimpleToken {
@@ -73,16 +72,11 @@ impl TokenType for SimpleToken {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-enum SimpleElement { Root }
+enum SimpleElement {}
 
 impl ElementType for SimpleElement {
     type Role = UniversalElementRole;
     fn role(&self) -> Self::Role { UniversalElementRole::None }
-}
-
-impl From<SimpleToken> for SimpleElement {
-    fn from(_: SimpleToken) -> Self { SimpleElement::Root }
 }
 
 struct SimpleLanguage;
@@ -112,5 +106,5 @@ state.advance(5);
 // Add end-of-file token
 state.add_eof();
 
-assert_eq!(state.get_tokens().len(), 4);
+assert_eq!(state.tokens().len(), 4);
 ```

@@ -1,12 +1,10 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
-/// Configuration for the Protobuf language support.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct ProtobufLanguage {}
 
 impl ProtobufLanguage {
-    /// Creates a new `ProtobufLanguage`.
     pub fn new() -> Self {
         Self {}
     }

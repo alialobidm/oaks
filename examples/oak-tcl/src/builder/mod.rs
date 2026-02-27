@@ -6,15 +6,15 @@ use crate::{
 };
 use oak_core::{Builder, BuilderCache, GreenNode, Lexer, OakDiagnostics, OakError, Parser, RedNode, RedTree, SourceText, TextEdit, source::Source};
 
-/// AST builder for Tcl language
+/// Tcl 语言的 AST 构建器
 #[derive(Clone)]
 pub struct TclBuilder<'config> {
-    /// Language configuration
+    /// 语言配置
     config: &'config TclLanguage,
 }
 
 impl<'config> TclBuilder<'config> {
-    /// Creates a new Tcl builder
+    /// 创建新的 Tcl 构建器
     pub fn new(config: &'config TclLanguage) -> Self {
         Self { config }
     }
@@ -47,7 +47,7 @@ impl<'config> Builder<TclLanguage> for TclBuilder<'config> {
 }
 
 impl<'config> TclBuilder<'config> {
-    /// Builds the root node
+    /// 构建根节点
     pub(crate) fn build_root(&self, green_tree: GreenNode<TclLanguage>, source: &SourceText) -> Result<TclRoot, OakError> {
         let red_root = RedNode::new(&green_tree, 0);
         self.build_root_from_red(red_root, source)

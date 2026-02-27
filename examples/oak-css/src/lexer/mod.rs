@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// CSS token types and role definitions.
 pub mod token_type;
 use crate::language::CssLanguage;
 use oak_core::{Lexer, LexerState, OakError, lexer::LexOutput, source::Source};
@@ -10,13 +9,13 @@ type State<'s, S> = LexerState<'s, S, CssLanguage>;
 /// Lexer for the CSS language.
 pub struct CssLexer<'config> {
     /// Language configuration.
-    config: &'config CssLanguage,
+    _config: &'config CssLanguage,
 }
 
 impl<'config> CssLexer<'config> {
     /// Creates a new `CssLexer` with the given language configuration.
     pub fn new(config: &'config CssLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     /// Skips whitespace characters.

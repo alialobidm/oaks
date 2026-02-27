@@ -1,16 +1,15 @@
 #![doc = include_str!("readme.md")]
-/// Token type definition.
 pub mod token_type;
 pub use token_type::CppTokenType;
 
 use crate::language::CppLanguage;
 use oak_core::{Lexer, LexerCache, LexerState, TextEdit, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, CppLanguage>;
+type State<'a, S> = LexerState<'a, S, CppLanguage>;
 
 /// Lexer for the C++ language.
 pub struct CppLexer<'config> {
-    config: &'config CppLanguage,
+    _config: &'config CppLanguage,
 }
 
 /// Type alias for a C lexer.
@@ -19,7 +18,7 @@ pub type CLexer<'config> = CppLexer<'config>;
 impl<'config> CppLexer<'config> {
     /// Creates a new `CppLexer` with the given configuration.
     pub fn new(config: &'config CppLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     /// Skips whitespace characters.
@@ -557,7 +556,7 @@ impl<'config> CppLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip the current character and mark as error
+            // 如果都不匹配，跳过当前字符并记录错误
             let start = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());

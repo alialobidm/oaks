@@ -4,16 +4,15 @@ use crate::{
     lexer::{VonLexer, VonTokenType},
     parser::{VonElementType, VonParser},
 };
-use oak_core::{Builder, BuilderCache, GreenNode, Lexer, OakDiagnostics, OakError, Parser, SourceText, TextEdit, parser::session::ParseSession, source::Source};
+use oak_core::{Builder, BuilderCache, GreenNode, GreenTree, Lexer, OakDiagnostics, OakError, Parser, Range, SourceText, TextEdit, parser::session::ParseSession, source::Source};
 
-/// A builder for VON AST and diagnostic results.
+/// VON AST 构建器
 #[derive(Clone)]
 pub struct VonBuilder<'config> {
     config: &'config VonLanguage,
 }
 
 impl<'config> VonBuilder<'config> {
-    /// Creates a new `VonBuilder` with the given configuration.
     pub fn new(config: &'config VonLanguage) -> Self {
         Self { config }
     }
@@ -59,7 +58,7 @@ impl<'config> VonBuilder<'config> {
     }
 
     fn build_value<'a>(&self, node: &GreenNode<'a, VonLanguage>, offset: usize, source: &SourceText) -> Result<VonValue, OakError> {
-        let span: oak_core::Range<usize> = (offset..offset + node.byte_length as usize).into();
+        let span: oak_core::Range<usize> = (offset..offset + node.text_len as usize).into();
 
         match node.kind {
             VonElementType::Object => {
@@ -71,7 +70,7 @@ impl<'config> VonBuilder<'config> {
                             if n.kind == VonElementType::ObjectEntry {
                                 fields.push(self.build_field(n, current_offset, source)?);
                             }
-                            current_offset += n.byte_length as usize;
+                            current_offset += n.text_len as usize;
                         }
                         oak_core::GreenTree::Leaf(l) => {
                             current_offset += l.length as usize;
@@ -89,7 +88,7 @@ impl<'config> VonBuilder<'config> {
                             if n.kind == VonElementType::ArrayElement {
                                 elements.push(self.build_value(n, current_offset, source)?);
                             }
-                            current_offset += n.byte_length as usize;
+                            current_offset += n.text_len as usize;
                         }
                         oak_core::GreenTree::Leaf(l) => {
                             current_offset += l.length as usize;
@@ -106,7 +105,7 @@ impl<'config> VonBuilder<'config> {
                     match child {
                         oak_core::GreenTree::Node(n) => {
                             payload = Some(Box::new(self.build_value(n, current_offset, source)?));
-                            current_offset += n.byte_length as usize;
+                            current_offset += n.text_len as usize;
                         }
                         oak_core::GreenTree::Leaf(l) => {
                             if l.kind == VonTokenType::Identifier {
@@ -130,7 +129,7 @@ impl<'config> VonBuilder<'config> {
                         if l.kind == VonTokenType::StringLiteral {
                             let s_span: oak_core::Range<usize> = (current_offset..current_offset + l.length as usize).into();
                             let mut text = source.get_text_in(s_span.clone());
-                            // Handle raw strings raw"..." or raw'...'
+                            // 处理原始字符串 raw"..." 或 raw'...'
                             let is_raw = text.starts_with("raw") && (text[3..].starts_with('"') || text[3..].starts_with('\''));
                             if is_raw {
                                 match text {
@@ -140,7 +139,7 @@ impl<'config> VonBuilder<'config> {
                                     }
                                 }
                             }
-                            // Handle symmetric quotes: find the number of consecutive quotes at the beginning
+                            // 处理对称引号：找到开头连续的引号数量
                             let quote_char = text.chars().next().unwrap();
                             let mut quote_count = 0;
                             for c in text.chars() {
@@ -190,7 +189,7 @@ impl<'config> VonBuilder<'config> {
     }
 
     fn build_field<'a>(&self, node: &GreenNode<'a, VonLanguage>, offset: usize, source: &SourceText) -> Result<VonField, OakError> {
-        let span: oak_core::Range<usize> = (offset..offset + node.byte_length as usize).into();
+        let span: oak_core::Range<usize> = (offset..offset + node.text_len as usize).into();
 
         let mut name = None;
         let mut value = None;
@@ -202,7 +201,7 @@ impl<'config> VonBuilder<'config> {
                     if n.kind == VonElementType::Value || n.kind == VonElementType::Object || n.kind == VonElementType::Array || n.kind == VonElementType::Enum {
                         value = Some(self.build_value(n, current_offset, source)?);
                     }
-                    current_offset += n.byte_length as usize
+                    current_offset += n.text_len as usize
                 }
                 oak_core::GreenTree::Leaf(l) => {
                     if l.kind == VonTokenType::Identifier || l.kind == VonTokenType::StringLiteral {

@@ -14,13 +14,6 @@ use std::{
 ///
 /// Green trees represent the immutable structure of kind trees without
 /// position information.
-///
-/// # Design Note: Lifetimes and References
-/// We use `&'a GreenNode<'a, L>` instead of an owned `GreenNode<'a, L>` for two reasons:
-/// 1. **Recursion**: `GreenTree` is a recursive structure. To avoid infinite size, we must use a pointer.
-///    Since green nodes are allocated in an arena, a reference `&'a` is the most efficient choice.
-/// 2. **Handles**: Holding a reference (8 bytes) is much cheaper than holding the whole
-///    `GreenNode` struct (24+ bytes), making handles like `RedNode` very lightweight.
 pub enum GreenTree<'a, L: Language> {
     /// A green node with child elements
     Node(&'a GreenNode<'a, L>),
@@ -75,7 +68,7 @@ impl<'a, L: Language> GreenTree<'a, L> {
     #[inline]
     pub fn len(&self) -> u32 {
         match self {
-            GreenTree::Node(n) => n.byte_length,
+            GreenTree::Node(n) => n.text_len,
             GreenTree::Leaf(t) => t.length,
         }
     }
@@ -205,22 +198,22 @@ impl<L: Language> GreenLeaf<L> {
 pub struct GreenNode<'a, L: Language> {
     /// The element type (kind) of this node.
     pub kind: L::ElementType,
+    /// The total text length of this node (sum of children's lengths) in bytes.
+    pub text_len: u32,
     /// The children of this node, which can be other nodes or leaf tokens.
     pub children: &'a [GreenTree<'a, L>],
-    /// The total text length of this node (sum of children's lengths) in bytes.
-    pub byte_length: u32,
 }
 
 // Manually implement Clone to avoid L: Clone bound (though L usually is Clone)
 impl<'a, L: Language> Clone for GreenNode<'a, L> {
     fn clone(&self) -> Self {
-        Self { kind: self.kind, byte_length: self.byte_length, children: self.children }
+        Self { kind: self.kind, text_len: self.text_len, children: self.children }
     }
 }
 
 impl<'a, L: Language> PartialEq for GreenNode<'a, L> {
     fn eq(&self, other: &Self) -> bool {
-        self.kind == other.kind && self.byte_length == other.byte_length && self.children == other.children
+        self.kind == other.kind && self.text_len == other.text_len && self.children == other.children
     }
 }
 
@@ -228,7 +221,7 @@ impl<'a, L: Language> Eq for GreenNode<'a, L> {}
 
 impl<'a, L: Language> fmt::Debug for GreenNode<'a, L> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("GreenNode").field("kind", &self.kind).field("children", &self.children).field("length", &self.byte_length).finish()
+        f.debug_struct("GreenNode").field("kind", &self.kind).field("children", &self.children).field("length", &self.text_len).finish()
     }
 }
 
@@ -251,7 +244,7 @@ impl<'a, L: Language> GreenNode<'a, L> {
     /// * `children` - The slice of child elements.
     pub fn new(kind: L::ElementType, children: &'a [GreenTree<'a, L>]) -> Self {
         let len: u32 = children.iter().map(|c| c.len()).sum();
-        Self { kind, byte_length: len, children }
+        Self { kind, text_len: len, children }
     }
 
     /// Returns the kind of this node.
@@ -263,7 +256,7 @@ impl<'a, L: Language> GreenNode<'a, L> {
     /// Returns the total text length of this node in bytes.
     #[inline]
     pub fn text_len(&self) -> u32 {
-        self.byte_length
+        self.text_len
     }
 
     /// Returns the children of this node.

@@ -1,5 +1,4 @@
 #![doc = include_str!("readme.md")]
-/// Token type definitions.
 pub mod token_type;
 
 pub use token_type::AplTokenType;
@@ -12,15 +11,13 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, AplLanguage>;
+type State<'a, S> = LexerState<'a, S, AplLanguage>;
 
 static APL_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 
-/// Lexer for the APL language.
 #[derive(Clone, Debug)]
 pub struct AplLexer<'config> {
-    /// The language configuration.
-    pub config: &'config AplLanguage,
+    config: &'config AplLanguage,
 }
 
 impl<'config> Lexer<AplLanguage> for AplLexer<'config> {
@@ -35,12 +32,11 @@ impl<'config> Lexer<AplLanguage> for AplLexer<'config> {
 }
 
 impl<'config> AplLexer<'config> {
-    /// Creates a new `AplLexer`.
     pub fn new(config: &'config AplLanguage) -> Self {
         Self { config }
     }
 
-    /// Main lexical analysis logic.
+    /// 主要词法分析逻辑
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
@@ -69,7 +65,7 @@ impl<'config> AplLexer<'config> {
                 continue;
             }
 
-            // If no pattern matches, skip current character and generate Error token
+            // 如果没有匹配任何模式，跳过当前字符并生成 Error token
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
                 state.add_token(AplTokenType::Error, safe_point, state.get_position());
@@ -79,7 +75,7 @@ impl<'config> AplLexer<'config> {
         Ok(())
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         APL_WHITESPACE.scan(state, AplTokenType::Whitespace)
     }

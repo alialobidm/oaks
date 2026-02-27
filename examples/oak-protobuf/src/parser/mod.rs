@@ -1,9 +1,9 @@
-/// Element types and tree structure definitions for Protobuf.
 pub mod element_type;
 
 use crate::{
     language::ProtobufLanguage,
     lexer::{ProtobufLexer, token_type::ProtobufTokenType},
+    parser::element_type::ProtobufElementType,
 };
 use oak_core::{
     errors::OakError,
@@ -14,18 +14,21 @@ use oak_core::{
 
 pub(crate) type State<'a, S> = ParserState<'a, ProtobufLanguage, S>;
 
-/// Parser implementation for the Protobuf language.
 pub struct ProtobufParser<'a> {
     language: &'a ProtobufLanguage,
 }
 
 impl<'a> ProtobufParser<'a> {
-    /// Creates a new instance of the Protobuf parser with the given configuration.
     pub fn new(language: &'a ProtobufLanguage) -> Self {
         Self { language }
     }
 
-    /// Parses the top-level Protobuf program.
+    fn parse_root_internal<'b, S: Source + ?Sized>(&self, state: &mut State<'b, S>) -> Result<&'b GreenNode<'b, ProtobufLanguage>, OakError> {
+        let checkpoint = state.checkpoint();
+        self.parse_program(state);
+        Ok(state.finish_at(checkpoint, crate::parser::element_type::ProtobufElementType::Root))
+    }
+
     fn parse_program<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         while state.not_at_end() {
             if state.at(ProtobufTokenType::Syntax) {
@@ -55,7 +58,6 @@ impl<'a> ProtobufParser<'a> {
         }
     }
 
-    /// Parses a syntax definition statement.
     fn parse_syntax<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         let checkpoint = state.checkpoint();
         state.expect(ProtobufTokenType::Syntax).ok();
@@ -65,7 +67,6 @@ impl<'a> ProtobufParser<'a> {
         state.finish_at(checkpoint, crate::parser::element_type::ProtobufElementType::SyntaxDef);
     }
 
-    /// Parses a package definition statement.
     fn parse_package<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         let checkpoint = state.checkpoint();
         state.expect(ProtobufTokenType::Package).ok();
@@ -74,7 +75,6 @@ impl<'a> ProtobufParser<'a> {
         state.finish_at(checkpoint, crate::parser::element_type::ProtobufElementType::PackageDef);
     }
 
-    /// Parses an import definition statement.
     fn parse_import<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         let checkpoint = state.checkpoint();
         state.expect(ProtobufTokenType::Import).ok();
@@ -86,7 +86,6 @@ impl<'a> ProtobufParser<'a> {
         state.finish_at(checkpoint, crate::parser::element_type::ProtobufElementType::ImportDef);
     }
 
-    /// Parses an option definition statement.
     fn parse_option<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         let checkpoint = state.checkpoint();
         state.expect(ProtobufTokenType::Option).ok();
@@ -97,7 +96,6 @@ impl<'a> ProtobufParser<'a> {
         state.finish_at(checkpoint, crate::parser::element_type::ProtobufElementType::OptionDef);
     }
 
-    /// Parses a message definition block.
     fn parse_message<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         let checkpoint = state.checkpoint();
         state.expect(ProtobufTokenType::Message).ok();
@@ -110,7 +108,6 @@ impl<'a> ProtobufParser<'a> {
         state.finish_at(checkpoint, crate::parser::element_type::ProtobufElementType::MessageDef);
     }
 
-    /// Parses an enum definition block.
     fn parse_enum<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         let checkpoint = state.checkpoint();
         state.expect(ProtobufTokenType::Enum).ok();
@@ -123,7 +120,6 @@ impl<'a> ProtobufParser<'a> {
         state.finish_at(checkpoint, crate::parser::element_type::ProtobufElementType::EnumDef);
     }
 
-    /// Parses a service definition block.
     fn parse_service<S: Source + ?Sized>(&self, state: &mut State<'_, S>) {
         let checkpoint = state.checkpoint();
         state.expect(ProtobufTokenType::Service).ok();
@@ -140,10 +136,6 @@ impl<'a> ProtobufParser<'a> {
 impl<'a> Parser<ProtobufLanguage> for ProtobufParser<'a> {
     fn parse<'b, S: Source + ?Sized>(&self, text: &'b S, edits: &[TextEdit], cache: &'b mut impl ParseCache<ProtobufLanguage>) -> ParseOutput<'b, ProtobufLanguage> {
         let lexer = ProtobufLexer::new(self.language);
-        parse_with_lexer(&lexer, text, edits, cache, |state| {
-            let checkpoint = state.checkpoint();
-            self.parse_program(state);
-            Ok(state.finish_at(checkpoint, element_type::ProtobufElementType::Root))
-        })
+        parse_with_lexer(&lexer, text, edits, cache, |state| self.parse_root_internal(state))
     }
 }

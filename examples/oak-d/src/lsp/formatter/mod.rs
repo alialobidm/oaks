@@ -1,4 +1,5 @@
 #![doc = include_str!("readme.md")]
+//! D Code Formatter
 
 use crate::ast::DRoot;
 

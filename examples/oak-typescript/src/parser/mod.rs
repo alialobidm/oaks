@@ -1,4 +1,3 @@
-/// Element types for TypeScript AST.
 pub mod element_type;
 mod parse_class;
 mod parse_expression;
@@ -16,13 +15,11 @@ use oak_core::{
 
 pub(crate) type State<'a, S> = ParserState<'a, TypeScriptLanguage, S>;
 
-/// Parser for the TypeScript language.
 pub struct TypeScriptParser<'config> {
     pub(crate) config: &'config TypeScriptLanguage,
 }
 
 impl<'config> TypeScriptParser<'config> {
-    /// Creates a new `TypeScriptParser` with the given language configuration.
     pub fn new(config: &'config TypeScriptLanguage) -> Self {
         Self { config }
     }

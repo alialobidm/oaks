@@ -3,14 +3,14 @@ use core::range::Range;
 use oak_core::source::{SourceBuffer, ToSource};
 #[cfg(feature = "oak-pretty-print")]
 use oak_pretty_print::{AsDocument, Document};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Lua root node
+/// Lua 根节点
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaRoot {
-    /// Statements in the root.
     pub statements: Vec<LuaStatement>,
-    /// Source span of the root.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -31,35 +31,22 @@ impl AsDocument for LuaRoot {
     }
 }
 
-/// Lua statement
+/// Lua 语句
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LuaStatement {
-    /// A local statement.
     Local(LuaLocalStatement),
-    /// An assignment statement.
     Assignment(LuaAssignmentStatement),
-    /// An expression statement.
     Expression(LuaExpression),
-    /// A return statement.
     Return(LuaReturnStatement),
-    /// An if statement.
     If(LuaIfStatement),
-    /// A while statement.
     While(LuaWhileStatement),
-    /// A for statement.
     For(LuaForStatement),
-    /// A repeat statement.
     Repeat(LuaRepeatStatement),
-    /// A function statement.
     Function(LuaFunctionStatement),
-    /// A break statement.
     Break,
-    /// A do block.
     Do(Vec<LuaStatement>),
-    /// A goto statement.
     Goto(String),
-    /// A label statement.
     Label(String),
 }
 
@@ -106,13 +93,11 @@ impl AsDocument for LuaStatement {
     }
 }
 
-/// Local variable declaration
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// 本地变量声明
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 pub struct LuaLocalStatement {
-    /// Names of the local variables.
     pub names: Vec<String>,
-    /// Values assigned to the local variables.
     pub values: Vec<LuaExpression>,
 }
 
@@ -137,13 +122,11 @@ impl ToSource for LuaLocalStatement {
     }
 }
 
-/// Assignment statement
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// 赋值语句
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 pub struct LuaAssignmentStatement {
-    /// Targets of the assignment.
     pub targets: Vec<LuaExpression>,
-    /// Values assigned to the targets.
     pub values: Vec<LuaExpression>,
 }
 
@@ -165,11 +148,10 @@ impl ToSource for LuaAssignmentStatement {
     }
 }
 
-/// Return statement
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// 返回语句
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 pub struct LuaReturnStatement {
-    /// Values returned.
     pub values: Vec<LuaExpression>,
 }
 
@@ -185,17 +167,13 @@ impl ToSource for LuaReturnStatement {
     }
 }
 
-/// If statement
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// If 语句
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 pub struct LuaIfStatement {
-    /// The condition of the `if` block.
     pub condition: LuaExpression,
-    /// The block of the `if` part.
     pub then_block: Vec<LuaStatement>,
-    /// Else-if blocks.
     pub else_ifs: Vec<(LuaExpression, Vec<LuaStatement>)>,
-    /// The block of the `else` part.
     pub else_block: Option<Vec<LuaStatement>>,
 }
 
@@ -228,13 +206,11 @@ impl ToSource for LuaIfStatement {
     }
 }
 
-/// While statement
+/// While 语句
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaWhileStatement {
-    /// The condition of the `while` loop.
     pub condition: LuaExpression,
-    /// The block of the `while` loop.
     pub block: Vec<LuaStatement>,
 }
 
@@ -251,32 +227,12 @@ impl ToSource for LuaWhileStatement {
     }
 }
 
-/// For statement
+/// For 语句
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LuaForStatement {
-    /// A numeric for loop: `for var = start, end, step do block end`.
-    Numeric {
-        /// The loop variable.
-        variable: String,
-        /// The start value.
-        start: LuaExpression,
-        /// The end value.
-        end: LuaExpression,
-        /// The step value.
-        step: Option<LuaExpression>,
-        /// The loop block.
-        block: Vec<LuaStatement>,
-    },
-    /// A generic for loop: `for vars in iters do block end`.
-    Generic {
-        /// The loop variables.
-        variables: Vec<String>,
-        /// The iterators.
-        iterators: Vec<LuaExpression>,
-        /// The loop block.
-        block: Vec<LuaStatement>,
-    },
+    Numeric { variable: String, start: LuaExpression, end: LuaExpression, step: Option<LuaExpression>, block: Vec<LuaStatement> },
+    Generic { variables: Vec<String>, iterators: Vec<LuaExpression>, block: Vec<LuaStatement> },
 }
 
 impl ToSource for LuaForStatement {
@@ -326,13 +282,11 @@ impl ToSource for LuaForStatement {
     }
 }
 
-/// Repeat statement
+/// Repeat 语句
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaRepeatStatement {
-    /// The block of the `repeat` loop.
     pub block: Vec<LuaStatement>,
-    /// The condition of the `repeat` loop.
     pub condition: LuaExpression,
 }
 
@@ -348,19 +302,14 @@ impl ToSource for LuaRepeatStatement {
     }
 }
 
-/// Function definition statement
+/// 函数定义语句
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaFunctionStatement {
-    /// The name parts of the function.
     pub name: Vec<String>,
-    /// The receiver part (after `:`) if any.
     pub receiver: Option<String>,
-    /// The parameters of the function.
     pub parameters: Vec<String>,
-    /// Whether the function has a vararg parameter.
     pub is_vararg: bool,
-    /// The function body.
     pub block: Vec<LuaStatement>,
 }
 
@@ -399,35 +348,22 @@ impl ToSource for LuaFunctionStatement {
     }
 }
 
-/// Lua expression
+/// Lua 表达式
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LuaExpression {
-    /// An identifier.
     Identifier(String),
-    /// A number literal.
     Number(f64),
-    /// A string literal.
     String(String),
-    /// A boolean literal.
     Boolean(bool),
-    /// A nil literal.
     Nil,
-    /// A binary expression.
     Binary(Box<LuaBinaryExpression>),
-    /// A unary expression.
     Unary(Box<LuaUnaryExpression>),
-    /// A call expression.
     Call(Box<LuaCallExpression>),
-    /// A table constructor.
     Table(LuaTableConstructor),
-    /// A function expression.
     Function(LuaFunctionExpression),
-    /// An index expression.
     Index(Box<LuaIndexExpression>),
-    /// A member expression.
     Member(Box<LuaMemberExpression>),
-    /// A vararg expression.
     Vararg,
 }
 
@@ -464,13 +400,11 @@ impl AsDocument for LuaExpression {
     }
 }
 
-/// Unary expression
+/// 一元表达式
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaUnaryExpression {
-    /// The operator.
     pub op: String,
-    /// The operand.
     pub operand: LuaExpression,
 }
 
@@ -481,15 +415,12 @@ impl ToSource for LuaUnaryExpression {
     }
 }
 
-/// Binary expression
+/// 二元表达式
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaBinaryExpression {
-    /// The left-hand side.
     pub left: LuaExpression,
-    /// The operator.
     pub op: String,
-    /// The right-hand side.
     pub right: LuaExpression,
 }
 
@@ -503,13 +434,11 @@ impl ToSource for LuaBinaryExpression {
     }
 }
 
-/// Function call expression
+/// 函数调用表达式
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaCallExpression {
-    /// The function being called.
     pub function: LuaExpression,
-    /// The arguments passed to the function.
     pub arguments: Vec<LuaExpression>,
 }
 
@@ -527,11 +456,10 @@ impl ToSource for LuaCallExpression {
     }
 }
 
-/// Table constructor
+/// 表构造器
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaTableConstructor {
-    /// The fields in the table constructor.
     pub fields: Vec<LuaTableField>,
 }
 
@@ -548,29 +476,12 @@ impl ToSource for LuaTableConstructor {
     }
 }
 
-/// A field in a Lua table constructor.
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LuaTableField {
-    /// A keyed field: `[key] = value`.
-    Keyed {
-        /// The key expression.
-        key: LuaExpression,
-        /// The value expression.
-        value: LuaExpression,
-    },
-    /// A named field: `name = value`.
-    Named {
-        /// The name.
-        name: String,
-        /// The value expression.
-        value: LuaExpression,
-    },
-    /// A list field: `value`.
-    List {
-        /// The value expression.
-        value: LuaExpression,
-    },
+    Keyed { key: LuaExpression, value: LuaExpression },
+    Named { name: String, value: LuaExpression },
+    List { value: LuaExpression },
 }
 
 impl ToSource for LuaTableField {
@@ -592,15 +503,12 @@ impl ToSource for LuaTableField {
     }
 }
 
-/// Anonymous function expression
+/// 匿名函数表达式
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaFunctionExpression {
-    /// The parameters of the function.
     pub parameters: Vec<String>,
-    /// Whether the function has a vararg parameter.
     pub is_vararg: bool,
-    /// The function body.
     pub block: Vec<LuaStatement>,
 }
 
@@ -628,13 +536,11 @@ impl ToSource for LuaFunctionExpression {
     }
 }
 
-/// Index access expression
+/// 索引访问表达式
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaIndexExpression {
-    /// The table being indexed.
     pub table: LuaExpression,
-    /// The index expression.
     pub index: LuaExpression,
 }
 
@@ -647,15 +553,12 @@ impl ToSource for LuaIndexExpression {
     }
 }
 
-/// Member access expression
+/// 成员访问表达式
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LuaMemberExpression {
-    /// The table whose member is being accessed.
     pub table: LuaExpression,
-    /// The member name.
     pub member: String,
-    /// Whether this is a method call (using `:`).
     pub is_method: bool,
 }
 

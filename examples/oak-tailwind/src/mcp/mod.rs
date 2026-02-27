@@ -2,7 +2,7 @@
 use crate::lsp::TailwindLanguageService;
 use oak_vfs::MemoryVfs;
 
-/// Starts the MCP server (Stdio) for Tailwind semantics.
+/// 为 Tailwind 语义启动 MCP 服务器 (Stdio)。
 #[cfg(feature = "mcp")]
 pub async fn serve_tailwind_mcp(vfs: MemoryVfs) {
     let service = TailwindLanguageService::new(vfs);

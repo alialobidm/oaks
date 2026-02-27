@@ -1,97 +1,81 @@
-{{! Comprehensive Handlebars Lexer Test }}
+{{!-- Handlebars template basic syntax test file --}}
 
-{{! --- Basic Expressions --- }}
-<h1>{{title}}</h1>
-<p>{{body}}</p>
+{{!-- Basic variable interpolation --}}
+<h1>Welcome {{userName}}!</h1>
+<p>Your age is {{userAge}} years old.</p>
 
-{{! --- HTML Escaping --- }}
-I want to show some HTML: {{{htmlContent}}}
-Or: {{&htmlContent}}
-
-{{! --- Comments --- }}
-{{! This is a comment }}
-{{!-- This is a block comment 
-            that can contain }} braces --}}
-
-{{! --- Block Helpers --- }}
-{{#if isActive}}
-    <div class="active">Active</div>
-{{else if isPending}}
-    <div class="pending">Pending</div>
+{{!-- Conditional blocks --}}
+{{#if isLoggedIn}}
+    <div class="user-dashboard">
+        <h2>Hello {{firstName}} {{lastName}}!</h2>
+        {{#if hasNotifications}}
+            <div class="notifications">
+                You have {{notificationCount}} new notifications.
+            </div>
+        {{else}}
+            <p>No new notifications.</p>
+        {{/if}}
+    </div>
 {{else}}
-    <div class="inactive">Inactive</div>
+    <div class="login-prompt">
+        Please <a href="/login">log in</a> to continue.
+    </div>
 {{/if}}
 
-{{#unless isAuthorized}}
-    <p>Please log in.</p>
-{{/unless}}
-
-{{! --- Iteration --- }}
-<ul>
-    {{#each items}}
-        <li>{{this}}</li>
+{{!-- Each loop --}}
+<ul class="product-list">
+    {{#each products}}
+        <li class="product-item">
+            <h3>{{this.name}}</h3>
+            <p>Price: ${{this.price}}</p>
+            {{#if this.inStock}}
+                <span class="in-stock">In Stock ({{this.quantity}})</span>
+            {{else}}
+                <span class="out-of-stock">Out of Stock</span>
+            {{/if}}
+        </li>
     {{/each}}
 </ul>
 
-{{#each users as |user userId|}}
-    <div id="user-{{userId}}">
-        {{user.name}} - {{@index}} - {{@key}}
-        {{#if @first}} (First) {{/if}}
-        {{#if @last}} (Last) {{/if}}
+{{!-- With block --}}
+{{#with company}}
+    <div class="company-info">
+        <h2>{{name}}</h2>
+        <p>Founded in {{foundedYear}}</p>
+        <address>
+            {{address.street}}<br>
+            {{address.city}}, {{address.state}} {{address.zip}}
+        </address>
     </div>
+{{/with}}
+
+{{!-- Unless block --}}
+{{#unless isWeekend}}
+    <p>It's a weekday. Time to work!</p>
 {{else}}
-    <p>No users found.</p>
+    <p>It's the weekend! Time to relax.</p>
+{{/unless}}
+
+{{!-- Helpers usage --}}
+<p>Total: {{formatCurrency totalAmount}}</p>
+<p>Date: {{formatDate currentDate "YYYY-MM-DD"}}</p>
+
+{{!-- Partial inclusion --}}
+{{> userCard user=currentUser}}
+
+{{!-- Comment syntax --}}
+{{!-- This is a Handlebars comment that won't be rendered --}}
+
+{{!-- Nested helpers --}}
+{{#each (filter products "inStock" true)}}
+    <div class="available-product">
+        {{this.name}} - {{this.price}}
+    </div>
 {{/each}}
 
-{{! --- With Helper --- }}
-{{#with author}}
-    <h2>By {{firstName}} {{lastName}}</h2>
-    <p>Email: {{email}}</p>
-{{/with}}
-
-{{#with city as |city|}}
-    {{#with city.location as |loc|}}
-        {{city.name}}: {{loc.north}} {{loc.east}}
-    {{/with}}
-{{/with}}
-
-{{! --- Path Navigation --- }}
-{{./name}}
-{{../title}}
-{{../../section/header}}
-
-{{! --- Helpers with Arguments --- }}
-{{link "See more..." href=story.url class="story"}}
-
-{{! --- Subexpressions --- }}
-{{outer-helper (inner-helper 'abc') 'def'}}
-
-{{! --- Partials --- }}
-{{> myPartial }}
-{{> myPartial name=firstName age=30 }}
-{{> (dynamicPartial) }}
-
-{{! --- Inline Partials --- }}
-{{#*inline "myInlinePartial"}}
-    <div class="inline">
-        {{content}}
+{{!-- Block parameters --}}
+{{#each users as |user userIndex|}}
+    <div class="user-{{userIndex}}">
+        {{user.name}} ({{user.email}})
     </div>
-{{/inline}}
-
-{{> myInlinePartial content="Hello Inline" }}
-
-{{! --- Raw Blocks --- }}
-{{{{raw-helper}}}}
-    {{bar}}
-{{{{/raw-helper}}}}
-
-{{! --- Log Helper --- }}
-{{log "Look at me!" level="error"}}
-
-{{! --- Custom Delimiters (if supported, though rare in standard handlebars) --- }}
-{{!-- Not typically supported in basic syntax highlighting but good to test --}}
-
-{{! --- Complex Data --- }}
-{{object.value}}
-{{array.[0]}}
-{{array.[10].name}}
+{{/each}}

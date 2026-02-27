@@ -1,243 +1,141 @@
-//! Element types for the Groovy language.
+use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-use oak_core::{ElementType, UniversalElementRole};
-
-/// Element types for the Groovy AST.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[repr(u16)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GroovyElementType {
-    /// Root node.
     Root,
-    /// Source file.
     SourceFile,
-    // --- Literals ---
-    /// Integer literal.
+    // 字面量
     IntLiteral,
-    /// Floating point literal.
     FloatLiteral,
-    /// String literal.
     StringLiteral,
-    /// Character literal.
     CharLiteral,
-    /// Boolean literal.
     BooleanLiteral,
-    /// Null literal.
     NullLiteral,
 
-    // --- Identifiers ---
-    /// Identifier.
+    // 标识符
     Identifier,
 
-    // --- Keywords ---
-    /// `abstract` keyword.
+    // 关键字
     AbstractKeyword,
-    /// `as` keyword.
     AsKeyword,
-    /// `assert` keyword.
     AssertKeyword,
-    /// `break` keyword.
     BreakKeyword,
-    /// `case` keyword.
     CaseKeyword,
-    /// `catch` keyword.
     CatchKeyword,
-    /// `class` keyword.
     ClassKeyword,
-    /// `const` keyword.
     ConstKeyword,
-    /// `continue` keyword.
     ContinueKeyword,
-    /// `def` keyword.
     DefKeyword,
-    /// `default` keyword.
     DefaultKeyword,
-    /// `do` keyword.
     DoKeyword,
-    /// `else` keyword.
     ElseKeyword,
-    /// `enum` keyword.
     EnumKeyword,
-    /// `extends` keyword.
     ExtendsKeyword,
-    /// `final` keyword.
     FinalKeyword,
-    /// `finally` keyword.
     FinallyKeyword,
-    /// `for` keyword.
     ForKeyword,
-    /// `goto` keyword.
     GotoKeyword,
-    /// `if` keyword.
     IfKeyword,
-    /// `implements` keyword.
     ImplementsKeyword,
-    /// `import` keyword.
     ImportKeyword,
-    /// `in` keyword.
     InKeyword,
-    /// `instanceof` keyword.
     InstanceofKeyword,
-    /// `interface` keyword.
     InterfaceKeyword,
-    /// `native` keyword.
     NativeKeyword,
-    /// `new` keyword.
     NewKeyword,
-    /// `package` keyword.
     PackageKeyword,
-    /// `private` keyword.
     PrivateKeyword,
-    /// `protected` keyword.
     ProtectedKeyword,
-    /// `public` keyword.
     PublicKeyword,
-    /// `return` keyword.
     ReturnKeyword,
-    /// `static` keyword.
     StaticKeyword,
-    /// `strictfp` keyword.
     StrictfpKeyword,
-    /// `super` keyword.
     SuperKeyword,
-    /// `switch` keyword.
     SwitchKeyword,
-    /// `synchronized` keyword.
     SynchronizedKeyword,
-    /// `this` keyword.
     ThisKeyword,
-    /// `throw` keyword.
     ThrowKeyword,
-    /// `throws` keyword.
     ThrowsKeyword,
-    /// `trait` keyword.
     TraitKeyword,
-    /// `transient` keyword.
     TransientKeyword,
-    /// `try` keyword.
     TryKeyword,
-    /// `void` keyword.
     VoidKeyword,
-    /// `volatile` keyword.
     VolatileKeyword,
-    /// `while` keyword.
     WhileKeyword,
 
-    // --- Operators ---
-    /// Plus `+`.
-    Plus,
-    /// Minus `-`.
-    Minus,
-    /// Star `*`.
-    Star,
-    /// Slash `/`.
-    Slash,
-    /// Percent `%`.
-    Percent,
-    /// Power `**`.
-    Power,
+    // 操作符
+    Plus,    // +
+    Minus,   // -
+    Star,    // *
+    Slash,   // /
+    Percent, // %
+    Power,   // **
 
-    /// Assign `=`.
-    Assign,
-    /// Plus assign `+=`.
-    PlusAssign,
-    /// Minus assign `-=`.
-    MinusAssign,
-    /// Star assign `*=`.
-    StarAssign,
-    /// Slash assign `/=`.
-    SlashAssign,
-    /// Percent assign `%=`.
-    PercentAssign,
-    /// Power assign `**=`.
-    PowerAssign,
+    Assign,        // =
+    PlusAssign,    // +=
+    MinusAssign,   // -=
+    StarAssign,    // *=
+    SlashAssign,   // /=
+    PercentAssign, // %=
+    PowerAssign,   // **=
 
-    /// Equal `==`.
-    Equal,
-    /// Not equal `!=`.
-    NotEqual,
-    /// Less than `<`.
-    Less,
-    /// Greater than `>`.
-    Greater,
-    /// Less than or equal `<=`.
-    LessEqual,
-    /// Greater than or equal `>=`.
-    GreaterEqual,
-    /// Spaceship operator `<=>`.
-    Spaceship,
+    Equal,        // ==
+    NotEqual,     // !=
+    Less,         // <
+    Greater,      // >
+    LessEqual,    // <=
+    GreaterEqual, // >=
+    Spaceship,    // <=>
 
-    /// Logical AND `&&`.
-    LogicalAnd,
-    /// Logical OR `||`.
-    LogicalOr,
-    /// Logical NOT `!`.
-    LogicalNot,
+    LogicalAnd, // &&
+    LogicalOr,  // ||
+    LogicalNot, // !
 
-    /// Bitwise AND `&`.
-    BitAnd,
-    /// Bitwise OR `|`.
-    BitOr,
-    /// Bitwise XOR `^`.
-    BitXor,
-    /// Bitwise NOT `~`.
-    BitNot,
-    /// Left shift `<<`.
-    LeftShift,
-    /// Right shift `>>`.
-    RightShift,
-    /// Unsigned right shift `>>>`.
-    UnsignedRightShift,
+    BitAnd,             // &
+    BitOr,              // |
+    BitXor,             // ^
+    BitNot,             // ~
+    LeftShift,          // <<
+    RightShift,         // >>
+    UnsignedRightShift, // >>>
 
-    /// Increment `++`.
-    Increment,
-    /// Decrement `--`.
-    Decrement,
+    Increment, // ++
+    Decrement, // --
 
-    /// Question mark `?`.
-    Question,
-    /// Colon `:`.
-    Colon,
-    /// Elvis operator `?:`.
-    Elvis,
-    /// Safe navigation operator `?.`.
-    SafeNavigation,
+    Question,       // ?
+    Colon,          // :
+    Elvis,          // ?:
+    SafeNavigation, // ?.
 
-    // --- Delimiters ---
-    /// Left parenthesis `(`.
-    LeftParen,
-    /// Right parenthesis `)`.
-    RightParen,
-    /// Left bracket `[`.
-    LeftBracket,
-    /// Right bracket `]`.
-    RightBracket,
-    /// Left brace `{`.
-    LeftBrace,
-    /// Right brace `}`.
-    RightBrace,
-    /// Comma `,`.
-    Comma,
-    /// Period `.`.
-    Period,
-    /// Semicolon `;`.
-    Semicolon,
-    /// At symbol `@`.
-    At,
+    // 分隔符
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBracket,  // [
+    RightBracket, // ]
+    LeftBrace,    // {
+    RightBrace,   // }
+    Comma,        // ,
+    Period,       // .
+    Semicolon,    // ;
+    At,           // @
 
-    // --- Whitespace and Comments ---
-    /// Whitespace.
+    // 空白和注释
     Whitespace,
-    /// Comment.
     Comment,
 
-    // --- Special ---
-    /// Newline.
+    // 特殊
     Newline,
-    /// End of file.
     Eof,
-    /// Error token.
     Error,
+}
+
+impl GroovyElementType {
+    pub fn is_keyword(&self) -> bool {
+        false
+    }
 }
 
 impl ElementType for GroovyElementType {
@@ -252,7 +150,7 @@ impl ElementType for GroovyElementType {
 }
 
 impl From<crate::lexer::token_type::GroovyTokenType> for GroovyElementType {
-    fn from(token: crate::lexer::token_type::GroovyTokenType) -> Self {
-        unsafe { std::mem::transmute(token) }
+    fn from(_token: crate::lexer::token_type::GroovyTokenType) -> Self {
+        Self::Root
     }
 }

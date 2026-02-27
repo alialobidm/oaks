@@ -1,58 +1,34 @@
-use oak_core::{ElementType, UniversalElementRole};
+use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Element types for the VON (Value-Oriented Notation) parser.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum VonElementType {
-    /// Whitespace characters.
     Whitespace,
-    /// Line breaks.
     Newline,
-    /// Comments.
     Comment,
-    /// End of file.
     Eof,
-    /// An opening brace (`{`).
     LeftBrace,
-    /// A closing brace (`}`).
     RightBrace,
-    /// An opening bracket (`[`).
     LeftBracket,
-    /// A closing bracket (`]`).
     RightBracket,
-    /// A comma (`,`).
     Comma,
-    /// A colon (`:`).
     Colon,
-    /// An equal sign (`=`).
     Eq,
-    /// A string literal.
     StringLiteral,
-    /// A numeric literal.
     NumberLiteral,
-    /// A boolean literal.
     BoolLiteral,
-    /// A null literal.
     NullLiteral,
-    /// An identifier.
     Identifier,
-    /// A value element.
     Value,
-    /// An object element.
     Object,
-    /// An array element.
     Array,
-    /// An entry in an object.
     ObjectEntry,
-    /// An enum element.
     Enum,
-    /// An error node in the parse tree.
     ErrorNode,
-    /// An error element.
     Error,
-    /// The root of the parse tree.
     Root,
-    /// An element in an array.
     ArrayElement,
 }
 

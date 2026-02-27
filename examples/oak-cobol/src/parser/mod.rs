@@ -1,32 +1,30 @@
-use crate::{language::CobolLanguage, lexer::CobolLexer};
+#![doc = include_str!("readme.md")]
+use crate::language::CobolLanguage;
+pub mod element_type;
+pub use element_type::CobolElementType;
+
 use oak_core::{
-    parser::{ParseCache, ParseOutput, Parser, parse_with_lexer},
+    parser::{Parser, ParserState},
     source::{Source, TextEdit},
 };
 
-pub mod element_type;
+mod parse_top_level;
 
-pub use element_type::CobolElementType;
+pub(crate) type State<'a, S> = ParserState<'a, CobolLanguage, S>;
 
-/// COBOL parser.
-pub struct CobolParser;
+pub struct CobolParser<'config> {
+    pub(crate) _config: &'config CobolLanguage,
+}
 
-impl CobolParser {
-    /// Create a new COBOL parser.
-    pub fn new() -> Self {
-        Self
+impl<'config> CobolParser<'config> {
+    pub fn new(config: &'config CobolLanguage) -> Self {
+        Self { _config: config }
     }
 }
 
-impl Parser<CobolLanguage> for CobolParser {
-    fn parse<'a, S: Source + ?Sized>(&self, text: &'a S, edits: &[TextEdit], cache: &'a mut impl ParseCache<CobolLanguage>) -> ParseOutput<'a, CobolLanguage> {
-        let lexer = CobolLexer::new();
-        parse_with_lexer(&lexer, text, edits, cache, |state| {
-            let cp = state.checkpoint();
-            while state.not_at_end() {
-                state.bump();
-            }
-            Ok(state.finish_at(cp, CobolElementType::Root))
-        })
+impl<'config> Parser<CobolLanguage> for CobolParser<'config> {
+    fn parse<'a, S: Source + ?Sized>(&self, text: &'a S, edits: &[TextEdit], cache: &'a mut impl oak_core::ParseCache<CobolLanguage>) -> oak_core::ParseOutput<'a, CobolLanguage> {
+        let lexer = crate::lexer::CobolLexer::new(self._config);
+        oak_core::parser::parse_with_lexer(&lexer, text, edits, cache, |state| self.parse_root_internal(state))
     }
 }

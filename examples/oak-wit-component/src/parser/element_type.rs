@@ -1,9 +1,11 @@
 use oak_core::{ElementType, Parser, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum WitElementType {
-    // Basic kind
+    // 基础 kind
     Root,
     Whitespace,
     Newline,
@@ -12,13 +14,13 @@ pub enum WitElementType {
     Eof,
     Text,
 
-    // Literals
+    // 字面量
     IntegerLiteral,
     FloatLiteral,
     StringLiteral,
     Identifier,
 
-    // WIT Component keywords - Basic structure
+    // WIT Component 关键字 - 基本结构
     WorldKw,
     InterfaceKw,
     PackageKw,
@@ -39,19 +41,19 @@ pub enum WitElementType {
     ResultKw,
     ResourceKw,
 
-    // Import/Export
+    // 导入导出
     ImportKw,
     ExportKw,
     UseKw,
     IncludeKw,
     WithKw,
 
-    // Type related
+    // 类型相关
     StaticKw,
     ConstructorKw,
     MethodKw,
 
-    // Basic types
+    // 基本类型
     BoolKw,
     U8Kw,
     U16Kw,
@@ -66,7 +68,7 @@ pub enum WitElementType {
     CharKw,
     StringKw,
 
-    // Operators
+    // 操作符
     Arrow,     // ->
     FatArrow,  // =>
     Assign,    // =
@@ -91,7 +93,7 @@ pub enum WitElementType {
     Tilde,     // ~
     Bang,      // !
 
-    // Punctuation
+    // 标点符号
     LeftParen,    // (
     RightParen,   // )
     LeftBrace,    // {

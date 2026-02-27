@@ -1,234 +1,133 @@
 use oak_core::{Source, Token, TokenType, UniversalElementRole, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// A token in a Typst document.
 pub type TypstToken = Token<TypstTokenType>;
 
 impl TokenType for TypstTokenType {
     type Role = UniversalTokenRole;
-    const END_OF_STREAM: Self = Self::Eof;
+    const END_OF_STREAM: Self = Self::Error;
 
     fn is_ignored(&self) -> bool {
-        matches!(self, Self::Whitespace | Self::Newline | Self::LineComment | Self::BlockComment)
+        false
     }
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Whitespace | Self::Newline => UniversalTokenRole::Whitespace,
-            Self::LineComment | Self::BlockComment => UniversalTokenRole::Comment,
-            Self::Let | Self::If | Self::Else | Self::For | Self::While | Self::Break | Self::Continue | Self::Return | Self::Import | Self::Include | Self::Set | Self::Show => UniversalTokenRole::Keyword,
-            Self::True | Self::False | Self::StringLiteral | Self::NumericLiteral => UniversalTokenRole::Literal,
-            Self::Identifier => UniversalTokenRole::Name,
-            Self::Plus | Self::Minus | Self::Star | Self::Slash | Self::Percent | Self::Equal | Self::EqualEqual | Self::NotEqual | Self::Less | Self::Greater | Self::LessEqual | Self::GreaterEqual | Self::And | Self::Or | Self::Not => {
-                UniversalTokenRole::Operator
-            }
-            Self::LeftParen
-            | Self::RightParen
-            | Self::LeftBrace
-            | Self::RightBrace
-            | Self::LeftBracket
-            | Self::RightBracket
-            | Self::Semicolon
-            | Self::Comma
-            | Self::Dot
-            | Self::Colon
-            | Self::Hash
-            | Self::At
-            | Self::Dollar
-            | Self::Underscore
-            | Self::Backtick => UniversalTokenRole::Punctuation,
-            Self::Eof => UniversalTokenRole::Eof,
-            Self::Error => UniversalTokenRole::Error,
             _ => UniversalTokenRole::None,
         }
     }
 }
 
-/// Represents the type of a Typst token.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TypstTokenType {
-    /// Root node.
+    // 节点种类
     Root,
-    /// A document.
     Document,
-    /// A block of content.
     Block,
 
-    /// A heading (= Heading).
+    // 内容元素
     Heading,
-    /// A paragraph of text.
     Paragraph,
-    /// A list (+ Item).
     List,
-    /// A list item.
     ListItem,
-    /// An enumeration item (1. Item).
     EnumItem,
-    /// A table.
     Table,
-    /// A table row.
     TableRow,
-    /// A table cell.
     TableCell,
-    /// A figure.
     Figure,
-    /// An image.
     Image,
-    /// A link.
     Link,
 
-    /// Plain text.
+    // 文本元素
     Text,
-    /// Strong text (*strong*).
     Strong,
-    /// Emphasized text (_emphasis_).
     Emphasis,
-    /// Code content (`code`).
     Code,
-    /// Math content ($...$).
     Math,
-    /// Inline math content.
     InlineMath,
-    /// Display math content.
     DisplayMath,
-    /// Raw content.
     Raw,
-    /// A quote.
     Quote,
 
-    /// A script.
+    // 脚本元素
     Script,
-    /// An expression.
     Expression,
-    /// A function call.
     FunctionCall,
-    /// A variable.
     Variable,
-    /// An assignment.
     Assignment,
-    /// A conditional statement.
     Conditional,
-    /// A loop statement.
     Loop,
-    /// An import statement.
     Import,
-    /// An include statement.
     Include,
 
-    /// A set rule.
+    // 样式元素
     Set,
-    /// A show rule.
     Show,
-    /// A style rule.
     Style,
-    /// A color.
     Color,
-    /// A font.
     Font,
-    /// A size.
     Size,
 
-    /// 'let' keyword.
+    // 关键字
     Let,
-    /// 'if' keyword.
     If,
-    /// 'else' keyword.
     Else,
-    /// 'for' keyword.
     For,
-    /// 'while' keyword.
     While,
-    /// 'break' keyword.
     Break,
-    /// 'continue' keyword.
     Continue,
-    /// 'return' keyword.
     Return,
-    /// 'true' keyword.
     True,
-    /// 'false' keyword.
     False,
 
-    /// Plus operator (+).
+    // 操作符
     Plus,
-    /// Minus operator (-).
     Minus,
-    /// Multiplication operator (*).
     Star,
-    /// Division operator (/).
     Slash,
-    /// Modulo operator (%).
     Percent,
-    /// Assignment operator (=).
     Equal,
-    /// Equality operator (==).
     EqualEqual,
-    /// Inequality operator (!=).
     NotEqual,
-    /// Less than operator (<).
     Less,
-    /// Greater than operator (>).
     Greater,
-    /// Less than or equal to operator (<=).
     LessEqual,
-    /// Greater than or equal to operator (>=).
     GreaterEqual,
-    /// Logical AND operator (and).
     And,
-    /// Logical OR operator (or).
     Or,
-    /// Logical NOT operator (not).
     Not,
 
-    /// Left parenthesis (().
+    // 标点符号
     LeftParen,
-    /// Right parenthesis ()).
     RightParen,
-    /// Left brace ({).
     LeftBrace,
-    /// Right brace (}).
     RightBrace,
-    /// Left bracket ([).
     LeftBracket,
-    /// Right bracket (]).
     RightBracket,
-    /// Semicolon separator (;).
     Semicolon,
-    /// Comma separator (,).
     Comma,
-    /// Dot separator (.).
     Dot,
-    /// Colon separator (:).
     Colon,
-    /// Hash symbol (#).
     Hash,
-    /// At symbol (@).
     At,
-    /// Dollar symbol ($).
     Dollar,
-    /// Underscore symbol (_).
     Underscore,
-    /// Backtick symbol (`).
     Backtick,
 
-    /// A string literal ("...").
+    // 字面量
     StringLiteral,
-    /// A numeric literal.
     NumericLiteral,
-    /// An identifier.
     Identifier,
 
-    /// A line comment (// ...).
+    // 注释和空白
     LineComment,
-    /// A block comment (/* ... */).
     BlockComment,
-    /// Whitespace characters.
     Whitespace,
-    /// A newline character.
     Newline,
 
-    /// End of file marker.
+    // 特殊符号
     Eof,
-    /// Error token.
     Error,
 }

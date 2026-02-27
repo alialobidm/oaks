@@ -1,162 +1,99 @@
-use oak_core::UniversalTokenRole;
+use oak_core::{TokenType as _, UniversalTokenRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Token types for the APL language.
+/// APL 词法单元类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AplTokenType {
-    /// Whitespace.
     Whitespace,
-    /// A newline.
     Newline,
-    /// A comment (⍝).
-    Comment,
+    Comment, // ⍝
 
-    /// A string literal.
     StringLiteral,
-    /// A number literal.
     NumberLiteral,
-    /// An identifier.
     Identifier,
 
     // Core Symbols
-    /// Left arrow (←).
-    LeftArrow,
-    /// Right arrow (→).
-    RightArrow,
-    /// Diamond (⋄).
-    Diamond,
-    /// Quad (⎕).
-    Quad,
-    /// Quote quad (⍞).
-    QuoteQuad,
-    /// Rho (⍴).
-    Rho,
-    /// Iota (⍳).
-    Iota,
-    /// Epsilon (∊).
-    Epsilon,
-    /// Up arrow (↑).
-    UpArrow,
-    /// Down arrow (↓).
-    DownArrow,
-    /// Del (∇).
-    Del,
-    /// Delta (∆).
-    Delta,
-    /// Alpha (⍺).
-    Alpha,
-    /// Omega (⍵).
-    Omega,
-    /// Zilde (⍬).
-    Zilde,
+    LeftArrow,  // ←
+    RightArrow, // →
+    Diamond,    // ⋄
+    Quad,       // ⎕
+    QuoteQuad,  // ⍞
+    Rho,        // ⍴
+    Iota,       // ⍳
+    Epsilon,    // ∊
+    UpArrow,    // ↑
+    DownArrow,  // ↓
+    Del,        // ∇
+    Delta,      // ∆
+    Alpha,      // ⍺
+    Omega,      // ⍵
+    Zilde,      // ⍬
 
     // Operators/Functions
-    /// Plus (+).
-    Plus,
-    /// Minus (-).
-    Minus,
-    /// Times (×).
-    Times,
-    /// Divide (÷).
-    Divide,
-    /// Star (*).
-    Star,
-    /// Log (⍟).
-    Log,
-    /// Circle (○).
-    Circle,
-    /// Or (∨).
-    Or,
-    /// And (∧).
-    And,
-    /// Not (∼).
-    Not,
-    /// Nor (⍱).
-    Nor,
-    /// Nand (⍲).
-    Nand,
-    /// Equal (=).
-    Equal,
-    /// Not equal (≠).
-    NotEqual,
-    /// Less than (<).
-    LessThan,
-    /// Less equal (≤).
-    LessEqual,
-    /// Greater equal (≥).
-    GreaterEqual,
-    /// Greater than (>).
-    GreaterThan,
-    /// Up stile (⌈).
-    UpStile,
-    /// Down stile (⌊).
-    DownStile,
-    /// Bar (|).
-    Bar,
-    /// Tilde (∼).
-    Tilde,
-    /// Question (?).
-    Question,
-    /// Factorial (!).
-    Factorial,
+    Plus,         // +
+    Minus,        // -
+    Times,        // ×
+    Divide,       // ÷
+    Star,         // *
+    Log,          // ⍟
+    Circle,       // ○
+    Or,           // ∨
+    And,          // ∧
+    Not,          // ∼
+    Nor,          // ⍱
+    Nand,         // ⍲
+    Equal,        // =
+    NotEqual,     // ≠
+    LessThan,     // <
+    LessEqual,    // ≤
+    GreaterEqual, // ≥
+    GreaterThan,  // >
+    UpStile,      // ⌈
+    DownStile,    // ⌊
+    Bar,          // |
+    Tilde,        // ∼
+    Question,     // ?
+    Factorial,    // !
 
     // Operators (Higher Order)
-    /// Slash (/).
-    Slash,
-    /// Backslash (\).
-    Backslash,
-    /// Slash bar (⌿).
-    SlashBar,
-    /// Backslash bar (⍀).
-    BackslashBar,
-    /// Dot (.).
-    Dot,
-    /// Jot (∘).
-    Jot,
-    /// Diaeresis (¨).
-    Diaeresis,
-    /// Power (⍣).
-    Power,
-    /// Rank (⍤).
-    Rank,
-    /// Tally (≢).
-    Tally,
+    Slash,        // /
+    Backslash,    // \
+    SlashBar,     // ⌿
+    BackslashBar, // ⍀
+    Dot,          // .
+    Jot,          // ∘
+    Diaeresis,    // ¨
+    Power,        // ⍣
+    Rank,         // ⍤
+    Tally,        // ≢
 
     // Structural
-    /// Left parenthesis (().
-    LeftParen,
-    /// Right parenthesis ()).
-    RightParen,
-    /// Left bracket ([).
-    LeftBracket,
-    /// Right bracket (]).
-    RightBracket,
-    /// Left brace ({).
-    LeftBrace,
-    /// Right brace (}).
-    RightBrace,
-    /// Semicolon (;).
-    Semicolon,
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBracket,  // [
+    RightBracket, // ]
+    LeftBrace,    // {
+    RightBrace,   // }
+    Semicolon,    // ;
 
-    /// End of stream.
     Eof,
-    /// An error token.
     Error,
 }
 
 impl AplTokenType {
-    /// Returns true if this token is an identifier.
+    /// 是否为标识符
     pub fn is_identifier(&self) -> bool {
         matches!(self, Self::Identifier | Self::Alpha | Self::Omega)
     }
 
-    /// Returns true if this token is a literal.
+    /// 是否为字面量
     pub fn is_literal(&self) -> bool {
         matches!(self, Self::StringLiteral | Self::NumberLiteral | Self::Zilde)
     }
 }
 
-/// Type alias for `AplTokenType`.
 pub type TokenType = AplTokenType;
 
 impl oak_core::TokenType for AplTokenType {

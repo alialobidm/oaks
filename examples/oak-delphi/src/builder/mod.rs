@@ -1,14 +1,13 @@
 use crate::{ast::*, language::DelphiLanguage, parser::DelphiParser};
 use oak_core::{Builder, BuilderCache, GreenNode, OakDiagnostics, OakError, Parser, RedNode, SourceText, TextEdit, source::Source};
 
-/// AST builder for the Delphi language
+/// Delphi 语言的 AST 构建器
 #[derive(Clone)]
 pub struct DelphiBuilder {
     config: DelphiLanguage,
 }
 
 impl DelphiBuilder {
-    /// Creates a new `DelphiBuilder`
     pub fn new(config: DelphiLanguage) -> Self {
         Self { config }
     }
@@ -40,8 +39,8 @@ impl Builder<DelphiLanguage> for DelphiBuilder {
 
 impl DelphiBuilder {
     fn build_root<'a>(&self, green_tree: &'a GreenNode<'a, DelphiLanguage>, _source: &SourceText) -> Result<DelphiRoot, OakError> {
-        let red_root = RedNode::new(green_tree, 0);
-        // Simple implementation
-        Ok(DelphiRoot { items: Vec::new(), span: red_root.span() })
+        let _red_root = RedNode::new(green_tree, 0);
+        // 简单实现
+        Ok(DelphiRoot { items: Vec::new() })
     }
 }

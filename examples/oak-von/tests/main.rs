@@ -34,7 +34,7 @@ fn test_von_parsing() {
 
     println!("Parsed VON: {}", val.to_string());
 
-    // Verify fields
+    // 验证字段
     match val {
         oak_von::VonValue::Object(obj) => {
             assert_eq!(obj.fields.len(), 8);

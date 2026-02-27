@@ -1,9 +1,11 @@
 use crate::lexer::BashTokenType;
 use oak_core::{ElementType, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Represents all possible element kinds in the Bash shell scripting language.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum BashElementType {
     /// A wrapper for tokens
     Token(BashTokenType),
@@ -11,12 +13,6 @@ pub enum BashElementType {
     Root,
     /// A single command or a pipeline
     CommandStatement,
-    /// A variable assignment
-    VariableAssignment,
-    /// A pipeline of commands
-    Pipeline,
-    /// A redirection operation
-    Redirection,
     /// An if statement
     IfStatement,
     /// A for loop
@@ -50,8 +46,7 @@ impl ElementType for BashElementType {
         match self {
             Self::Root => UniversalElementRole::Root,
             Self::FunctionDefinition => UniversalElementRole::Definition,
-            Self::VariableAssignment => UniversalElementRole::Statement,
-            Self::CommandStatement | Self::IfStatement | Self::ForStatement | Self::WhileStatement | Self::Pipeline | Self::Redirection => UniversalElementRole::Statement,
+            Self::CommandStatement | Self::IfStatement | Self::ForStatement | Self::WhileStatement => UniversalElementRole::Statement,
             Self::Error => UniversalElementRole::Error,
             _ => UniversalElementRole::None,
         }

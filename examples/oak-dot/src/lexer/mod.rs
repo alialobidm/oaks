@@ -1,25 +1,22 @@
 #![doc = include_str!("readme.md")]
-/// Token types for the DOT language.
 pub mod token_type;
 
 use crate::{language::DotLanguage, lexer::token_type::DotTokenType};
 use oak_core::{Lexer, LexerCache, LexerState, OakError, lexer::LexOutput, source::Source};
 
-pub(crate) type State<'a, S> = LexerState<'a, S, DotLanguage>;
+type State<'a, S> = LexerState<'a, S, DotLanguage>;
 
-/// Lexical analyzer for the DOT language.
 #[derive(Clone)]
 pub struct DotLexer<'config> {
-    config: &'config DotLanguage,
+    _config: &'config DotLanguage,
 }
 
 impl<'config> DotLexer<'config> {
-    /// Creates a new DOT lexer with the given configuration.
     pub fn new(config: &'config DotLanguage) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
-    /// Skips whitespace characters.
+    /// 跳过空白字符
     fn skip_whitespace<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -41,7 +38,7 @@ impl<'config> DotLexer<'config> {
         }
     }
 
-    /// Handles newlines.
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -63,12 +60,12 @@ impl<'config> DotLexer<'config> {
         }
     }
 
-    /// Handles comments.
+    /// 处理注释
     fn lex_comment<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
         if state.consume_if_starts_with("//") {
-            // Single-line comment
+            // 单行注释
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -80,7 +77,7 @@ impl<'config> DotLexer<'config> {
             true
         }
         else if state.consume_if_starts_with("/*") {
-            // Multi-line comment
+            // 多行注释
             while let Some(ch) = state.peek() {
                 if ch == '*' && state.peek_next_n(1) == Some('/') {
                     state.advance(2); // Skip */
@@ -93,7 +90,7 @@ impl<'config> DotLexer<'config> {
             true
         }
         else if state.consume_if_starts_with("#") {
-            // # style comment
+            // # 风格注释
             while let Some(ch) = state.peek() {
                 if ch == '\n' || ch == '\r' {
                     break;
@@ -109,7 +106,7 @@ impl<'config> DotLexer<'config> {
         }
     }
 
-    /// Handles identifiers or keywords.
+    /// 处理标识符或关键字
     fn lex_identifier_or_keyword<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -151,7 +148,7 @@ impl<'config> DotLexer<'config> {
         }
     }
 
-    /// Handles numbers.
+    /// 处理数字
     fn lex_number<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -160,10 +157,10 @@ impl<'config> DotLexer<'config> {
             let mut has_digit = false;
 
             if is_negative {
-                // Check if there is a digit after the negative sign
+                // 检查负号后面是否有数字
                 if let Some(next_ch) = state.peek_next_n(1) {
                     if next_ch.is_ascii_digit() {
-                        state.advance(1); // Skip negative sign
+                        state.advance(1); // 跳过负号
                     }
                     else {
                         return false;
@@ -179,7 +176,7 @@ impl<'config> DotLexer<'config> {
                     has_digit = true;
                     state.advance(ch.len_utf8());
 
-                    // Handle integer part
+                    // 处理整数部分
                     while let Some(ch) = state.peek() {
                         if ch.is_ascii_digit() {
                             state.advance(ch.len_utf8());
@@ -189,7 +186,7 @@ impl<'config> DotLexer<'config> {
                         }
                     }
 
-                    // Handle fractional part
+                    // 处理小数部分
                     if let Some('.') = state.peek() {
                         let dot_pos = state.get_position();
                         state.advance(1);
@@ -206,12 +203,12 @@ impl<'config> DotLexer<'config> {
                                 }
                             }
                             else {
-                                // Backtrack dot
+                                // 回退点号
                                 state.set_position(dot_pos);
                             }
                         }
                         else {
-                            // Backtrack dot
+                            // 回退点号
                             state.set_position(dot_pos);
                         }
                     }
@@ -223,7 +220,7 @@ impl<'config> DotLexer<'config> {
                 true
             }
             else {
-                // Backtrack to start position
+                // 回退到开始位
                 state.set_position(start_pos);
                 false
             }
@@ -233,7 +230,7 @@ impl<'config> DotLexer<'config> {
         }
     }
 
-    /// Handles strings.
+    /// 处理字符
     fn lex_string<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -257,7 +254,7 @@ impl<'config> DotLexer<'config> {
                 }
             }
 
-            // Unclosed string
+            // 未闭合的字符
             state.add_token(DotTokenType::Error, start_pos, state.get_position());
             true
         }
@@ -266,7 +263,7 @@ impl<'config> DotLexer<'config> {
         }
     }
 
-    /// Handles operators.
+    /// 处理操作
     fn lex_operator<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -304,7 +301,7 @@ impl<'config> DotLexer<'config> {
         }
     }
 
-    /// Handles delimiters.
+    /// 处理分隔
     fn lex_delimiter<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -341,12 +338,12 @@ impl<'config> Lexer<DotLanguage> for DotLexer<'config> {
 }
 
 impl<'config> DotLexer<'config> {
-    /// Main lexical analysis logic.
+    /// 主要的词法分析逻辑
     fn run<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
         while state.not_at_end() {
             let safe_point = state.get_position();
 
-            // Try various lexical rules
+            // 尝试各种词法规则
             if self.skip_whitespace(state) {
                 continue;
             }
@@ -379,7 +376,7 @@ impl<'config> DotLexer<'config> {
                 continue;
             }
 
-            // If no rules match, skip the current character and mark it as an error
+            // 如果所有规则都不匹配，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());

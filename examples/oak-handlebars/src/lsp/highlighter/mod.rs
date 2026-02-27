@@ -1,34 +1,33 @@
 #![doc = include_str!("readme.md")]
-/// Local definition of highlight kinds.
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword.
+    /// 关键字
     Keyword,
-    /// String.
+    /// 字符串
     String,
-    /// Number.
+    /// 数字
     Number,
-    /// Comment.
+    /// 注释
     Comment,
-    /// Macro.
+    /// 宏
     Macro,
-    /// Identifier.
+    /// 标识符
     Identifier,
-    /// Operator.
+    /// 运算符
     Operator,
 }
 
-/// Highlighter trait.
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text.
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// Handlebars syntax highlighter.
+/// Handlebars 语法高亮器
 pub struct HandlebarsHighlighter;
 
 impl HandlebarsHighlighter {
-    /// Creates a new `HandlebarsHighlighter`.
     pub fn new() -> Self {
         Self
     }

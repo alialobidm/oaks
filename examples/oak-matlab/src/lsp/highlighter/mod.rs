@@ -1,31 +1,32 @@
 #![doc = include_str!("readme.md")]
+//! MATLAB 语法高亮器
+//!
+//! 这个模块提供了 MATLAB 源代码的语法高亮功能，支持关键字、字符串、数字、注释等的高亮显示。
 
-use oak_highlight::highlighter::{HighlightKind, Highlighter};
-
-/// Local definition of highlight kinds
+/// 高亮类型的本地定义
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {
-    /// Keyword
+    /// 关键字
     Keyword,
-    /// String
+    /// 字符串
     String,
-    /// Number
+    /// 数字
     Number,
-    /// Comment
+    /// 注释
     Comment,
-    /// Identifier
+    /// 标识符
     Identifier,
 }
 
-/// Highlighter trait
+/// 高亮器 trait
 pub trait Highlighter {
-    /// Highlights the given text
+    /// 对给定的文本进行高亮处理
     fn highlight(&self, text: &str) -> Vec<(usize, usize, HighlightKind)>;
 }
 
-/// MATLAB syntax highlighter
+/// MATLAB 语法高亮器
 ///
-/// `MatlabHighlighter` implements `Highlighter` trait, providing syntax highlighting for MATLAB code.
+/// `MatlabHighlighter` 实现了 `Highlighter` trait，为 MATLAB 代码提供语法高亮功能。
 pub struct MatlabHighlighter;
 
 impl Default for MatlabHighlighter {
@@ -35,12 +36,12 @@ impl Default for MatlabHighlighter {
 }
 
 impl MatlabHighlighter {
-    /// Creates a new MATLAB highlighter instance
+    /// 创建一个新的 MATLAB 高亮器实例
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Highlights MATLAB keywords
+    /// 高亮 MATLAB 关键字
     fn highlight_keywords(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let keywords = ["break", "case", "catch", "classdef", "continue", "else", "elseif", "end", "for", "function", "global", "if", "otherwise", "parfor", "persistent", "return", "spmd", "switch", "try", "while"];
@@ -63,7 +64,7 @@ impl MatlabHighlighter {
         highlights
     }
 
-    /// Highlights string literals
+    /// 高亮字符串字面量
     fn highlight_strings(&self, text: &str) -> Vec<(usize, usize, HighlightKind)> {
         let mut highlights = Vec::new();
         let mut chars = text.char_indices().peekable();
@@ -75,7 +76,7 @@ impl MatlabHighlighter {
                 while let Some((j, next_ch)) = chars.next() {
                     end = j + next_ch.len_utf8();
                     if next_ch == '\'' {
-                        // Check for double quote escape
+                        // 检查是否是双引号转义
                         if let Some(&(_, peek_ch)) = chars.peek() {
                             if peek_ch == '\'' {
                                 chars.next();
@@ -99,7 +100,7 @@ impl Highlighter for MatlabHighlighter {
         highlights.extend(self.highlight_keywords(text));
         highlights.extend(self.highlight_strings(text));
 
-        // Sort by position
+        // 按位置排序
         highlights.sort_by_key(|&(start, _, _)| start);
         highlights
     }

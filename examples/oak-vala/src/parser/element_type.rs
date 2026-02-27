@@ -1,45 +1,30 @@
 use crate::lexer::token_type::ValaTokenType;
 use oak_core::{ElementType, UniversalElementRole};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-/// Vala language syntax element types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum ValaElementType {
-    /// Source file.
     SourceFile,
-    /// Root element.
     Root,
-    /// Namespace declaration.
     Namespace,
-    /// Class declaration.
     Class,
-    /// Interface declaration.
     Interface,
-    /// Struct declaration.
     Struct,
-    /// Enum declaration.
     Enum,
-    /// Method declaration.
     Method,
-    /// Field declaration.
     Field,
-    /// Property declaration.
     Property,
-    /// Parameter.
     Parameter,
-    /// Code block.
     Block,
-    /// Statement.
     Statement,
-    /// Expression.
     Expression,
-    /// Type reference.
     Type,
-    /// Error element.
     Error,
 
-    /// Element derived from a token.
+    // Token-derived elements
     Token(ValaTokenType),
 }
 
@@ -79,14 +64,20 @@ impl oak_core::language::TokenType for ValaElementType {
 
     fn is_ignored(&self) -> bool {
         match self {
-            Self::Token(t) => t.is_ignored(),
+            Self::Token(t) => {
+                use oak_core::TokenType;
+                t.is_ignored()
+            }
             _ => false,
         }
     }
 
     fn role(&self) -> Self::Role {
         match self {
-            Self::Token(t) => t.role(),
+            Self::Token(t) => {
+                use oak_core::TokenType;
+                t.role()
+            }
             _ => oak_core::UniversalTokenRole::None,
         }
     }

@@ -1,204 +1,268 @@
-//! Svelte parser implementation.
-
-pub mod element_type;
-use crate::{language::SvelteLanguage, lexer::token_type::SvelteTokenType};
-pub use element_type::SvelteElementType;
+#![doc = include_str!("readme.md")]
 use oak_core::{
-    errors::OakError,
-    parser::{ParseCache, ParseOutput, Parser, ParserState, parse_with_lexer},
+    GreenNode, OakError,
+    parser::{ParseCache, ParseOutput, Parser, state::ParserState},
     source::{Source, TextEdit},
 };
 
-pub(crate) type State<'a, S> = ParserState<'a, SvelteLanguage, S>;
+/// Element types for Svelte.
+pub mod element_type;
 
-/// Svelte parser.
+use crate::{
+    lexer::token_type::{SvelteLanguage, SvelteTokenType},
+    parser::element_type::SvelteElementType,
+};
+
+pub(crate) type SvelteParserState<'a, S> = ParserState<'a, SvelteLanguage, S>;
+
+/// Svelte Parser
 pub struct SvelteParser<'config> {
-    language: &'config SvelteLanguage,
+    _config: &'config SvelteLanguage,
 }
 
-#[allow(dead_code)]
 impl<'config> SvelteParser<'config> {
-    /// Creates a new `SvelteParser`.
-    pub fn new(language: &'config SvelteLanguage) -> Self {
-        Self { language }
+    /// Create a new Svelte parser
+    pub fn new(config: &'config SvelteLanguage) -> Self {
+        Self { _config: config }
     }
 
-    fn parse_node<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
-        match state.peek_kind() {
-            Some(SvelteTokenType::Lt) => self.parse_element(state),
-            Some(SvelteTokenType::LeftBrace) => self.parse_expression(state),
-            Some(SvelteTokenType::HashBrace) => self.parse_block(state),
-            Some(SvelteTokenType::Comment) => {
-                let cp = state.checkpoint();
-                state.bump();
-                state.finish_at(cp, SvelteElementType::CommentNode);
-                Ok(())
-            }
-            _ => {
-                let cp = state.checkpoint();
-                state.advance();
-                state.finish_at(cp, SvelteElementType::TextNode);
-                Ok(())
-            }
-        }
-    }
-
-    fn parse_element<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+    pub(crate) fn parse_root_internal<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) -> Result<&'a GreenNode<'a, SvelteLanguage>, OakError> {
         let cp = state.checkpoint();
 
-        // Tag (Opening)
-        let tag_cp = state.checkpoint();
-        state.expect(SvelteTokenType::Lt)?;
-        state.expect(SvelteTokenType::Identifier).ok();
+        while state.not_at_end() {
+            self.parse_node(state);
+        }
 
-        while state.not_at_end() && !matches!(state.peek_kind(), Some(SvelteTokenType::Gt) | Some(SvelteTokenType::SlashGt)) {
-            if state.at(SvelteTokenType::Identifier) || state.at(SvelteTokenType::LeftBrace) {
-                self.parse_attribute(state)?;
+        Ok(state.finish_at(cp, SvelteElementType::Root))
+    }
+
+    fn parse_node<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
+        if state.at(SvelteTokenType::TagOpen) {
+            self.parse_element(state);
+        }
+        else if state.at(SvelteTokenType::OpenBrace) {
+            let next = state.peek_kind_at(1);
+            if next == Some(SvelteTokenType::Hash) {
+                self.parse_control_block(state);
+            }
+            else if next == Some(SvelteTokenType::Slash) || next == Some(SvelteTokenType::Colon) {
+                // These should normally be handled by parse_control_block,
+                // but if we find them at top level, parse them as errors or individual blocks.
+                self.parse_control_block(state);
+            }
+            else if next == Some(SvelteTokenType::At) {
+                self.parse_special_tag(state);
             }
             else {
-                state.advance();
+                self.parse_interpolation(state);
             }
         }
-
-        let is_self_closing = state.eat(SvelteTokenType::SlashGt);
-        if !is_self_closing {
-            state.expect(SvelteTokenType::Gt).ok();
+        else if state.at(SvelteTokenType::Comment) {
+            let cp = state.checkpoint();
+            state.bump();
+            state.finish_at(cp, SvelteElementType::Comment);
         }
-        state.finish_at(tag_cp, SvelteElementType::Tag);
+        else {
+            self.parse_text(state);
+        }
+    }
+
+    fn parse_element<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
+        let cp = state.checkpoint();
+
+        // Start Tag
+        let start_cp = state.checkpoint();
+        state.expect(SvelteTokenType::TagOpen).ok();
+        state.expect(SvelteTokenType::Identifier).ok();
+
+        while state.not_at_end() && !state.at(SvelteTokenType::TagClose) && !state.at(SvelteTokenType::TagSelfClose) {
+            if state.at(SvelteTokenType::Whitespace) {
+                state.bump();
+                continue;
+            }
+            self.parse_attribute(state);
+        }
+
+        let mut is_self_closing = false;
+        if state.at(SvelteTokenType::TagSelfClose) {
+            state.bump();
+            is_self_closing = true;
+        }
+        else {
+            state.expect(SvelteTokenType::TagClose).ok();
+        }
+        state.finish_at(start_cp, SvelteElementType::StartTag);
 
         if !is_self_closing {
-            // Content
-            while state.not_at_end() && !state.at(SvelteTokenType::LtSlash) {
-                self.parse_node(state)?;
+            while state.not_at_end() && !state.at(SvelteTokenType::TagEndOpen) {
+                self.parse_node(state);
             }
 
-            // Closing Tag
-            if state.at(SvelteTokenType::LtSlash) {
-                let close_cp = state.checkpoint();
+            if state.at(SvelteTokenType::TagEndOpen) {
+                let end_cp = state.checkpoint();
                 state.bump(); // </
-                state.eat(SvelteTokenType::Identifier);
-                state.expect(SvelteTokenType::Gt).ok();
-                state.finish_at(close_cp, SvelteElementType::CloseTag);
+                state.expect(SvelteTokenType::Identifier).ok();
+                state.expect(SvelteTokenType::TagClose).ok();
+                state.finish_at(end_cp, SvelteElementType::EndTag);
             }
         }
 
         state.finish_at(cp, SvelteElementType::Element);
-        Ok(())
     }
 
-    fn parse_attribute<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+    fn parse_attribute<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
         let cp = state.checkpoint();
 
-        if state.at(SvelteTokenType::LeftBrace) {
-            // Shorthand: {name}
-            self.parse_expression(state)?;
-        }
-        else {
-            state.expect(SvelteTokenType::Identifier)?;
+        if state.at(SvelteTokenType::Identifier) {
+            let text = state.peek_text().map(|c| c.to_string()).unwrap_or_default();
+            let is_directive = text.contains(':') || text.starts_with('|');
 
-            if state.eat(SvelteTokenType::Colon) {
-                state.expect(SvelteTokenType::Identifier).ok();
-            }
+            state.bump(); // name
 
             if state.eat(SvelteTokenType::Eq) {
                 if state.at(SvelteTokenType::StringLiteral) {
                     state.bump();
                 }
-                else if state.at(SvelteTokenType::LeftBrace) {
-                    self.parse_expression(state)?;
+                else if state.at(SvelteTokenType::OpenBrace) {
+                    self.parse_interpolation(state);
                 }
             }
+
+            let element_type = if is_directive { SvelteElementType::Directive } else { SvelteElementType::Attribute };
+            state.finish_at(cp, element_type);
         }
-        state.finish_at(cp, SvelteElementType::Attribute);
-        Ok(())
+        else {
+            state.bump();
+            state.finish_at(cp, SvelteElementType::Error);
+        }
     }
 
-    fn parse_expression<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+    fn parse_control_block<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
         let cp = state.checkpoint();
-        state.expect(SvelteTokenType::LeftBrace)?;
-        while state.not_at_end() && !state.at(SvelteTokenType::RightBrace) {
-            state.advance();
+        state.expect(SvelteTokenType::OpenBrace).ok();
+
+        let mut is_start_block = false;
+        let mut is_snippet = false;
+
+        if state.at(SvelteTokenType::Hash) {
+            state.bump();
+            is_start_block = true;
+            if let Some(text) = state.peek_text() {
+                if text == "snippet" {
+                    is_snippet = true;
+                }
+            }
+            state.expect(SvelteTokenType::Identifier).ok();
         }
-        state.expect(SvelteTokenType::RightBrace).ok();
-        state.finish_at(cp, SvelteElementType::Expression);
-        Ok(())
-    }
-
-    fn parse_block<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
-        let cp = state.checkpoint();
-
-        // Block Header
-        let header_cp = state.checkpoint();
-        state.expect(SvelteTokenType::HashBrace)?;
-        state.expect(SvelteTokenType::Identifier).ok();
-
-        while state.not_at_end() && !state.at(SvelteTokenType::RightBrace) {
-            state.advance();
-        }
-        state.expect(SvelteTokenType::RightBrace).ok();
-        state.finish_at(header_cp, SvelteElementType::BlockHeader);
-
-        // Block Content
-        let content_cp = state.checkpoint();
-        while state.not_at_end() && !state.at(SvelteTokenType::SlashBrace) && !state.at(SvelteTokenType::ColonBrace) {
-            self.parse_node(state)?;
-        }
-        state.finish_at(content_cp, SvelteElementType::BlockContent);
-
-        // Block Branches
-        while state.at(SvelteTokenType::ColonBrace) {
-            self.parse_branch(state)?;
-        }
-
-        // Block Footer
-        if state.at(SvelteTokenType::SlashBrace) {
-            let footer_cp = state.checkpoint();
+        else if state.at(SvelteTokenType::Slash) || state.at(SvelteTokenType::Colon) {
             state.bump();
             state.expect(SvelteTokenType::Identifier).ok();
-            state.expect(SvelteTokenType::RightBrace).ok();
-            state.finish_at(footer_cp, SvelteElementType::BlockFooter);
         }
 
-        state.finish_at(cp, SvelteElementType::Block);
-        Ok(())
+        while state.not_at_end() && !state.at(SvelteTokenType::CloseBrace) {
+            state.bump();
+        }
+        state.expect(SvelteTokenType::CloseBrace).ok();
+
+        if is_start_block {
+            // Parse body until end tag or middle tag
+            while state.not_at_end() {
+                if state.at(SvelteTokenType::OpenBrace) {
+                    let next = state.peek_kind_at(1);
+                    if next == Some(SvelteTokenType::Slash) || next == Some(SvelteTokenType::Colon) {
+                        break;
+                    }
+                }
+                self.parse_node(state);
+            }
+
+            // If it's a middle block, we stop here and let the parent handle it?
+            // Actually, Svelte blocks are usually nested.
+            // {#if} ... {:else} ... {/if}
+            // We can treat the whole thing as one ControlBlock.
+
+            while state.at(SvelteTokenType::OpenBrace) && state.peek_kind_at(1) == Some(SvelteTokenType::Colon) {
+                self.parse_middle_block(state);
+
+                while state.not_at_end() {
+                    if state.at(SvelteTokenType::OpenBrace) {
+                        let next = state.peek_kind_at(1);
+                        if next == Some(SvelteTokenType::Slash) || next == Some(SvelteTokenType::Colon) {
+                            break;
+                        }
+                    }
+                    self.parse_node(state);
+                }
+            }
+
+            if state.at(SvelteTokenType::OpenBrace) && state.peek_kind_at(1) == Some(SvelteTokenType::Slash) {
+                self.parse_end_block(state);
+            }
+        }
+
+        let element_type = if is_snippet { SvelteElementType::Snippet } else { SvelteElementType::ControlBlock };
+        state.finish_at(cp, element_type);
     }
 
-    fn parse_branch<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+    fn parse_middle_block<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
         let cp = state.checkpoint();
-
-        // Branch Header
-        let header_cp = state.checkpoint();
-        state.expect(SvelteTokenType::ColonBrace)?;
+        state.expect(SvelteTokenType::OpenBrace).ok();
+        state.expect(SvelteTokenType::Colon).ok();
         state.expect(SvelteTokenType::Identifier).ok();
-        while state.not_at_end() && !state.at(SvelteTokenType::RightBrace) {
-            state.advance();
+        while state.not_at_end() && !state.at(SvelteTokenType::CloseBrace) {
+            state.bump();
         }
-        state.expect(SvelteTokenType::RightBrace).ok();
-        state.finish_at(header_cp, SvelteElementType::BlockHeader);
+        state.expect(SvelteTokenType::CloseBrace).ok();
+        state.finish_at(cp, SvelteElementType::MiddleBlock);
+    }
 
-        // Branch Content
-        let content_cp = state.checkpoint();
-        while state.not_at_end() && !state.at(SvelteTokenType::SlashBrace) && !state.at(SvelteTokenType::ColonBrace) {
-            self.parse_node(state)?;
+    fn parse_end_block<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
+        let cp = state.checkpoint();
+        state.expect(SvelteTokenType::OpenBrace).ok();
+        state.expect(SvelteTokenType::Slash).ok();
+        state.expect(SvelteTokenType::Identifier).ok();
+        while state.not_at_end() && !state.at(SvelteTokenType::CloseBrace) {
+            state.bump();
         }
-        state.finish_at(content_cp, SvelteElementType::BlockContent);
+        state.expect(SvelteTokenType::CloseBrace).ok();
+        state.finish_at(cp, SvelteElementType::EndTag);
+    }
 
-        state.finish_at(cp, SvelteElementType::BlockBranch);
-        Ok(())
+    fn parse_special_tag<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
+        let cp = state.checkpoint();
+        state.expect(SvelteTokenType::OpenBrace).ok();
+        state.expect(SvelteTokenType::At).ok();
+        while state.not_at_end() && !state.at(SvelteTokenType::CloseBrace) {
+            state.bump();
+        }
+        state.expect(SvelteTokenType::CloseBrace).ok();
+        state.finish_at(cp, SvelteElementType::ControlBlock);
+    }
+
+    fn parse_interpolation<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
+        let cp = state.checkpoint();
+        state.expect(SvelteTokenType::OpenBrace).ok();
+        while state.not_at_end() && !state.at(SvelteTokenType::CloseBrace) {
+            state.bump();
+        }
+        state.expect(SvelteTokenType::CloseBrace).ok();
+        state.finish_at(cp, SvelteElementType::Interpolation);
+    }
+
+    fn parse_text<'a, S: Source + ?Sized>(&self, state: &mut SvelteParserState<'a, S>) {
+        let cp = state.checkpoint();
+        while state.not_at_end() && !state.at(SvelteTokenType::TagOpen) && !state.at(SvelteTokenType::OpenBrace) && !state.at(SvelteTokenType::Comment) {
+            state.bump();
+        }
+        if state.tokens.index() > cp.0 {
+            state.finish_at(cp, SvelteElementType::Text);
+        }
     }
 }
 
 impl<'config> Parser<SvelteLanguage> for SvelteParser<'config> {
-    fn parse<'a, S: Source + ?Sized>(&self, text: &'a S, edits: &[TextEdit], cache: &'a mut impl ParseCache<SvelteLanguage>) -> ParseOutput<'a, SvelteLanguage> {
-        let lexer = crate::lexer::SvelteLexer::new(self.language);
-        parse_with_lexer(&lexer, text, edits, cache, |state| {
-            let cp = state.checkpoint();
-
-            while state.not_at_end() {
-                self.parse_node(state)?;
-            }
-
-            Ok(state.finish_at(cp, SvelteElementType::Root))
-        })
+    fn parse<'a, S: Source + ?Sized>(&self, source: &'a S, edits: &[TextEdit], cache: &'a mut impl ParseCache<SvelteLanguage>) -> ParseOutput<'a, SvelteLanguage> {
+        let lexer = crate::lexer::SvelteLexer::new(self._config);
+        oak_core::parser::parse_with_lexer(&lexer, source, edits, cache, |state| self.parse_root_internal(state))
     }
 }

@@ -7,7 +7,7 @@ use oak_core::{
 };
 use std::sync::LazyLock;
 
-pub(crate) type State<'a, S> = LexerState<'a, S, SchemeLanguage>;
+type State<'a, S> = LexerState<'a, S, SchemeLanguage>;
 
 static SCHEME_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static SCHEME_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: ";", block_start: "#|", block_end: "|#", nested_blocks: true });
@@ -63,7 +63,7 @@ impl<'config> SchemeLexer<'config> {
                 continue;
             }
 
-            // Error handling: If no rules match, skip current character and mark as error
+            // 错误处理：如果没有匹配任何规则，跳过当前字符并标记为错误
             let start_pos = state.get_position();
             if let Some(ch) = state.peek() {
                 state.advance(ch.len_utf8());
@@ -73,7 +73,7 @@ impl<'config> SchemeLexer<'config> {
             state.advance_if_dead_lock(safe_point)
         }
 
-        // Add EOF token
+        // 添加 EOF token
         state.add_eof();
         Ok(())
     }
@@ -82,7 +82,7 @@ impl<'config> SchemeLexer<'config> {
         SCHEME_WHITESPACE.scan(state, SchemeTokenType::Whitespace)
     }
 
-    /// Handle newline
+    /// 处理换行
     fn lex_newline<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> bool {
         let start_pos = state.get_position();
 
@@ -128,12 +128,12 @@ impl<'config> SchemeLexer<'config> {
                 return false;
             }
 
-            // Handle sign
+            // 处理符号
             if first_char == '-' || first_char == '+' {
                 len += first_char.len_utf8();
             }
 
-            // Skip digits
+            // 跳过数字
             let mut chars = rest.chars().skip(if first_char == '-' || first_char == '+' { 1 } else { 0 });
 
             while let Some(ch) = chars.next() {
@@ -142,7 +142,7 @@ impl<'config> SchemeLexer<'config> {
                     has_digits = true;
                 }
                 else if ch == '.' {
-                    // Floating point number
+                    // 浮点数
                     len += ch.len_utf8();
                     while let Some(ch) = chars.next() {
                         if ch.is_ascii_digit() {
