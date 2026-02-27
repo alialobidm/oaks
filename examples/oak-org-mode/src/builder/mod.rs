@@ -2,10 +2,12 @@
 use crate::language::OrgModeLanguage;
 use oak_core::{Builder, BuilderCache, OakDiagnostics, TextEdit, source::Source};
 
+/// Org-mode AST builder.
 pub struct OrgModeBuilder {}
 
 impl OrgModeBuilder {
-    pub fn new(_config: &OrgModeLanguage) -> Self {
+    /// Creates a new `OrgModeBuilder`.
+    pub fn new(config: &OrgModeLanguage) -> Self {
         Self {}
     }
 }

@@ -17,13 +17,13 @@ serde = { workspace = true, optional = true }
 triomphe = { workspace = true }
 smallvec = { workspace = true }
 tracing = { workspace = true }
+twox-hash.workspace = true
 
 [dev-dependencies]
 
 [features]
 default = []
 serde = ["dep:serde"]
-testing = []
 
 [package.metadata.docs.rs]
 all-features = true

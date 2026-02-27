@@ -3,12 +3,11 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
-//! Wat support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
-// pub mod builder;
-//
+/// Builder module.
+pub mod builder;
 // pub mod formatter;
 //
 // pub mod highlighter;
@@ -24,9 +23,10 @@ pub mod lsp;
 /// Parser module.
 pub mod parser;
 
-pub use crate::{ast::WatRoot, language::WatLanguage, lexer::WatLexer, parser::WatParser};
+pub use crate::{ast::WatRoot, builder::WatBuilder, language::WatLanguage, lexer::WatLexer, parser::WatParser};
 
 //
+/// Dummy highlighter for Wat.
 #[cfg(feature = "oak-highlight")]
 pub mod dummy_highlighter {}
 

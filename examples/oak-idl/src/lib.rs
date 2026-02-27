@@ -3,7 +3,6 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
-//! Idl support for the Oak language framework.
 
 /// AST module.
 pub mod ast;
@@ -36,3 +35,14 @@ pub use crate::lsp::highlighter::IdlHighlighter;
 pub use crate::lsp::IdlLanguageService;
 pub use lexer::token_type::IdlTokenType;
 pub use parser::element_type::IdlElementType;
+
+/// Parses an IDL string.
+pub fn parse(idl: &str) -> Result<crate::ast::IdlRoot, String> {
+    use oak_core::{Builder, parser::session::ParseSession, source::SourceText};
+    let language = IdlLanguage::default();
+    let builder = IdlBuilder::new(&language);
+    let source = SourceText::new(idl.to_string());
+    let mut cache = ParseSession::default();
+    let result = builder.build(&source, &[], &mut cache);
+    result.result.map_err(|e| format!("{:?}", e))
+}

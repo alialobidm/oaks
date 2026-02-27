@@ -1,11 +1,9 @@
 #![doc = include_str!("readme.md")]
 use oak_core::language::{Language, LanguageCategory};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 
 /// Kotlin language implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KotlinLanguage {
     /// Whether to enable strict mode.
     pub strict_mode: bool,
@@ -48,4 +46,14 @@ impl Language for KotlinLanguage {
     type TokenType = crate::lexer::token_type::KotlinTokenType;
     type ElementType = crate::parser::element_type::KotlinElementType;
     type TypedRoot = crate::ast::KotlinRoot;
+}
+
+/// Kotlin language marker for Oak framework.
+pub struct Kotlin;
+
+impl Language for Kotlin {
+    const NAME: &'static str = "Kotlin";
+    type TokenType = crate::lexer::token_type::KotlinTokenType;
+    type ElementType = crate::parser::element_type::KotlinElementType;
+    type TypedRoot = ();
 }

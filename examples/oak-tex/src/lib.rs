@@ -3,25 +3,24 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
-//! Tex support for the Oak language framework.
 
-/// AST module.
+/// AST module containing TeX syntax tree definitions.
 pub mod ast;
-/// Builder module.
+/// Builder module for constructing TeX ASTs.
 pub mod builder;
 
-/// Syntax kind module.
-/// Language configuration module.
+/// Language definition and configuration for TeX.
 pub mod language;
-/// Lexer module.
+/// Lexer implementation for TeX.
 pub mod lexer;
-/// LSP module.
+/// LSP-related functionality (hover, completion, highlighting) for TeX.
 #[cfg(any(feature = "lsp", feature = "oak-highlight", feature = "oak-pretty-print"))]
 pub mod lsp;
+/// MCP (Model Context Protocol) integration for TeX.
 #[cfg(feature = "mcp")]
 pub mod mcp;
 
-/// Parser module.
+/// Parser implementation for TeX.
 pub mod parser;
 
 pub use crate::{ast::TexRoot, builder::TexBuilder, language::TexLanguage, lexer::TexLexer, parser::TexParser};

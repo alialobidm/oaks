@@ -1,15 +1,16 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+/// HLSL language configuration.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct HlslLanguage {
+    /// Whether to allow comments in the output.
     pub allow_comment: bool,
 }
 
 impl HlslLanguage {
+    /// Creates a new HLSL language configuration with default settings.
     pub fn new() -> Self {
         Self::default()
     }

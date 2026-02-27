@@ -5,18 +5,55 @@ use crate::{
 };
 use oak_core::{GreenNode, GreenTree, OakError, Source, source::SourceText};
 
-/// Mojo 语法树构建器
+/// Mojo AST builder.
 pub struct MojoBuilder<'a> {
     source: &'a SourceText,
 }
 
 impl<'a> MojoBuilder<'a> {
-    /// 创建新的构建器
+    fn build_param_list(&self, node: &GreenNode<MojoLanguage>, offset: usize) -> Result<Vec<(String, Option<String>)>, OakError> {
+        let mut params = Vec::new();
+        let mut current_offset = offset;
+        let mut current_name = String::new();
+
+        for child in node.children() {
+            if let GreenTree::Node(child_node) = child {
+                match child_node.kind {
+                    MojoElementType::Identifier => {
+                        let text = self.source.get_text_in((current_offset..current_offset + child.len() as usize).into()).to_string();
+                        if current_name.is_empty() {
+                            current_name = text;
+                        }
+                        else {
+                            params.push((current_name.clone(), Some(text)));
+                            current_name.clear();
+                        }
+                    }
+                    MojoElementType::Comma => {
+                        if !current_name.is_empty() {
+                            params.push((current_name.clone(), None));
+                            current_name.clear();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            current_offset += child.len() as usize;
+        }
+
+        if !current_name.is_empty() {
+            params.push((current_name, None));
+        }
+
+        Ok(params)
+    }
+
+    /// Creates a new builder
     pub fn new(source: &'a SourceText) -> Self {
         Self { source }
     }
 
-    /// 从 GreenNode 构建 AST
+    /// Builds AST from GreenNode
     pub fn build_root(&self, green: &GreenNode<MojoLanguage>) -> Result<Vec<MojoStatement>, OakError> {
         let mut statements = Vec::new();
         let mut offset = 0;
@@ -58,10 +95,16 @@ impl<'a> MojoBuilder<'a> {
             if let GreenTree::Node(child_node) = child {
                 match child_node.kind {
                     MojoElementType::Identifier => {
-                        name = self.source.get_text_in((current_offset..current_offset + child.len() as usize).into()).to_string();
+                        let text = self.source.get_text_in((current_offset..current_offset + child.len() as usize).into()).to_string();
+                        if name.is_empty() {
+                            name = text;
+                        }
+                        else {
+                            return_type = Some(text);
+                        }
                     }
                     MojoElementType::ParamList => {
-                        // TODO: Parse parameters
+                        params = self.build_param_list(child_node, current_offset)?;
                     }
                     MojoElementType::Block => {
                         body = self.build_root(child_node)?;

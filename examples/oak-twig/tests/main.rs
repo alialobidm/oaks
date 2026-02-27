@@ -1,7 +1,7 @@
 mod lexer;
 
 use oak_core::{Lexer, ParseSession, Parser, SourceText};
-use oak_twig::{TwigLanguage, kind::TwigSyntaxKind};
+use oak_twig::{TwigLanguage, TwigTokenType};
 
 #[test]
 fn test_lexer_basic() {
@@ -45,8 +45,8 @@ fn test_lexer_string() {
     let tokens = result.result.unwrap();
     assert!(!tokens.is_empty());
 
-    // 检查是否包含字符串 kind
-    let has_string = tokens.iter().any(|t| matches!(t.kind, TwigSyntaxKind::String));
+    // Check if string kind exists.
+    let has_string = tokens.iter().any(|t| matches!(t.kind, TwigTokenType::String));
     assert!(has_string, "Should contain a string token")
 }
 
@@ -63,8 +63,8 @@ fn test_lexer_number() {
     let tokens = result.result.unwrap();
     assert!(!tokens.is_empty());
 
-    // 检查是否包含数字token
-    let has_number = tokens.iter().any(|t| matches!(t.kind, TwigSyntaxKind::Number));
+    // Check if number token exists.
+    let has_number = tokens.iter().any(|t| matches!(t.kind, TwigTokenType::Number));
     assert!(has_number, "Should contain a number token")
 }
 
@@ -81,8 +81,8 @@ fn test_lexer_boolean() {
     let tokens = result.result.unwrap();
     assert!(!tokens.is_empty());
 
-    // 检查是否包含布尔token
-    let has_boolean = tokens.iter().any(|t| matches!(t.kind, TwigSyntaxKind::Boolean));
+    // Check if boolean token exists.
+    let has_boolean = tokens.iter().any(|t| matches!(t.kind, TwigTokenType::Boolean));
     assert!(has_boolean, "Should contain a boolean token")
 }
 
@@ -126,11 +126,11 @@ fn test_empty_input() {
     let source = SourceText::new("");
     let mut session = ParseSession::<TwigLanguage>::default();
 
-    // 测试空输入的词法分析
+    // Test lexing of empty input
     let lex_result = lexer.lex(&source, &[], &mut session);
     assert!(lex_result.result.is_ok());
 
-    // 测试空输入的语法分析
+    // Test parsing of empty input
     let parse_result = parser.parse(&source, &[], &mut session);
     assert!(parse_result.result.is_ok())
 }

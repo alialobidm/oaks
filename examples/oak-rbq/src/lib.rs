@@ -3,30 +3,25 @@
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
-//! Rbq support for the Oak language framework.
 
-/// AST module.
+/// AST module containing node definitions for the RBQ language.
 pub mod ast;
-/// Builder module.
+/// Builder module for constructing RBQ trees.
 pub mod builder;
 
-/// Syntax kind module.
-/// Language configuration module.
+/// Language configuration and syntax kind definitions.
 pub mod language;
-/// Lexer module.
+/// Lexer implementation for RBQ.
 pub mod lexer;
-/// LSP module.
+/// LSP-related functionality (hover, completion, highlighting).
 #[cfg(any(feature = "lsp", feature = "oak-highlight", feature = "oak-pretty-print"))]
 pub mod lsp;
-/// MCP module.
+/// MCP (Model Context Protocol) integration for RBQ.
 #[cfg(feature = "mcp")]
 pub mod mcp;
 
-/// Parser module.
+/// Parser implementation for RBQ.
 pub mod parser;
-/// Semantic tokens module.
-#[cfg(feature = "lsp")]
-pub mod semantic_tokens;
 
 pub use crate::{
     ast::RbqRoot,

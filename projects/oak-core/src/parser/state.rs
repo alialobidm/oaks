@@ -8,7 +8,6 @@ use crate::{
     tree::{Cursor, GreenLeaf, GreenNode, GreenTree, TokenProvenance},
 };
 use core::range::Range;
-use triomphe::Arc;
 
 /// Helper function to raise deep clone of a node into an arena.
 ///
@@ -27,7 +26,9 @@ pub fn deep_clone_node<'a, L: Language>(node: &GreenNode<'_, L>, arena: &'a Synt
 
 /// Provides tokens to the parser.
 pub struct TokenSource<L: Language> {
+    /// The tokens being consumed.
     tokens: Tokens<L>,
+    /// The current index into the tokens.
     index: usize,
 }
 
@@ -82,50 +83,73 @@ impl<L: Language> TokenSource<L> {
 
 /// Collects the results of the parsing process.
 pub struct TreeSink<'a, L: Language> {
+    /// The arena to allocate syntax nodes in.
     arena: &'a SyntaxArena,
+    /// The list of children for the current node being constructed.
     children: Vec<GreenTree<'a, L>>,
 }
 
 impl<'a, L: Language> TreeSink<'a, L> {
     /// Creates a new tree sink.
     pub fn new(arena: &'a SyntaxArena, capacity_hint: usize) -> Self {
-        Self { arena, children: Vec::with_capacity(capacity_hint) }
+        // Use a larger default capacity to reduce reallocations
+        let capacity = usize::max(capacity_hint, 1024);
+        Self { arena, children: Vec::with_capacity(capacity) }
     }
 
     /// Pushes a leaf node (token) to the current list of children.
+    #[inline(always)]
     pub fn push_leaf(&mut self, kind: L::TokenType, len: usize) {
         self.children.push(GreenTree::Leaf(GreenLeaf::new(kind, len as u32)));
     }
 
     /// Pushes a leaf node (token) with provenance metadata to the current list of children.
+    #[inline(always)]
     pub fn push_leaf_with_metadata(&mut self, kind: L::TokenType, len: usize, provenance: TokenProvenance) {
         let index = self.arena.add_metadata(provenance);
         self.children.push(GreenTree::Leaf(GreenLeaf::with_metadata(kind, len as u32, Some(index))));
     }
 
     /// Pushes an existing node to the current list of children.
+    #[inline(always)]
     pub fn push_node(&mut self, node: &'a GreenNode<'a, L>) {
         self.children.push(GreenTree::Node(node));
     }
 
     /// Returns the current number of children, serving as a checkpoint for finishing a node later.
+    #[inline(always)]
     pub fn checkpoint(&self) -> usize {
         self.children.len()
     }
 
     /// Returns the syntax arena used by this sink.
+    #[inline(always)]
     pub fn arena(&self) -> &'a SyntaxArena {
         self.arena
     }
 
     /// Restores the sink to a previous checkpoint by truncating the children list.
+    #[inline(always)]
     pub fn restore(&mut self, checkpoint: usize) {
         self.children.truncate(checkpoint)
     }
 
     /// Finishes a node starting from the given checkpoint and adds it as a child.
     pub fn finish_node(&mut self, checkpoint: usize, kind: L::ElementType) -> &'a GreenNode<'a, L> {
-        let children_slice = self.arena.alloc_slice_copy(&self.children[checkpoint..]);
+        let children_count = self.children.len() - checkpoint;
+        if children_count == 0 {
+            // Fast path for empty nodes
+            let children_slice = &[];
+            let node = GreenNode::new(kind, children_slice);
+            let node_ref = self.arena.alloc(node);
+            self.children.truncate(checkpoint);
+            self.children.push(GreenTree::Node(node_ref));
+            return node_ref;
+        }
+
+        // Use alloc_slice_fill_iter instead of alloc_slice_copy to avoid intermediate copy
+        let children_iter = self.children[checkpoint..].iter().cloned();
+        let children_slice = self.arena.alloc_slice_fill_iter(children_count, children_iter);
         self.children.truncate(checkpoint);
         let node = GreenNode::new(kind, children_slice);
         let node_ref = self.arena.alloc(node);
@@ -136,6 +160,7 @@ impl<'a, L: Language> TreeSink<'a, L> {
 
 /// Encapsulates incremental parsing logic.
 pub struct IncrementalContext<'a, L: Language> {
+    /// A cursor over the previous syntax tree.
     cursor: Cursor<'a, L>,
     /// Sorted list of edits with their accumulated deltas.
     /// Each entry contains the old range and the cumulative delta *after* this edit.
@@ -196,7 +221,7 @@ impl<'a, L: Language> IncrementalContext<'a, L> {
 
 /// High-level API for parsers, coordinating token supply and tree construction.
 pub struct ParserState<'a, L: Language, S: Source + ?Sized = crate::source::SourceText> {
-    /// The token stream being parsed.
+    /// The token source providing tokens to the parser.
     pub tokens: TokenSource<L>,
 
     /// The sink where the syntax tree is constructed.
@@ -232,13 +257,11 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
     pub fn new(arena: &'a SyntaxArena, lex_output: LexOutput<L>, source: &'a S, capacity_hint: usize) -> Self {
         let (tokens, mut errors) = match lex_output.result {
             Ok(tokens) => (tokens, Vec::new()),
-            Err(e) => (Arc::from(Vec::new()), vec![e]),
+            Err(e) => (Tokens::default(), vec![e]),
         };
         errors.extend(lex_output.diagnostics);
 
-        let mut st = Self { tokens: TokenSource::new(tokens), sink: TreeSink::new(arena, capacity_hint), incremental: None, errors, source };
-        st.skip_trivia();
-        st
+        Self { tokens: TokenSource::new(tokens), sink: TreeSink::new(arena, capacity_hint), incremental: None, errors, source }
     }
 
     /// Creates a nested parser state that shares the same arena and source.
@@ -396,7 +419,7 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
     /// Skips trivia tokens and adds them to the syntax tree.
     pub fn skip_trivia(&mut self) {
         while let Some(token) = self.tokens.current() {
-            if L::TokenType::is_ignored(&token.kind) {
+            if std::intrinsics::likely(L::TokenType::is_ignored(&token.kind)) {
                 self.sink.push_leaf(token.kind, token.length());
                 self.tokens.advance()
             }
@@ -408,14 +431,14 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
 
     /// Advances until a token of the specified kind is found, or the end of the token stream is reached.
     pub fn advance_until(&mut self, kind: L::TokenType) {
-        while self.not_at_end() && !self.at(kind) {
+        while std::intrinsics::likely(self.not_at_end() && !self.at(kind)) {
             self.advance()
         }
     }
 
     /// Advances until any token of the specified kinds is found, or the end of the token stream is reached.
     pub fn advance_until_any(&mut self, kinds: &[L::TokenType]) {
-        while self.not_at_end() && !kinds.iter().any(|&k| self.at(k)) {
+        while std::intrinsics::likely(self.not_at_end() && !kinds.iter().any(|&k| self.at(k))) {
             self.advance()
         }
     }
@@ -431,7 +454,7 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
     /// Consumes the current token if it matches the specified kind.
     /// Returns `true` if the token was consumed, `false` otherwise.
     pub fn eat(&mut self, kind: L::TokenType) -> bool {
-        if self.at(kind) {
+        if std::intrinsics::unlikely(self.at(kind)) {
             self.bump();
             true
         }
@@ -443,7 +466,7 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
     /// Expects the current token to be of the specified kind, consuming it if it matches.
     /// If the token does not match, an error is recorded and returned.
     pub fn expect(&mut self, kind: L::TokenType) -> Result<(), OakError> {
-        if self.eat(kind) {
+        if std::intrinsics::likely(self.eat(kind)) {
             Ok(())
         }
         else {
@@ -554,26 +577,28 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
             let start = inc.cursor.offset();
             let end = inc.cursor.end_offset();
 
-            if start == target_old_pos {
+            if std::intrinsics::likely(start == target_old_pos) {
                 if let Some(node) = inc.cursor.as_node() {
-                    if node.kind == kind {
-                        if !inc.is_dirty(start, end) {
+                    if std::intrinsics::likely(node.kind == kind) {
+                        if std::intrinsics::likely(!inc.is_dirty(start, end)) {
                             // Verify tokens
                             let node_len = node.text_len() as usize;
+                            let target_new_end = new_pos + node_len;
 
-                            // Check token stream
+                            // Check token stream more efficiently
                             let mut lookahead = 0;
                             let mut current_pos = new_pos;
-                            let target_new_end = new_pos + node_len;
+                            let mut total_length = 0;
 
                             while let Some(t) = self.tokens.peek_at(lookahead) {
                                 if t.span.start != current_pos {
                                     // Token stream doesn't match expected positions
                                     break;
                                 }
+                                total_length += t.length();
                                 current_pos = t.span.end;
 
-                                if t.span.end == target_new_end {
+                                if total_length == node_len && current_pos == target_new_end {
                                     // Found the end!
                                     let tokens_consumed = lookahead + 1;
                                     let new_node = deep_clone_node(node, self.sink.arena);
@@ -582,7 +607,7 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
                                     inc.cursor.step_over();
                                     return true;
                                 }
-                                else if t.span.end > target_new_end {
+                                else if total_length > node_len {
                                     break;
                                 }
                                 lookahead += 1;
@@ -594,12 +619,15 @@ impl<'a, L: Language, S: Source + ?Sized> ParserState<'a, L, S> {
                     return false;
                 }
             }
-            else if start < target_old_pos && end > target_old_pos {
-                if !inc.cursor.step_into() && !inc.cursor.step_next() {
-                    return false;
+            else if std::intrinsics::likely(start < target_old_pos && end > target_old_pos) {
+                if !inc.cursor.step_into() {
+                    // If we can't step into, try to step next
+                    if !inc.cursor.step_next() {
+                        return false;
+                    }
                 }
             }
-            else if end <= target_old_pos {
+            else if std::intrinsics::likely(end <= target_old_pos) {
                 if !inc.cursor.step_next() {
                     return false;
                 }

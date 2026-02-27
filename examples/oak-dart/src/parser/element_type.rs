@@ -1,14 +1,18 @@
 use oak_core::{ElementType, UniversalElementRole};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 
+/// Element types for the Dart language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DartElementType {
+    /// Root element.
     Root,
+    /// Class declaration.
     ClassDeclaration,
+    /// Function declaration.
     FunctionDeclaration,
+    /// Whitespace.
     Whitespace,
+    /// Newline.
     Newline,
     Identifier,
     IntegerLiteral,
