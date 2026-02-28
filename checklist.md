@@ -1,38 +1,23 @@
 # Checklist: Fix Missing Documentation for Oaks Project
 
 ## Pre-Implementation
-- [ ] Review all files with missing documentation warnings
-- [ ] Understand the context and purpose of each item
+- [x] Review all files with missing documentation warnings
+- [x] Understand the context and purpose of each item
 
 ## Implementation
 
-### oak-mojo/src/parser/element_type.rs
-- [ ] Document `MojoElementType` enum
-- [ ] Document token variants (Fn, Struct, Var, Let, etc.)
-- [ ] Document statement variants (FunctionDef, StructDef, etc.)
-- [ ] Document expression variants (BinaryExpr, UnaryExpr, etc.)
-- [ ] Document component variants (ParamList, ArgList, Block)
-- [ ] Document special variants (Root, Grouping, Error)
+### oak-xml/src/language/mod.rs
+- [x] Document `serde` module
 
-### oak-hlsl/src/parser/element_type.rs
-- [ ] Document `HlslElementType` enum
-- [ ] Document whitespace/comment variants
-- [ ] Document literal variants
-- [ ] Document data type variants (Bool, Int, Float, etc.)
-- [ ] Document vector type variants (Bool2, Int3, Float4, etc.)
-- [ ] Document matrix type variants (Float2x2, Double4x4, etc.)
-- [ ] Document texture type variants
-- [ ] Document sampler type variants
-- [ ] Document buffer type variants
-- [ ] Document control flow variants
-- [ ] Document modifier variants
-- [ ] Document preprocessor directive variants
-- [ ] Document operator variants
-- [ ] Document separator variants
-- [ ] Document special token variants
+### oak-vlang/src/lib.rs
+- [x] Document `builder` module
+
+### oak-r/src/lexer/mod.rs
+- [x] Document `token_type` module
+- [x] Document `RLexer` struct
 
 ## Post-Implementation
-- [ ] Run `cargo check` - no missing documentation warnings
-- [ ] Verify all documentation is in English
-- [ ] Verify no postfix comments used
-- [ ] Verify no code logic changes
+- [x] Run `cargo check` - no missing documentation warnings
+- [x] Verify all documentation is in English
+- [x] Verify no postfix comments used
+- [x] Verify no code logic changes

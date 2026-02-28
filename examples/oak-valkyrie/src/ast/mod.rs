@@ -5,17 +5,7 @@ pub struct ValkyrieRoot {
 }
 
 /// Source code span
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
-pub struct Span {
-    pub start: u32,
-    pub end: u32,
-}
-
-impl From<std::ops::Range<usize>> for Span {
-    fn from(range: std::ops::Range<usize>) -> Self {
-        Self { start: range.start as u32, end: range.end as u32 }
-    }
-}
+pub type Span = oak_core::Range<usize>;
 
 /// An identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -178,7 +168,7 @@ pub enum Statement {
         annotations: Vec<Attribute>,
         span: Span,
     },
-    ExprStmt {
+    ExprStmt{
         expr: Expr,
         semi: bool,
         annotations: Vec<Attribute>,
@@ -236,6 +226,7 @@ pub struct MatchArm {
     pub pattern: Pattern,
     pub guard: Option<Expr>,
     pub body: Expr,
+    pub span: Span,
 }
 
 /// A pattern for matching
@@ -289,7 +280,7 @@ pub struct Field {
 
 /// A function definition
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Function {
+pub struct Function{
     pub name: Identifier,
     pub generics: Vec<GenericParam>,
     pub params: Vec<Param>,
@@ -310,7 +301,7 @@ pub struct EnumVariant {
 
 /// A variant case
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct VariantCase {
+pub struct VariantCase{
     pub pattern: Pattern,
     pub body: Expr,
     pub span: Span,
@@ -318,7 +309,7 @@ pub struct VariantCase {
 
 /// An attribute
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Attribute {
+pub struct Attribute{
     pub name: Identifier,
     pub args: Vec<Expr>,
     pub span: Span,

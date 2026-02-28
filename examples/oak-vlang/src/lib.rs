@@ -8,6 +8,7 @@ extern crate alloc;
 
 /// AST module.
 pub mod ast;
+/// Builder module for constructing V language AST from syntax trees.
 pub mod builder;
 // pub mod formatter;
 //

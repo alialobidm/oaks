@@ -1,4 +1,4 @@
-use crate::{ValkyrieLanguage, ValkyrieParser, ast::*, builder::text, lexer::token_type::ValkyrieSyntaxKind};
+use crate::{ValkyrieLanguage, ValkyrieParser, ast::*, builder::text, kind::{ValkyrieSyntaxKind, ValkyrieKeywords}};
 use oak_core::{OakError, RedNode, RedTree, source::SourceText};
 
 impl<'config> ValkyrieParser<'config> {
@@ -284,7 +284,9 @@ impl<'config> ValkyrieParser<'config> {
             ValkyrieSyntaxKind::YieldExpression => self.build_yield(node, source),
             ValkyrieSyntaxKind::RaiseExpression => self.build_raise(node, source),
             ValkyrieSyntaxKind::CatchExpression => self.build_catch(node, source),
-            ValkyrieSyntaxKind::ResumeExpression => self.build_resume(node, source),
+            ValkyrieSyntaxKind::ResumeExpression => {
+                Err(source.syntax_error("Resume expression not supported".to_string(), node.span().start))
+            }
             ValkyrieSyntaxKind::Error => Err(source.syntax_error(format!("Syntax error at {:?}", node.span()), node.span().start)),
             _ => Err(source.syntax_error(format!("Unknown expression type {:?} at {:?}", node.green.kind, node.span()), node.span().start)),
         }
@@ -611,26 +613,12 @@ impl<'config> ValkyrieParser<'config> {
 
     pub(crate) fn build_catch(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
         let span = node.span();
-        let mut return_type = None;
         let mut expr = None;
         let mut arms = Vec::new();
         for child in node.children() {
             match child {
                 RedTree::Node(n) => match n.green.kind {
                     ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Type => {
-                        let path_node = n.children().find_map(|c| {
-                            if let RedTree::Node(child_n) = c {
-                                if child_n.green.kind == ValkyrieSyntaxKind::NamePath {
-                                    return Some(child_n);
-                                }
-                            }
-                            None
-                        });
-                        if let Some(pn) = path_node {
-                            return_type = Some(self.build_name_path(pn, source)?);
-                        }
-                    }
                     ValkyrieSyntaxKind::MatchArm => arms.push(self.build_match_arm(n, source)?),
                     _ => {
                         if expr.is_none() {
@@ -645,25 +633,7 @@ impl<'config> ValkyrieParser<'config> {
             }
         }
 
-        Ok(Expr::Catch { return_type, expr: expr.ok_or_else(|| source.syntax_error("Missing catch expression".to_string(), span.start))?, arms, span })
-    }
-
-    pub(crate) fn build_resume(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
-        let span = node.span();
-        let mut expr = None;
-        for child in node.children() {
-            match child {
-                RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => expr = Some(Box::new(self.build_expr(n, source)?)),
-                },
-                RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => {}
-                },
-            }
-        }
-        Ok(Expr::Resume { expr, span })
+        Ok(Expr::Catch { expr: expr.ok_or_else(|| source.syntax_error("Missing catch expression".to_string(), span.start))?, arms, span })
     }
 
     pub(crate) fn build_block(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Block, OakError> {

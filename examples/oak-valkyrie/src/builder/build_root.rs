@@ -1,7 +1,7 @@
 use crate::{
     ValkyrieLanguage, ValkyrieParser,
     ast::{Item, ValkyrieRoot},
-    lexer::token_type::ValkyrieSyntaxKind,
+    kind::ValkyrieSyntaxKind,
 };
 use oak_core::{GreenNode, OakError, RedNode, RedTree, source::SourceText};
 

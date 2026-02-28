@@ -29,8 +29,11 @@ impl<'a> Lexer<DejavuLanguage> for DejavuLexer<'a> {
     }
 }
 
+/// Keyword definitions for Dejavu.
 pub mod keywords;
+/// Lexer implementation.
 pub mod lex;
+/// Token type definitions.
 pub mod token_type;
 
 pub use keywords::DejavuKeywords;

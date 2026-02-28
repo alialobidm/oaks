@@ -1,4 +1,5 @@
 #![doc = include_str!("readme.md")]
+/// Token type definitions for the R language.
 pub mod token_type;
 pub use token_type::RTokenType;
 
@@ -7,6 +8,10 @@ use oak_core::{Lexer, LexerCache, LexerState, Range, lexer::LexOutput, source::S
 
 type State<'s, S> = LexerState<'s, S, RLanguage>;
 
+/// Lexer for the R programming language.
+///
+/// This lexer tokenizes R source code into a sequence of tokens
+/// that can be used by the parser to build a syntax tree.
 #[derive(Clone)]
 pub struct RLexer<'config> {
     config: &'config RLanguage,

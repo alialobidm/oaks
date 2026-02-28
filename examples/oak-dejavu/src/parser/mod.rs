@@ -5,6 +5,7 @@ pub use element_type::DejavuElementType;
 
 /// Dejavu parser.
 pub struct DejavuParser {
+    /// Language configuration.
     pub language: DejavuLanguage,
 }
 
@@ -36,7 +37,11 @@ impl Parser<DejavuLanguage> for DejavuParser {
     }
 }
 
+/// Element type definitions.
 pub mod element_type;
+/// Control flow parsing utilities.
 pub mod parse_control_flow;
+/// Expression parsing utilities.
 pub mod parse_expr;
+/// Type parsing utilities.
 pub mod parse_types;

@@ -15,10 +15,10 @@ pub(crate) type State<'a, S> = LexerState<'a, S, ValkyrieLanguage>;
 static VK_WHITESPACE: LazyLock<WhitespaceConfig> = LazyLock::new(|| WhitespaceConfig { unicode_whitespace: true });
 static VK_COMMENT: LazyLock<CommentConfig> = LazyLock::new(|| CommentConfig { line_marker: "#", block_start: "/*", block_end: "*/", nested_blocks: true });
 
-impl crate::lexer::ValkyrieLexer<'_> {
+impl<'config> crate::lexer::ValkyrieLexer<'config> {
     /// Runs the lexer on the given state.
     pub(crate) fn run<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> Result<(), OakError> {
-        match self.config.syntax_mode {
+        match self.config.syntax_mode() {
             oak_dejavu::language::SyntaxMode::Programming => self.run_programming(state),
             oak_dejavu::language::SyntaxMode::Template => self.run_template(state),
         }
@@ -172,7 +172,7 @@ impl crate::lexer::ValkyrieLexer<'_> {
         let original_pos = state.get_position();
         state.set_position(start);
         let mut current = start;
-        let template = &self.config.template;
+        let template = self.config.template();
 
         while state.get_position() < end {
             if interpolation_enabled && state.starts_with(&template.comment_start) {

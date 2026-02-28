@@ -26,14 +26,23 @@ impl<'config> Builder<DejavuLanguage> for DejavuBuilder<'config> {
     }
 }
 
+/// Block building utilities.
 pub mod build_block;
+/// Class building utilities.
 pub mod build_class;
+/// Control flow building utilities.
 pub mod build_control_flow;
+/// Expression building utilities.
 pub mod build_expr;
+/// Micro definition building utilities.
 pub mod build_micro;
+/// Namespace building utilities.
 pub mod build_namespace;
+/// Pattern building utilities.
 pub mod build_pattern;
+/// Root building utilities.
 pub mod build_root;
+/// Statement building utilities.
 pub mod build_stmt;
 
 pub(crate) fn text(source: &(impl Source + ?Sized), range: oak_core::Range<usize>) -> String {

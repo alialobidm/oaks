@@ -3,87 +3,156 @@ use oak_core::{Token, TokenType, UniversalTokenRole};
 
 /// Alias for `Token<DejavuTokenType>`.
 pub type DejavuToken = Token<DejavuTokenType>;
+/// Alias for the syntax kind type.
 pub type DejavuSyntaxKind = DejavuTokenType;
 
+/// Token types for the Dejavu language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DejavuTokenType {
+    /// End of file token.
     Eof,
+    /// Whitespace token.
     Whitespace,
+    /// Error token.
     Error,
 
     // Literals
+    /// Integer literal token.
     IntegerLiteral,
+    /// Float literal token.
     FloatLiteral,
+    /// Boolean literal token.
     BoolLiteral,
+    /// String literal token.
     StringLiteral,
+    /// Character literal token.
     CharLiteral,
+    /// Identifier token.
     Identifier,
+    /// Label token.
     Label,
 
     // Comments
+    /// Line comment token.
     LineComment,
+    /// Block comment token.
     BlockComment,
 
     // Keywords
+    /// Keyword token.
     Keyword(DejavuKeywords),
 
     // Operators & Punctuation
-    Ampersand,    // &
-    AndAnd,       // &&
-    Arrow,        // ->
-    At,           // @
-    Bang,         // !
-    Bolt,         // ↯
-    Caret,        // ^
-    Colon,        // :
-    ColonColon,   // ::
-    ColonEq,      // :=
-    Comma,        // ,
-    Dollar,       // $
-    Dot,          // .
-    Eq,           // =
-    EqEq,         // ==
-    GreaterEq,    // >=
-    GreaterThan,  // >
-    LeftBrace,    // {
-    LeftBracket,  // [
-    LeftParen,    // (
-    LeftShift,    // <<
-    LessEq,       // <=
-    LessThan,     // <
-    Minus,        // -
-    MinusEq,      // -=
-    MinusMinus,   // --
-    NotEq,        // !=
-    OrOr,         // ||
-    Percent,      // %
-    PercentEq,    // %=
-    Pipe,         // |
-    PipeGreater,  // |>
-    Plus,         // +
-    PlusEq,       // +=
-    PlusPlus,     // ++
-    Question,     // ?
-    RightBrace,   // }
-    RightBracket, // ]
-    RightParen,   // )
-    RightShift,   // >>
-    Semicolon,    // ;
-    Slash,        // /
-    SlashEq,      // /=
-    Star,         // *
-    StarEq,       // *=
-    Tilde,        // ~
-    Underscore,   // _
+    /// Ampersand operator `&`.
+    Ampersand,
+    /// Logical and operator `&&`.
+    AndAnd,
+    /// Arrow operator `->`.
+    Arrow,
+    /// At symbol `@`.
+    At,
+    /// Bang operator `!`.
+    Bang,
+    /// Bolt symbol `↯`.
+    Bolt,
+    /// Caret operator `^`.
+    Caret,
+    /// Colon operator `:`.
+    Colon,
+    /// Path separator `::`.
+    ColonColon,
+    /// Assignment operator `:=`.
+    ColonEq,
+    /// Comma separator `,`.
+    Comma,
+    /// Dollar symbol `$`.
+    Dollar,
+    /// Dot operator `.`.
+    Dot,
+    /// Assignment operator `=`.
+    Eq,
+    /// Equality operator `==`.
+    EqEq,
+    /// Greater than or equal operator `>=`.
+    GreaterEq,
+    /// Greater than operator `>`.
+    GreaterThan,
+    /// Left brace `{`.
+    LeftBrace,
+    /// Left bracket `[`.
+    LeftBracket,
+    /// Left parenthesis `(`.
+    LeftParen,
+    /// Left shift operator `<<`.
+    LeftShift,
+    /// Less than or equal operator `<=`.
+    LessEq,
+    /// Less than operator `<`.
+    LessThan,
+    /// Minus operator `-`.
+    Minus,
+    /// Minus assignment operator `-=`.
+    MinusEq,
+    /// Decrement operator `--`.
+    MinusMinus,
+    /// Not equal operator `!=`.
+    NotEq,
+    /// Logical or operator `||`.
+    OrOr,
+    /// Percent operator `%`.
+    Percent,
+    /// Percent assignment operator `%=`.
+    PercentEq,
+    /// Pipe operator `|`.
+    Pipe,
+    /// Pipe forward operator `|>`.
+    PipeGreater,
+    /// Plus operator `+`.
+    Plus,
+    /// Plus assignment operator `+=`.
+    PlusEq,
+    /// Increment operator `++`.
+    PlusPlus,
+    /// Question operator `?`.
+    Question,
+    /// Right brace `}`.
+    RightBrace,
+    /// Right bracket `]`.
+    RightBracket,
+    /// Right parenthesis `)`.
+    RightParen,
+    /// Right shift operator `>>`.
+    RightShift,
+    /// Semicolon separator `;`.
+    Semicolon,
+    /// Slash operator `/`.
+    Slash,
+    /// Slash assignment operator `/=`.
+    SlashEq,
+    /// Star operator `*`.
+    Star,
+    /// Star assignment operator `*=`.
+    StarEq,
+    /// Tilde operator `~`.
+    Tilde,
+    /// Underscore token `_`.
+    Underscore,
 
-    // Template specific
+    // Template Specific
+    /// Interpolation start token.
     InterpolationStart,
+    /// Interpolation end token.
     InterpolationEnd,
+    /// String part token for templates.
     StringPart,
+    /// Template control start token.
     TemplateControlStart,
+    /// Template control end token.
     TemplateControlEnd,
+    /// Template comment start token.
     TemplateCommentStart,
+    /// Template comment end token.
     TemplateCommentEnd,
 }
 
