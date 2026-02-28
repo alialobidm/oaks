@@ -1,13 +1,14 @@
 use crate::{
-    ValkyrieLanguage, ValkyrieParser,
+    ValkyrieLanguage,
     ast::{Class, Enums, Flags, Identifier, Item, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
-    builder::text,
-    kind::ValkyrieSyntaxKind,
+    builder::{ValkyrieBuilder, text},
+    lexer::token_type::ValkyrieTokenType,
+    parser::element_type::ValkyrieElementType,
 };
-use oak_core::{OakError, RedNode, RedTree, source::SourceText};
+use oak_core::{OakError, RedNode, RedTree, Source};
 
-impl<'config> ValkyrieParser<'config> {
-    pub(crate) fn build_class(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Class, OakError> {
+impl<'config> ValkyrieBuilder<'config> {
+    pub(crate) fn build_class<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Class, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut generics = Vec::new();
@@ -18,77 +19,77 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        let t_text = text(source, t.span.clone().into());
-                        name = Identifier { name: t_text, span: t.span.clone() };
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        let t_text = text(source, t.span);
+                        name = Identifier { name: t_text, span: t.span };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => {
+                    ValkyrieElementType::Attribute => {
                         annotations.push(self.build_attribute(n, source)?);
                     }
-                    ValkyrieSyntaxKind::GenericParameterList => {
+                    ValkyrieElementType::GenericParameterList => {
                         generics = self.build_generic_params(n, source)?;
                     }
-                    ValkyrieSyntaxKind::NamePath => {
+                    ValkyrieElementType::NamePath => {
                         parents.push(self.build_name_path(n, source)?);
                     }
-                    ValkyrieSyntaxKind::Type => {
+                    ValkyrieElementType::Type => {
                         for child in n.children() {
                             if let RedTree::Node(inner) = child {
-                                if inner.green.kind == ValkyrieSyntaxKind::NamePath {
+                                if inner.green.kind == ValkyrieElementType::NamePath {
                                     parents.push(self.build_name_path(inner, source)?);
                                 }
                             }
                         }
                     }
-                    ValkyrieSyntaxKind::Namespace => {
+                    ValkyrieElementType::Namespace => {
                         let ns = self.build_namespace(n, source)?;
                         items.push(Item::Namespace(ns));
                     }
-                    ValkyrieSyntaxKind::Class => {
+                    ValkyrieElementType::Class => {
                         let class = self.build_class(n, source)?;
                         items.push(Item::Class(class));
                     }
-                    ValkyrieSyntaxKind::Flags => {
+                    ValkyrieElementType::Flags => {
                         let flags = self.build_flags(n, source)?;
                         items.push(Item::Flags(flags));
                     }
-                    ValkyrieSyntaxKind::Enums => {
+                    ValkyrieElementType::Enums => {
                         let enums = self.build_enums(n, source)?;
                         items.push(Item::Enums(enums));
                     }
-                    ValkyrieSyntaxKind::Trait => {
+                    ValkyrieElementType::Trait => {
                         let trait_node = self.build_trait(n, source)?;
                         items.push(Item::Trait(trait_node));
                     }
-                    ValkyrieSyntaxKind::Widget => {
+                    ValkyrieElementType::Widget => {
                         let widget = self.build_widget(n, source)?;
                         items.push(Item::Widget(widget));
                     }
-                    ValkyrieSyntaxKind::UsingStatement => {
+                    ValkyrieElementType::UsingStatement => {
                         let us = self.build_using(n, source)?;
                         items.push(Item::Using(us));
                     }
-                    ValkyrieSyntaxKind::Micro => {
+                    ValkyrieElementType::Micro => {
                         let micro = self.build_micro(n, source)?;
                         items.push(Item::Micro(micro));
                     }
-                    ValkyrieSyntaxKind::LetStatement => {
+                    ValkyrieElementType::LetStatement => {
                         let stmt = self.build_let(n, source)?;
                         items.push(Item::Statement(stmt));
                     }
-                    ValkyrieSyntaxKind::ExpressionStatement => {
+                    ValkyrieElementType::ExprStatement => {
                         let stmt = self.build_expr_stmt(n, source)?;
                         items.push(Item::Statement(stmt));
                     }
-                    ValkyrieSyntaxKind::Variant => {
+                    ValkyrieElementType::Variant => {
                         let variant = self.build_variant_decl(n, source)?;
                         items.push(Item::Variant(variant));
                     }
-                    ValkyrieSyntaxKind::BlockExpression => {
+                    ValkyrieElementType::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
                                 if let Ok(item) = self.build_item(inner_n, source) {
@@ -104,7 +105,7 @@ impl<'config> ValkyrieParser<'config> {
         Ok(Class { name, generics, annotations, parents, items, span })
     }
 
-    pub(crate) fn build_flags(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Flags, OakError> {
+    pub(crate) fn build_flags<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Flags, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut annotations = Vec::new();
@@ -113,23 +114,23 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        let t_text = text(source, t.span.clone().into());
-                        name = Identifier { name: t_text, span: t.span.clone() };
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        let t_text = text(source, t.span);
+                        name = Identifier { name: t_text, span: t.span };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    ValkyrieSyntaxKind::Variant => {
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::Variant => {
                         let variant = self.build_enum_variant(n, source)?;
                         variants.push(variant);
                     }
-                    ValkyrieSyntaxKind::BlockExpression => {
+                    ValkyrieElementType::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
-                                if inner_n.green.kind == ValkyrieSyntaxKind::Variant {
+                                if inner_n.green.kind == ValkyrieElementType::Variant {
                                     if let Ok(v) = self.build_enum_variant(inner_n, source) {
                                         variants.push(v);
                                     }
@@ -144,7 +145,7 @@ impl<'config> ValkyrieParser<'config> {
         Ok(Flags { name, variants, annotations, span })
     }
 
-    pub(crate) fn build_enums(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Enums, OakError> {
+    pub(crate) fn build_enums<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Enums, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut generics = Vec::new();
@@ -154,26 +155,26 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        let t_text = text(source, t.span.clone().into());
-                        name = Identifier { name: t_text, span: t.span.clone() }
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        let t_text = text(source, t.span);
+                        name = Identifier { name: t_text, span: t.span }
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    ValkyrieSyntaxKind::GenericParameterList => {
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::GenericParameterList => {
                         generics = self.build_generic_params(n, source)?;
                     }
-                    ValkyrieSyntaxKind::Variant => {
+                    ValkyrieElementType::Variant => {
                         let variant = self.build_enum_variant(n, source)?;
                         variants.push(variant)
                     }
-                    ValkyrieSyntaxKind::BlockExpression => {
+                    ValkyrieElementType::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
-                                if inner_n.green.kind == ValkyrieSyntaxKind::Variant {
+                                if inner_n.green.kind == ValkyrieElementType::Variant {
                                     if let Ok(v) = self.build_enum_variant(inner_n, source) {
                                         variants.push(v)
                                     }
@@ -188,7 +189,7 @@ impl<'config> ValkyrieParser<'config> {
         Ok(Enums { name, generics, variants, annotations, span })
     }
 
-    pub(crate) fn build_enum_variant(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<EnumVariant, OakError> {
+    pub(crate) fn build_enum_variant<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<EnumVariant, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut fields = Vec::new();
@@ -197,16 +198,16 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        let t_text = text(source, t.span.clone().into());
-                        name = Identifier { name: t_text, span: t.span.clone() };
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        let t_text = text(source, t.span);
+                        name = Identifier { name: t_text, span: t.span };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    ValkyrieSyntaxKind::Field => {
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::Field => {
                         if let Ok(field) = self.build_field(n, source) {
                             fields.push(field);
                         }
@@ -218,7 +219,7 @@ impl<'config> ValkyrieParser<'config> {
         Ok(EnumVariant { name, fields, annotations, span })
     }
 
-    pub(crate) fn build_field(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Field, OakError> {
+    pub(crate) fn build_field<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Field, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut ty = None;
@@ -228,17 +229,17 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
                         if name.name.is_empty() {
-                            name = Identifier { name: text(source, t.span.clone().into()), span: t.span.clone() };
+                            name = Identifier { name: text(source, t.span), span: t.span };
                         }
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    ValkyrieSyntaxKind::Type => ty = Some(self.build_type(n, source)?),
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::Type => ty = Some(self.build_type(n, source)?),
                     _ => {
                         if default.is_none() {
                             default = Some(self.build_expr(n, source)?);
@@ -248,11 +249,11 @@ impl<'config> ValkyrieParser<'config> {
             }
         }
 
-        let ty = ty.ok_or_else(|| source.syntax_error("Missing type for field", span.start))?;
+        let ty = ty.ok_or_else(|| source.syntax_error("Missing type for field".to_string(), span.start))?;
         Ok(Field { name, ty, default, annotations, span })
     }
 
-    pub(crate) fn build_variant_decl(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Variant, OakError> {
+    pub(crate) fn build_variant_decl<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Variant, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut generics = Vec::new();
@@ -262,19 +263,19 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        let t_text = text(source, t.span.clone().into());
-                        name = Identifier { name: t_text, span: t.span.clone() };
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        let t_text = text(source, t.span);
+                        name = Identifier { name: t_text, span: t.span };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    ValkyrieSyntaxKind::GenericParameterList => {
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::GenericParameterList => {
                         generics = self.build_generic_params(n, source)?;
                     }
-                    ValkyrieSyntaxKind::MatchArm => {
+                    ValkyrieElementType::MatchArm => {
                         if let Ok(case) = self.build_variant_case(n, source) {
                             cases.push(case);
                         }
@@ -286,7 +287,7 @@ impl<'config> ValkyrieParser<'config> {
         Ok(Variant { name, generics, cases, annotations, span })
     }
 
-    pub(crate) fn build_variant_case(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<VariantCase, OakError> {
+    pub(crate) fn build_variant_case<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<VariantCase, OakError> {
         let span = node.span();
         let mut pattern = None;
         let mut body = None;
@@ -294,12 +295,12 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Pattern => {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::Pattern => {
                         pattern = Some(self.build_pattern(n, source)?);
                     }
                     _ => {
@@ -311,12 +312,12 @@ impl<'config> ValkyrieParser<'config> {
             }
         }
 
-        let pattern = pattern.ok_or_else(|| source.syntax_error("Missing pattern in variant case", span.start))?;
-        let body = body.ok_or_else(|| source.syntax_error("Missing body in variant case", span.start))?;
+        let pattern = pattern.ok_or_else(|| source.syntax_error("Missing pattern in variant case".to_string(), span.start))?;
+        let body = body.ok_or_else(|| source.syntax_error("Missing body in variant case".to_string(), span.start))?;
         Ok(VariantCase { pattern, body, span })
     }
 
-    pub(crate) fn build_trait(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Trait, OakError> {
+    pub(crate) fn build_trait<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Trait, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut generics = Vec::new();
@@ -326,29 +327,29 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        let t_text = text(source, t.span.clone().into());
-                        name = Identifier { name: t_text, span: t.span.clone() };
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        let t_text = text(source, t.span);
+                        name = Identifier { name: t_text, span: t.span };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    ValkyrieSyntaxKind::GenericParameterList => {
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::GenericParameterList => {
                         generics = self.build_generic_params(n, source)?;
                     }
-                    ValkyrieSyntaxKind::NamePath => {},
-                    ValkyrieSyntaxKind::Type => {},
-                    ValkyrieSyntaxKind::Micro => {
+                    ValkyrieElementType::NamePath => {},
+                    ValkyrieElementType::Type => {},
+                    ValkyrieElementType::Micro => {
                         if let Ok(func) = self.build_function(n, source) {
                             methods.push(func);
                         }
                     }
-                    ValkyrieSyntaxKind::BlockExpression => {
+                    ValkyrieElementType::BlockExpression => {
                         for inner_child in n.children() {
                             if let RedTree::Node(inner_n) = inner_child {
-                                if inner_n.green.kind == ValkyrieSyntaxKind::Micro {
+                                if inner_n.green.kind == ValkyrieElementType::Micro {
                                     if let Ok(func) = self.build_function(inner_n, source) {
                                         methods.push(func);
                                     }
@@ -363,7 +364,7 @@ impl<'config> ValkyrieParser<'config> {
         Ok(Trait { name, generics, methods, annotations, span })
     }
 
-    pub(crate) fn build_widget(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Widget, OakError> {
+    pub(crate) fn build_widget<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Widget, OakError> {
         let span = node.span();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut generics = Vec::new();
@@ -373,50 +374,50 @@ impl<'config> ValkyrieParser<'config> {
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        name = Identifier { name: text(source, t.span.clone().into()), span: t.span.clone() };
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        name = Identifier { name: text(source, t.span), span: t.span };
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Attribute => annotations.push(self.build_attribute(n, source)?),
-                    ValkyrieSyntaxKind::GenericParameterList => {
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::GenericParameterList => {
                         generics = self.build_generic_params(n, source)?;
                     }
-                    ValkyrieSyntaxKind::Namespace => {
+                    ValkyrieElementType::Namespace => {
                         let ns = self.build_namespace(n, source)?;
                         items.push(Item::Namespace(ns))
                     }
-                    ValkyrieSyntaxKind::Class => {
+                    ValkyrieElementType::Class => {
                         let class = self.build_class(n, source)?;
                         items.push(Item::Class(class))
                     }
-                    ValkyrieSyntaxKind::Flags => {
+                    ValkyrieElementType::Flags => {
                         let flags = self.build_flags(n, source)?;
                         items.push(Item::Flags(flags))
                     }
-                    ValkyrieSyntaxKind::Trait => {
+                    ValkyrieElementType::Trait => {
                         let trait_node = self.build_trait(n, source)?;
                         items.push(Item::Trait(trait_node))
                     }
-                    ValkyrieSyntaxKind::Widget => {
+                    ValkyrieElementType::Widget => {
                         let widget = self.build_widget(n, source)?;
                         items.push(Item::Widget(widget))
                     }
-                    ValkyrieSyntaxKind::UsingStatement => {
+                    ValkyrieElementType::UsingStatement => {
                         let us = self.build_using(n, source)?;
                         items.push(Item::Using(us))
                     }
-                    ValkyrieSyntaxKind::Micro => {
+                    ValkyrieElementType::Micro => {
                         let micro = self.build_micro(n, source)?;
                         items.push(Item::Micro(micro))
                     }
-                    ValkyrieSyntaxKind::LetStatement => {
+                    ValkyrieElementType::LetStatement => {
                         let stmt = self.build_let(n, source)?;
                         items.push(Item::Statement(stmt))
                     }
-                    ValkyrieSyntaxKind::ExpressionStatement => {
+                    ValkyrieElementType::ExprStatement => {
                         let stmt = self.build_expr_stmt(n, source)?;
                         items.push(Item::Statement(stmt))
                     }

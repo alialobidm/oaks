@@ -1,9 +1,7 @@
 pub use element_type::ValkyrieElementType;
 
-use crate::{ValkyrieLanguage, ValkyrieLexer, kind::ValkyrieSyntaxKind};
+use crate::{ValkyrieLanguage, ValkyrieLexer};
 use oak_core::{Parser, Source, TextEdit, parser::ParseCache};
-
-pub(crate) type State<'a, S> = oak_core::parser::ParserState<'a, ValkyrieLanguage, S>;
 
 /// Valkyrie parser.
 pub struct ValkyrieParser<'config> {
@@ -27,10 +25,6 @@ impl<'config> ValkyrieParser<'config> {
     /// Create a new Valkyrie parser.
     pub fn new(config: &'config ValkyrieLanguage) -> Self {
         Self { config }
-    }
-
-    pub(crate) fn skip_trivia<'a, S: oak_core::Source + ?Sized>(&self, state: &mut oak_core::parser::ParserState<'a, ValkyrieLanguage, S>) {
-        state.skip_trivia();
     }
 }
 

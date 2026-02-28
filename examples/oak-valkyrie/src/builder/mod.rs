@@ -6,12 +6,11 @@ mod build_root;
 mod build_stmt;
 
 use crate::{ValkyrieLanguage, ValkyrieParser};
-use crate::ast::Span;
 use oak_core::{Builder, BuilderCache, OakDiagnostics, Parser, SourceText, TextEdit, builder::BuildOutput, source::Source};
 
-/// Extracts text from source using a span.
-pub fn text(source: &SourceText, span: Span) -> String {
-    source.slice(span).to_string()
+/// Extracts text from source using a range.
+pub(crate) fn text(source: &(impl Source + ?Sized), range: oak_core::Range<usize>) -> String {
+    source.get_text_in(range).to_string()
 }
 
 /// Valkyrie builder.
@@ -35,8 +34,7 @@ impl<'config> Builder<ValkyrieLanguage> for ValkyrieBuilder<'config> {
 
         match parse_result.result {
             Ok(green_tree) => {
-                let source_text = SourceText::new(source.get_text_in((0..source.length()).into()).into_owned());
-                match parser.build_root(green_tree, &source_text) {
+                match self.build_root(green_tree, source) {
                     Ok(ast_root) => OakDiagnostics { result: Ok(ast_root), diagnostics: parse_result.diagnostics },
                     Err(build_error) => {
                         let mut diagnostics = parse_result.diagnostics;

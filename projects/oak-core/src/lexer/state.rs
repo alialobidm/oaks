@@ -258,7 +258,7 @@ impl<'s, S: Source + ?Sized, L: Language> LexerState<'s, S, L> {
     /// Uses SIMD acceleration if available on the platform.
     /// Returns the range of the skipped hex digits.
     #[inline]
-    pub fn skip_ascii_hexdigits(&mut self) -> std::ops::Range<usize> {
+    pub fn skip_ascii_hexdigits(&mut self) -> std::range::Range<usize> {
         let start = self.get_position();
         let rest = self.rest_bytes();
         let skipped = crate::source::SimdScanner::skip_ascii_hexdigits(rest);

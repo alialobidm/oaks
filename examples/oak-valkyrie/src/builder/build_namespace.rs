@@ -1,12 +1,13 @@
 use crate::{
-    ValkyrieLanguage, ValkyrieParser,
+    ValkyrieLanguage,
     ast::{Item, NamePath, Namespace},
-    parser::element_type::ValkyrieElementType,
     lexer::token_type::ValkyrieTokenType,
+    parser::element_type::ValkyrieElementType,
+    builder::ValkyrieBuilder,
 };
 use oak_core::{OakError, RedNode, RedTree, Source};
 
-impl<'config> ValkyrieParser<'config> {
+impl<'config> ValkyrieBuilder<'config> {
     pub(crate) fn build_namespace<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Namespace, OakError> {
         let span = node.span();
         let mut name = NamePath { parts: Vec::new(), span: Default::default() };

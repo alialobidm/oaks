@@ -1,6 +1,6 @@
 pub use token_type::ValkyrieTokenType;
 
-use crate::{ValkyrieLanguage, kind::ValkyrieSyntaxKind};
+use crate::{ValkyrieLanguage, lexer::keywords::ValkyrieKeywords};
 use oak_core::{
     Lexer, LexerState, TextEdit,
     lexer::{LexOutput, LexerCache},
@@ -34,6 +34,9 @@ impl<'config> ValkyrieLexer<'config> {
 
 /// Token type definitions for the Valkyrie lexer.
 pub mod token_type;
+
+/// Keywords for the Valkyrie language.
+pub mod keywords;
 
 /// Lexer implementation.
 mod lex;

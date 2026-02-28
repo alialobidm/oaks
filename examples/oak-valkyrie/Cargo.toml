@@ -26,6 +26,7 @@ futures = { workspace = true, optional = true }
 tracing = { workspace = true }
 tokio = { workspace = true, optional = true }
 ordered-float = { workspace = true }
+unicode-ident = "1.0"
 
 [dev-dependencies]
 oak-testing = { workspace = true }

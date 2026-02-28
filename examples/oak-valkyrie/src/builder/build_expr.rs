@@ -1,323 +1,371 @@
-use crate::{ValkyrieLanguage, ValkyrieParser, ast::*, builder::text, kind::{ValkyrieSyntaxKind, ValkyrieKeywords}};
-use oak_core::{OakError, RedNode, RedTree, source::SourceText};
+use crate::{
+    ValkyrieLanguage,
+    ast::*,
+    lexer::token_type::ValkyrieTokenType,
+    parser::element_type::ValkyrieElementType,
+    builder::{ValkyrieBuilder, text},
+};
+use oak_core::{OakError, RedNode, RedTree, Source};
 
-impl<'config> ValkyrieParser<'config> {
-    pub(crate) fn build_expr(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
-        let node_kind = node.green.kind;
-        let node_span = node.span();
-        if node_kind == ValkyrieSyntaxKind::Error {
-            return Err(source.syntax_error("Syntax error in expression".to_string(), node_span.start));
-        }
-        match node_kind {
-            ValkyrieSyntaxKind::IdentifierExpression => {
-                let span = node.span();
-                let mut ident: Option<Identifier> = None;
-                for child in node.children() {
-                    match child {
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                            ValkyrieSyntaxKind::Identifier => {
-                                let t_text = text(source, t.span.clone().into());
-                                ident = Some(Identifier { name: t_text, span: t.span.clone() });
-                            }
-                            ValkyrieSyntaxKind::At | ValkyrieSyntaxKind::Bolt => {
-                                continue;
-                            }
-                            _ => {}
-                        },
-                        _ => {}
-                    }
-                }
-                if let Some(id) = ident {
-                    return Ok(Expr::Ident(id));
-                }
-                Err(source.syntax_error(format!("Missing identifier in identifier expression at {:?}", span), span.start))
-            }
-            ValkyrieSyntaxKind::PathExpression | ValkyrieSyntaxKind::NamePath => {
-                let mut path = NamePath { parts: Vec::new(), span: Default::default() };
-                if node_kind == ValkyrieSyntaxKind::NamePath {
-                    path = self.build_name_path(node, source)?;
-                }
-                else {
-                    for child in node.children() {
-                        match child {
-                            RedTree::Leaf(t) => match t.kind {
-                                ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                                _ => {}
-                            },
-                            RedTree::Node(n) => {
-                                if n.green.kind == ValkyrieSyntaxKind::NamePath {
-                                    path = self.build_name_path(n, source)?;
-                                }
-                            }
-                        }
-                    }
-                }
-                Ok(Expr::Path(path))
-            }
-            ValkyrieSyntaxKind::LiteralExpression => {
-                let span = node.span();
-                for child in node.children() {
-                    match child {
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                            ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::True) => return Ok(Expr::Bool { value: true, span }),
-                            ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::False) => return Ok(Expr::Bool { value: false, span }),
-                            _ => return Ok(Expr::Literal { value: text(source, t.span.into()), span }),
-                        },
-                        RedTree::Node(_) => {}
-                    }
-                }
-                Err(source.syntax_error(format!("Missing literal in literal expression at {:?}", span), span.start))
-            }
-            ValkyrieSyntaxKind::BooleanLiteral => {
-                let span = node.span();
-                for child in node.children() {
-                    match child {
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                            _ => return Ok(Expr::Bool { value: t.kind == ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::True), span }),
-                        },
-                        RedTree::Node(_) => {}
-                    }
-                }
-                Err(source.syntax_error(format!("Missing boolean literal in boolean literal expression at {:?}", span), span.start))
-            }
-            ValkyrieSyntaxKind::ParenthesizedExpression => {
-                let span = node.span();
-                for child in node.children() {
-                    match child {
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment | ValkyrieSyntaxKind::LeftParen | ValkyrieSyntaxKind::RightParen => continue,
-                            _ => {}
-                        },
-                        RedTree::Node(n) => return Ok(Expr::Paren { expr: Box::new(self.build_expr(n, source)?), span }),
-                    }
-                }
-                Err(source.syntax_error(format!("Missing expression in parenthesized expression at {:?}", span), span.start))
-            }
-            ValkyrieSyntaxKind::UnaryExpression => {
-                let span = node.span();
-                let mut op: Option<ValkyrieSyntaxKind> = None;
-                let mut expr: Option<Expr> = None;
-                for child in node.children() {
-                    match child {
-                        RedTree::Node(n) => expr = Some(self.build_expr(n, source)?),
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                            _ => {
-                                if let oak_core::UniversalTokenRole::Operator = oak_core::TokenType::role(&t.kind) {
-                                    op = Some(t.kind);
-                                }
-                            }
-                        },
-                    }
-                }
-                if let (Some(op_kind), Some(expr_val)) = (op, expr) { Ok(Expr::Unary { op: op_kind, expr: Box::new(expr_val), span }) } else { Err(source.syntax_error(format!("Missing operand in unary expression at {:?}", span), span.start)) }
-            }
-            ValkyrieSyntaxKind::BinaryExpression => {
-                let span = node.span();
-                let mut left: Option<Expr> = None;
-                let mut op: Option<ValkyrieSyntaxKind> = None;
-                let mut right: Option<Expr> = None;
-                for child in node.children() {
-                    match child {
-                        RedTree::Node(n) => {
-                            if left.is_none() {
-                                left = Some(self.build_expr(n, source)?);
-                            }
-                            else {
-                                right = Some(self.build_expr(n, source)?);
-                            }
-                        }
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                            _ => {
-                                if let oak_core::UniversalTokenRole::Operator = oak_core::TokenType::role(&t.kind) {
-                                    op = Some(t.kind);
-                                }
-                            }
-                        },
-                    }
-                }
-                if let (Some(left_expr), Some(op_kind), Some(right_expr)) = (left, op, right) {
-                    Ok(Expr::Binary { left: Box::new(left_expr), op: op_kind, right: Box::new(right_expr), span })
-                }
-                else {
-                    Err(source.syntax_error(format!("Missing operands in binary expression at {:?}", span), span.start))
-                }
-            }
-            ValkyrieSyntaxKind::CallExpression => {
-                let span = node.span();
-                let mut callee: Option<Expr> = None;
-                let mut args: Vec<Expr> = Vec::new();
-                let mut seen_paren = false;
-                for child in node.children() {
-                    match child {
-                        RedTree::Node(n) => {
-                            if !seen_paren && callee.is_none() {
-                                callee = Some(self.build_expr(n, source)?);
-                            }
-                            else {
-                                args.push(self.build_expr(n, source)?);
-                            }
-                        }
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment | ValkyrieSyntaxKind::Comma | ValkyrieSyntaxKind::RightParen => continue,
-                            ValkyrieSyntaxKind::LeftParen => {
-                                seen_paren = true;
-                            }
-                            _ => {}
-                        },
-                    }
-                }
-                if let Some(callee_expr) = callee { Ok(Expr::Call { callee: Box::new(callee_expr), args, span }) } else { Err(source.syntax_error(format!("Missing callee in call expression at {:?}", span), span.start)) }
-            }
-            ValkyrieSyntaxKind::FieldExpression => {
-                let span = node.span();
-                let mut receiver: Option<Expr> = None;
-                let mut field: Option<Identifier> = None;
-                let mut seen_dot = false;
-                for child in node.children() {
-                    match child {
-                        RedTree::Node(n) => {
-                            if receiver.is_none() {
-                                receiver = Some(self.build_expr(n, source)?);
-                            }
-                            else if field.is_none() {
-                                match self.build_expr(n, source)? {
-                                    Expr::Ident(ident) => field = Some(ident),
-                                    Expr::Path(path) if path.parts.len() == 1 => field = Some(path.parts[0].clone()),
-                                    _ => return Err(source.syntax_error(format!("Expected identifier after '.', but found {:?}", n.green.kind), n.span().start)),
-                                }
-                            }
-                        }
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                            ValkyrieSyntaxKind::Dot => {
-                                seen_dot = true;
-                            }
-                            ValkyrieSyntaxKind::Identifier => {
-                                if seen_dot && field.is_none() {
-                                    field = Some(Identifier { name: text(source, t.span.clone().into()), span: t.span.clone() });
-                                }
-                            }
-                            _ => {}
-                        },
-                    }
-                }
-                if let (Some(receiver_val), Some(field_val)) = (receiver, field) {
-                    Ok(Expr::Field { receiver: Box::new(receiver_val), field: field_val, span })
-                }
-                else {
-                    Err(source.syntax_error(format!("Missing receiver or field in field expression at {:?}", span), span.start))
-                }
-            }
-            ValkyrieSyntaxKind::IndexExpression => {
-                let span = node.span();
-                let mut base: Option<Expr> = None;
-                let mut index: Option<Expr> = None;
-                for child in node.children() {
-                    match child {
-                        RedTree::Node(n) => {
-                            if base.is_none() {
-                                base = Some(self.build_expr(n, source)?);
-                            }
-                            else {
-                                index = Some(self.build_expr(n, source)?);
-                            }
-                        }
-                        RedTree::Leaf(t) => match t.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment | ValkyrieSyntaxKind::LeftBracket | ValkyrieSyntaxKind::RightBracket => continue,
-                            _ => {}
-                        },
-                    }
-                }
-                if let (Some(base_expr), Some(index_expr)) = (base, index) {
-                    Ok(Expr::Index { receiver: Box::new(base_expr), index: Box::new(index_expr), span })
-                }
-                else {
-                    Err(source.syntax_error(format!("Missing base or index in index expression at {:?}", span), span.start))
-                }
-            }
-            ValkyrieSyntaxKind::IfExpression => self.build_if(node, source),
-            ValkyrieSyntaxKind::MatchExpression => self.build_match(node, source),
-            ValkyrieSyntaxKind::LoopExpression => self.build_loop(node, source),
-            ValkyrieSyntaxKind::ReturnExpression => self.build_return(node, source),
-            ValkyrieSyntaxKind::ApplyBlock | ValkyrieSyntaxKind::ObjectExpression => {
-                let span = node.span();
-                let mut callee = None;
-                let mut block = None;
-                for child in node.children() {
-                    match child {
-                        RedTree::Node(n) => match n.green.kind {
-                            ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                            ValkyrieSyntaxKind::BlockExpression => block = Some(self.build_block(n, source)?),
-                            ValkyrieSyntaxKind::NamePath => {
-                                if callee.is_none() {
-                                    callee = Some(Expr::Path(self.build_name_path(n, source)?));
-                                }
-                            }
-                            _ => {
-                                if callee.is_none() {
-                                    callee = Some(self.build_expr(n, source)?);
-                                }
-                            }
-                        },
-                        RedTree::Leaf(_) => {}
-                    }
-                }
-                let callee = callee.ok_or_else(|| source.syntax_error("Missing callee in apply block", span.start))?;
-                let block = block.ok_or_else(|| source.syntax_error("Missing block in apply block", span.end))?;
-                Ok(Expr::Object { callee: Box::new(callee), block, span })
-            }
-            ValkyrieSyntaxKind::BlockExpression => {
-                let block = self.build_block(node, source)?;
-                Ok(Expr::Block(block))
-            }
-            ValkyrieSyntaxKind::Micro => {
-                let lambda = self.build_lambda_expr(node, source)?;
-                Ok(Expr::Lambda(lambda))
-            }
-            ValkyrieSyntaxKind::BreakExpression => self.build_break(node, source),
-            ValkyrieSyntaxKind::ContinueExpression => self.build_continue(node, source),
-            ValkyrieSyntaxKind::YieldExpression => self.build_yield(node, source),
-            ValkyrieSyntaxKind::RaiseExpression => self.build_raise(node, source),
-            ValkyrieSyntaxKind::CatchExpression => self.build_catch(node, source),
-            ValkyrieSyntaxKind::ResumeExpression => {
-                Err(source.syntax_error("Resume expression not supported".to_string(), node.span().start))
-            }
-            ValkyrieSyntaxKind::Error => Err(source.syntax_error(format!("Syntax error at {:?}", node.span()), node.span().start)),
-            _ => Err(source.syntax_error(format!("Unknown expression type {:?} at {:?}", node.green.kind, node.span()), node.span().start)),
+impl<'config> ValkyrieBuilder<'config> {
+    pub(crate) fn build_expr<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        match node.green.kind {
+            ValkyrieElementType::LiteralExpression => self.build_literal(node, source),
+            ValkyrieElementType::BooleanLiteral => self.build_bool_literal(node, source),
+            ValkyrieElementType::BinaryExpression => self.build_binary(node, source),
+            ValkyrieElementType::UnaryExpression => self.build_unary(node, source),
+            ValkyrieElementType::CallExpression => self.build_call(node, source),
+            ValkyrieElementType::FieldExpression => self.build_field_expr(node, source),
+            ValkyrieElementType::IndexExpression => self.build_index(node, source),
+            ValkyrieElementType::ParenthesizedExpression => self.build_paren(node, source),
+            ValkyrieElementType::BlockExpression => Ok(Expr::Block(self.build_block(node, source)?)),
+            ValkyrieElementType::LambdaExpression => Ok(Expr::Lambda(self.build_lambda_expr(node, source)?)),
+            ValkyrieElementType::ObjectExpression => self.build_object(node, source),
+            ValkyrieElementType::IfExpression => self.build_if(node, source),
+            ValkyrieElementType::MatchExpression => self.build_match(node, source),
+            ValkyrieElementType::LoopExpression => self.build_loop(node, source),
+            ValkyrieElementType::ReturnExpression => self.build_return(node, source),
+            ValkyrieElementType::BreakExpression => self.build_break(node, source),
+            ValkyrieElementType::ContinueExpression => self.build_continue(node, source),
+            ValkyrieElementType::YieldExpression => self.build_yield(node, source),
+            ValkyrieElementType::RaiseExpression => self.build_raise(node, source),
+            ValkyrieElementType::CatchExpression => self.build_catch(node, source),
+            ValkyrieElementType::IdentifierExpression => self.build_identifier_expr(node, source),
+            ValkyrieElementType::PathExpression => self.build_path_expr(node, source),
+            _ => Err(source.syntax_error(format!("Unexpected expression kind: {:?}", node.green.kind), span.start)),
         }
     }
 
-    pub(crate) fn build_if(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_literal<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut value = String::new();
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::IntegerLiteral | ValkyrieTokenType::FloatLiteral | ValkyrieTokenType::StringLiteral => {
+                        value = text(source, t.span);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(Expr::Literal { value, span })
+    }
+
+    pub(crate) fn build_bool_literal<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut value = false;
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == ValkyrieTokenType::BoolLiteral {
+                    let text_val = text(source, t.span);
+                    value = text_val == "true";
+                }
+            }
+        }
+        Ok(Expr::Bool { value, span })
+    }
+
+    pub(crate) fn build_binary<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut left = None;
+        let mut right = None;
+        let mut op = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {
+                        if op.is_none() && left.is_some() {
+                            op = Some(t.kind);
+                        }
+                    }
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if left.is_none() {
+                            left = Some(Box::new(self.build_expr(n, source)?));
+                        } else if right.is_none() {
+                            right = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let left = left.ok_or_else(|| source.syntax_error("Missing left operand".to_string(), span.start))?;
+        let right = right.ok_or_else(|| source.syntax_error("Missing right operand".to_string(), span.start))?;
+        let op = op.unwrap_or(ValkyrieTokenType::Plus);
+
+        Ok(Expr::Binary { left, op, right, span })
+    }
+
+    pub(crate) fn build_unary<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut expr = None;
+        let mut op = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {
+                        if op.is_none() {
+                            op = Some(t.kind);
+                        }
+                    }
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        expr = Some(Box::new(self.build_expr(n, source)?));
+                    }
+                },
+            }
+        }
+
+        let expr = expr.ok_or_else(|| source.syntax_error("Missing operand".to_string(), span.start))?;
+        let op = op.unwrap_or(ValkyrieTokenType::Bang);
+
+        Ok(Expr::Unary { op, expr, span })
+    }
+
+    pub(crate) fn build_call<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut callee = None;
+        let mut args = Vec::new();
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::ArgList => {
+                        for arg_child in n.children() {
+                            if let RedTree::Node(arg_n) = arg_child {
+                                if let Ok(arg) = self.build_expr(arg_n, source) {
+                                    args.push(arg);
+                                }
+                            }
+                        }
+                    }
+                    _ => {
+                        if callee.is_none() {
+                            callee = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let callee = callee.ok_or_else(|| source.syntax_error("Missing callee".to_string(), span.start))?;
+
+        Ok(Expr::Call { callee, args, span })
+    }
+
+    pub(crate) fn build_field_expr<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut receiver = None;
+        let mut field = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        if receiver.is_some() && field.is_none() {
+                            field = Some(Identifier { name: text(source, t.span), span: t.span });
+                        }
+                    }
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if receiver.is_none() {
+                            receiver = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let receiver = receiver.ok_or_else(|| source.syntax_error("Missing receiver".to_string(), span.start))?;
+        let field = field.ok_or_else(|| source.syntax_error("Missing field".to_string(), span.start))?;
+
+        Ok(Expr::Field { receiver, field, span })
+    }
+
+    pub(crate) fn build_index<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut receiver = None;
+        let mut index = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if receiver.is_none() {
+                            receiver = Some(Box::new(self.build_expr(n, source)?));
+                        } else if index.is_none() {
+                            index = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let receiver = receiver.ok_or_else(|| source.syntax_error("Missing receiver".to_string(), span.start))?;
+        let index = index.ok_or_else(|| source.syntax_error("Missing index".to_string(), span.start))?;
+
+        Ok(Expr::Index { receiver, index, span })
+    }
+
+    pub(crate) fn build_paren<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut expr = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if expr.is_none() {
+                            expr = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let expr = expr.ok_or_else(|| source.syntax_error("Missing parenthesized expression".to_string(), span.start))?;
+
+        Ok(Expr::Paren { expr, span })
+    }
+
+    pub(crate) fn build_block<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Block, OakError> {
+        let span = node.span();
+        let mut statements = Vec::new();
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::LetStatement => {
+                        if let Ok(stmt) = self.build_let(n, source) {
+                            statements.push(stmt);
+                        }
+                    }
+                    ValkyrieElementType::ExprStatement => {
+                        if let Ok(stmt) = self.build_expr_stmt(n, source) {
+                            statements.push(stmt);
+                        }
+                    }
+                    _ => {
+                        if let Ok(expr) = self.build_expr(n, source) {
+                            statements.push(Statement::ExprStmt { annotations: Vec::new(), expr, semi: false, span: n.span() });
+                        }
+                    }
+                },
+            }
+        }
+
+        Ok(Block { statements, span })
+    }
+
+    pub(crate) fn build_object<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut callee = None;
+        let mut block = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::BlockExpression => {
+                        block = Some(self.build_block(n, source)?);
+                    }
+                    _ => {
+                        if callee.is_none() {
+                            callee = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let callee = callee.ok_or_else(|| source.syntax_error("Missing object callee".to_string(), span.start))?;
+        let block = block.ok_or_else(|| source.syntax_error("Missing object block".to_string(), span.start))?;
+
+        Ok(Expr::Object { callee, block, span })
+    }
+
+    pub(crate) fn build_identifier_expr<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut name = String::new();
+        for child in node.children() {
+            if let RedTree::Leaf(t) = child {
+                if t.kind == ValkyrieTokenType::Identifier {
+                    name = text(source, t.span);
+                    return Ok(Expr::Ident(Identifier { name, span: t.span }));
+                }
+            }
+        }
+        Ok(Expr::Ident(Identifier { name, span }))
+    }
+
+    pub(crate) fn build_path_expr<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let path = self.build_name_path(node, source)?;
+        Ok(Expr::Path(path))
+    }
+
+    pub(crate) fn build_if<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut pattern = None;
         let mut condition = None;
         let mut then_branch = None;
         let mut else_branch = None;
-        let mut is_else = false;
 
         for child in node.children() {
             match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Pattern => pattern = Some(self.build_pattern(n, source)?),
-                    ValkyrieSyntaxKind::BlockExpression => {
-                        if is_else {
-                            else_branch = Some(self.build_block(n, source)?);
-                        }
-                        else {
-                            then_branch = Some(self.build_block(n, source)?);
-                        }
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::Pattern => {
+                        pattern = Some(self.build_pattern(n, source)?);
                     }
-                    ValkyrieSyntaxKind::IfExpression => {
-                        if is_else {
-                            let nested_if = self.build_if(n, source)?;
-                            let n_span = n.span();
-                            else_branch = Some(Block { statements: vec![Statement::ExprStmt { annotations: Vec::new(), expr: nested_if, semi: false, span: n_span.clone() }], span: n_span });
+                    ValkyrieElementType::BlockExpression => {
+                        if then_branch.is_none() {
+                            then_branch = Some(self.build_block(n, source)?);
+                        } else {
+                            else_branch = Some(self.build_block(n, source)?);
                         }
                     }
                     _ => {
@@ -326,34 +374,32 @@ impl<'config> ValkyrieParser<'config> {
                         }
                     }
                 },
-                RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::Else) => is_else = true,
-                    _ => {}
-                },
             }
         }
 
-        Ok(Expr::If {
-            pattern,
-            condition: condition.ok_or_else(|| source.syntax_error("Missing if condition".to_string(), span.start))?,
-            then_branch: then_branch.ok_or_else(|| source.syntax_error("Missing if then branch".to_string(), span.start))?,
-            else_branch,
-            span,
-        })
+        let condition = condition.ok_or_else(|| source.syntax_error("Missing if condition".to_string(), span.start))?;
+        let then_branch = then_branch.ok_or_else(|| source.syntax_error("Missing if then branch".to_string(), span.start))?;
+
+        Ok(Expr::If { pattern, condition, then_branch, else_branch, span })
     }
 
-    pub(crate) fn build_match(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_match<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut scrutinee = None;
         let mut arms = Vec::new();
 
         for child in node.children() {
             match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::MatchArm => {
-                        arms.push(self.build_match_arm(n, source)?);
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::MatchArm => {
+                        if let Ok(arm) = self.build_match_arm(n, source) {
+                            arms.push(arm);
+                        }
                     }
                     _ => {
                         if scrutinee.is_none() {
@@ -361,265 +407,248 @@ impl<'config> ValkyrieParser<'config> {
                         }
                     }
                 },
-                RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => {}
-                },
             }
         }
 
-        Ok(Expr::Match { scrutinee: scrutinee.ok_or_else(|| source.syntax_error("Missing match scrutinee".to_string(), span.start))?, arms, span })
+        let scrutinee = scrutinee.ok_or_else(|| source.syntax_error("Missing match scrutinee".to_string(), span.start))?;
+
+        Ok(Expr::Match { scrutinee, arms, span })
     }
 
-    pub(crate) fn build_match_arm(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<MatchArm, OakError> {
+    pub(crate) fn build_match_arm<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<MatchArm, OakError> {
         let span = node.span();
         let mut pattern = None;
         let mut guard = None;
         let mut body = None;
-        let mut is_guard = false;
-        let mut is_when_arm = false;
 
         for child in node.children() {
             match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Pattern => {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::Pattern => {
                         pattern = Some(self.build_pattern(n, source)?);
                     }
-                    ValkyrieSyntaxKind::NamePath => {
-                        pattern = Some(Pattern::Type { name: self.build_name_path(n, source)?, span: n.span() });
-                    }
                     _ => {
-                        if is_when_arm && pattern.is_none() {
-                            pattern = Some(Pattern::Wildcard { span: n.span() });
-                            guard = Some(self.build_expr(n, source)?)
-                        }
-                        else if is_guard && guard.is_none() {
-                            guard = Some(self.build_expr(n, source)?)
-                        }
-                        else if body.is_none() {
+                        if body.is_none() {
                             body = Some(self.build_expr(n, source)?);
-                        }
-                    }
-                },
-                RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment | ValkyrieSyntaxKind::Colon | ValkyrieSyntaxKind::Arrow | ValkyrieSyntaxKind::Comma => continue,
-                    ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::When) => {
-                        if pattern.is_none() && !is_guard {
-                            is_when_arm = true;
-                        }
-                        else {
-                            is_guard = true;
-                        }
-                    }
-                    ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::Else) => pattern = Some(Pattern::Else { span: t.span.clone() }),
-                    ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::Case) | ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::Type) => continue,
-                    _ => {
-                        if is_when_arm && pattern.is_none() {
-                            pattern = Some(Pattern::Wildcard { span: t.span.clone() });
+                        } else if guard.is_none() {
+                            guard = Some(self.build_expr(n, source)?);
                         }
                     }
                 },
             }
         }
 
-        Ok(MatchArm { pattern: pattern.ok_or_else(|| source.syntax_error("Missing match arm pattern".to_string(), span.start))?, guard, body: body.ok_or_else(|| source.syntax_error("Missing match arm body".to_string(), span.start))?, span })
+        let pattern = pattern.ok_or_else(|| source.syntax_error("Missing match arm pattern".to_string(), span.start))?;
+        let body = body.ok_or_else(|| source.syntax_error("Missing match arm body".to_string(), span.start))?;
+
+        Ok(MatchArm { pattern, guard, body, span })
     }
 
-    pub(crate) fn build_pattern(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Pattern, OakError> {
+    pub(crate) fn build_pattern<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Pattern, OakError> {
         let span = node.span();
-        let mut name_path = None;
-        let mut fields = Vec::new();
-        let mut is_class = false;
-        let mut is_explicit_type = false;
-
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => {
-                        if !is_class && name_path.is_none() {
-                            return Ok(Pattern::Variable { name: Identifier { name: text(source, t.span.clone().into()), span: t.span.clone() }, span });
-                        }
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Underscore => return Ok(Pattern::Wildcard { span: t.span }),
+                    ValkyrieTokenType::Identifier => {
+                        let name = text(source, t.span);
+                        return Ok(Pattern::Variable { name: Identifier { name, span: t.span }, span: t.span });
                     }
-                    ValkyrieSyntaxKind::IntegerLiteral | ValkyrieSyntaxKind::StringLiteral | ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::True) | ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::False) => {
-                        return Ok(Pattern::Literal { value: text(source, t.span.clone().into()), span });
+                    ValkyrieTokenType::IntegerLiteral | ValkyrieTokenType::FloatLiteral | ValkyrieTokenType::StringLiteral => {
+                        let value = text(source, t.span);
+                        return Ok(Pattern::Literal { value, span: t.span });
                     }
-                    ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::Else) => return Ok(Pattern::Else { span }),
-                    ValkyrieSyntaxKind::Keyword(crate::lexer::ValkyrieKeywords::Is) => is_explicit_type = true,
-                    ValkyrieSyntaxKind::Underscore => return Ok(Pattern::Wildcard { span }),
-                    ValkyrieSyntaxKind::LeftBrace => is_class = true,
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::NamePath => name_path = Some(self.build_name_path(n, source)?),
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::NamePath => {
+                        let name = self.build_name_path(n, source)?;
+                        return Ok(Pattern::Type { name, span: n.span() });
+                    }
                     _ => {}
                 },
             }
         }
-
-        if is_class && name_path.is_some() {
-            let mut current_field_name = None;
-            for child in node.children() {
-                match child {
-                    RedTree::Leaf(t) if t.kind == ValkyrieSyntaxKind::Identifier => {
-                        current_field_name = Some(Identifier { name: text(source, t.span.clone().into()), span: t.span.clone() });
-                    }
-                    RedTree::Node(n) if n.green.kind == ValkyrieSyntaxKind::Pattern => {
-                        if let Some(field_name) = current_field_name.take() {
-                            fields.push((field_name, self.build_pattern(n, source)?));
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            return Ok(Pattern::Class { name: name_path.unwrap(), fields, span });
-        }
-
-        if let Some(path) = name_path {
-            if is_explicit_type || path.parts.len() > 1 {
-                return Ok(Pattern::Type { name: path, span });
-            }
-            return Ok(Pattern::Variable { name: path.parts[0].clone(), span });
-        }
-
         Ok(Pattern::Wildcard { span })
     }
 
-    pub(crate) fn build_loop(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_loop<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut label = None;
         let mut pattern = None;
         let mut condition = None;
         let mut body = None;
+
         for child in node.children() {
             match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Label => {
+                        label = Some(text(source, t.span));
+                    }
+                    _ => {}
+                },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Pattern => pattern = Some(self.build_pattern(n, source)?),
-                    ValkyrieSyntaxKind::BlockExpression => body = Some(self.build_block(n, source)?),
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::Pattern => {
+                        pattern = Some(self.build_pattern(n, source)?);
+                    }
+                    ValkyrieElementType::BlockExpression => {
+                        body = Some(self.build_block(n, source)?);
+                    }
                     _ => {
                         if condition.is_none() {
                             condition = Some(Box::new(self.build_expr(n, source)?));
                         }
                     }
                 },
-                RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => label = Some(text(source, t.span.into())),
-                    _ => {}
-                },
             }
         }
-        Ok(Expr::Loop { label, pattern, condition, body: body.ok_or_else(|| source.syntax_error("Missing loop body".to_string(), span.start))?, span })
+
+        let body = body.ok_or_else(|| source.syntax_error("Missing loop body".to_string(), span.start))?;
+
+        Ok(Expr::Loop { label, pattern, condition, body, span })
     }
 
-    pub(crate) fn build_return(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_return<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut expr = None;
+
         for child in node.children() {
             match child {
-                RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => expr = Some(Box::new(self.build_expr(n, source)?)),
-                },
-
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
                     _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if expr.is_none() {
+                            expr = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
                 },
             }
         }
+
         Ok(Expr::Return { expr, span })
     }
 
-    pub(crate) fn build_break(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_break<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut label = None;
         let mut expr = None;
+
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => label = Some(text(source, t.span.into())),
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Label => {
+                        label = Some(text(source, t.span));
+                    }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => expr = Some(Box::new(self.build_expr(n, source)?)),
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if expr.is_none() {
+                            expr = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
                 },
             }
         }
+
         Ok(Expr::Break { label, expr, span })
     }
 
-    pub(crate) fn build_continue(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_continue<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut label = None;
+
         for child in node.children() {
-            match child {
-                RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Identifier => label = Some(text(source, t.span.into())),
+            if let RedTree::Leaf(t) = child {
+                match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Label => {
+                        label = Some(text(source, t.span));
+                    }
                     _ => {}
-                },
-                RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => {}
-                },
+                }
             }
         }
+
         Ok(Expr::Continue { label, span })
     }
 
-    pub(crate) fn build_yield(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_yield<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut expr = None;
-        let mut yield_from = false;
+        let yield_from = false;
+
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::Star => yield_from = true,
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => expr = Some(Box::new(self.build_expr(n, source)?)),
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if expr.is_none() {
+                            expr = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
                 },
             }
         }
+
         Ok(Expr::Yield { expr, yield_from, span })
     }
 
-    pub(crate) fn build_raise(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_raise<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut expr = None;
+
         for child in node.children() {
             match child {
-                RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    _ => expr = Some(Box::new(self.build_expr(n, source)?)),
-                },
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
                     _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if expr.is_none() {
+                            expr = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
                 },
             }
         }
-        Ok(Expr::Raise { expr: expr.ok_or_else(|| source.syntax_error("Missing raise expression".to_string(), span.start))?, span })
+
+        let expr = expr.ok_or_else(|| source.syntax_error("Missing raise expression".to_string(), span.start))?;
+
+        Ok(Expr::Raise { expr, span })
     }
 
-    pub(crate) fn build_catch(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Expr, OakError> {
+    pub(crate) fn build_catch<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut expr = None;
         let mut arms = Vec::new();
+
         for child in node.children() {
             match child {
                 RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::MatchArm => arms.push(self.build_match_arm(n, source)?),
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::MatchArm => arms.push(self.build_match_arm(n, source)?),
                     _ => {
                         if expr.is_none() {
                             expr = Some(Box::new(self.build_expr(n, source)?));
@@ -627,32 +656,30 @@ impl<'config> ValkyrieParser<'config> {
                     }
                 },
                 RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
                     _ => {}
                 },
             }
         }
 
-        Ok(Expr::Catch { expr: expr.ok_or_else(|| source.syntax_error("Missing catch expression".to_string(), span.start))?, arms, span })
+        let expr = expr.ok_or_else(|| source.syntax_error("Missing catch expression".to_string(), span.start))?;
+
+        Ok(Expr::Catch { expr, arms, span })
     }
 
-    pub(crate) fn build_block(&self, node: RedNode<ValkyrieLanguage>, source: &SourceText) -> Result<Block, OakError> {
+    pub(crate) fn build_name_path<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<NamePath, OakError> {
         let span = node.span();
-        let mut statements = Vec::new();
+        let mut parts = Vec::new();
+
         for child in node.children() {
-            match child {
-                RedTree::Leaf(t) => match t.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment | ValkyrieSyntaxKind::LeftBrace | ValkyrieSyntaxKind::RightBrace | ValkyrieSyntaxKind::Comma => continue,
-                    _ => return Err(source.syntax_error(format!("Unexpected token in block: {:?}", t.kind), t.span.start)),
-                },
-                RedTree::Node(n) => match n.green.kind {
-                    ValkyrieSyntaxKind::Whitespace | ValkyrieSyntaxKind::Newline | ValkyrieSyntaxKind::LineComment | ValkyrieSyntaxKind::BlockComment => continue,
-                    ValkyrieSyntaxKind::LetStatement => statements.push(self.build_let(n, source)?),
-                    ValkyrieSyntaxKind::ExpressionStatement => statements.push(self.build_expr_stmt(n, source)?),
-                    _ => return Err(source.syntax_error(format!("Unexpected statement in block: {:?}", n.green.kind), n.span().start)),
-                },
+            if let RedTree::Leaf(t) = child {
+                match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => parts.push(Identifier { name: text(source, t.span), span: t.span }),
+                    _ => {}
+                }
             }
         }
-        Ok(Block { statements, span })
+        Ok(NamePath { parts, span })
     }
 }
