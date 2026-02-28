@@ -24,6 +24,7 @@ impl<'config> Lexer<RLanguage> for RLexer<'config> {
 }
 
 impl<'config> RLexer<'config> {
+    /// Creates a new RLexer with the given language configuration.
     pub fn new(config: &'config RLanguage) -> Self {
         Self { config }
     }

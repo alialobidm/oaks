@@ -23,6 +23,9 @@ pub mod mcp;
 /// Parser module.
 pub mod parser;
 
+/// Syntax kinds.
+pub mod kind;
+
 pub use crate::{ast::ValkyrieRoot, language::ValkyrieLanguage, lexer::ValkyrieLexer, parser::ValkyrieParser};
 
 pub use oak_core::{ElementType, TokenType};

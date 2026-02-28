@@ -24,6 +24,7 @@ serde = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 tracing = { workspace = true }
 tokio = { workspace = true, optional = true }
+ordered-float = { workspace = true }
 
 [dev-dependencies]
 oak-testing = { workspace = true }

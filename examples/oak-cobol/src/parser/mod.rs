@@ -4,6 +4,11 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
+/// Element type definitions for COBOL syntax tree nodes.
+///
+/// This module provides [`CobolElementType`] which defines all element types
+/// used in the COBOL parse tree, including structural elements like divisions
+/// and paragraphs, as well as token-derived elements.
 pub mod element_type;
 
 pub use element_type::CobolElementType;

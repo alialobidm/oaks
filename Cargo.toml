@@ -52,6 +52,7 @@ indexmap = { version = "2.7", features = ["serde"] }
 im-rc = "15.1"
 num = "0.4"
 bigdecimal = "0.4"
+ordered-float = "4.0"
 twox-hash = "1.6"
 
 # Internal project dependencies

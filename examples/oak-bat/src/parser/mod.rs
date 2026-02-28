@@ -20,6 +20,12 @@ pub struct BatParser<'config> {
 }
 
 impl<'config> BatParser<'config> {
+    /// Creates a new `BatParser` instance with the specified language configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - A reference to the `BatLanguage` configuration that defines
+    ///   the language-specific settings for parsing.
     pub fn new(config: &'config BatLanguage) -> Self {
         Self { config }
     }
