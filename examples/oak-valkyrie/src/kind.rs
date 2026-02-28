@@ -210,7 +210,7 @@ pub enum ValkyrieSyntaxKind {
     // Parameters
     GenericParam,
     Param,
-    Field,
+    FieldItem,
     // Match arm
     MatchArm,
 }

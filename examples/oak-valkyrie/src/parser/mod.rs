@@ -1,12 +1,14 @@
 pub use element_type::ValkyrieElementType;
 
 /// Valkyrie parser.
-pub struct ValkyrieParser;
+pub struct ValkyrieParser<'config> {
+    config: &'config ValkyrieLanguage,
+}
 
-impl ValkyrieParser {
+impl<'config> ValkyrieParser<'config> {
     /// Create a new Valkyrie parser.
-    pub fn new() -> Self {
-        Self
+    pub fn new(config: &'config ValkyrieLanguage) -> Self {
+        Self { config }
     }
 }
 

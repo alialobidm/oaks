@@ -3,10 +3,15 @@ use core::range::Range;
 
 use crate::lexer::token_type::RTokenType;
 
+/// An identifier in the R language.
+///
+/// Represents a named entity such as a variable, function, or parameter.
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Identifier {
+    /// The name of the identifier.
     pub name: String,
+    /// The source code span of the identifier.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -15,6 +20,7 @@ pub struct Identifier {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RRoot {
+    /// The list of top-level statements in the R program.
     pub statements: Vec<Statement>,
 }
 
@@ -22,21 +28,33 @@ pub struct RRoot {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Statement {
+    /// An assignment statement, e.g., `x <- 1`.
     Assignment {
+        /// The name being assigned to.
         name: Identifier,
+        /// The expression being assigned.
         expr: Expr,
+        /// The source code span of the assignment statement.
         #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
+    /// An expression statement (an expression evaluated for its side effects).
     ExprStmt {
+        /// The expression being evaluated.
         expr: Expr,
+        /// The source code span of the expression statement.
         #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },
+    /// A function definition statement.
     FunctionDef {
+        /// The name of the function.
         name: Identifier,
+        /// The parameter list of the function.
         params: Vec<Identifier>,
+        /// The body of the function (list of statements).
         body: Vec<Statement>,
+        /// The source code span of the function definition.
         #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Range<usize>,
     },

@@ -1,4 +1,8 @@
 #![doc = include_str!("readme.md")]
+/// Element type definitions for Windows Batch (BAT) syntax tree nodes.
+///
+/// This module provides [`BatElementType`] which defines all element types
+/// used in the BAT parse tree, including statements, labels, and commands.
 pub mod element_type;
 
 pub use element_type::BatElementType;
@@ -15,6 +19,10 @@ use oak_core::{
 
 pub(crate) type State<'a, S> = ParserState<'a, BatLanguage, S>;
 
+/// Parser for Windows Batch (BAT) files.
+///
+/// This parser transforms tokens from the lexer into a structured
+/// parse tree (green tree) representing the BAT source code.
 pub struct BatParser<'config> {
     pub(crate) config: &'config BatLanguage,
 }

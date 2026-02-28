@@ -9,11 +9,21 @@ type FortranKind = FortranElementType;
 
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// A placeholder statement node in the Fortran AST.
 pub struct Statement {
     // Placeholder fields
 }
 
 impl Statement {
+    /// Attempts to cast a syntax node to a `Statement`.
+    ///
+    /// # Arguments
+    ///
+    /// * `_node` - The syntax node to cast.
+    ///
+    /// # Returns
+    ///
+    /// `Some(Statement)` if the cast succeeds, `None` otherwise.
     pub fn cast<'a>(_node: SyntaxNode<'a>) -> Option<Self> {
         Some(Statement {})
     }
@@ -23,8 +33,11 @@ impl Statement {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FortranRoot {
+    /// The optional name of the program.
     pub name: Option<String>,
+    /// The list of program units contained in this root.
     pub units: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -72,10 +85,15 @@ pub enum ProgramUnitKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MainProgramNode {
+    /// The optional name of the main program.
     pub name: Option<String>,
+    /// The specification statements in the main program.
     pub specification_part: Vec<SpecificationStmt>,
+    /// The executable statements in the main program.
     pub execution_part: Vec<ExecutableStmt>,
+    /// Internal subprograms defined within the main program.
     pub internal_subprograms: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -84,11 +102,17 @@ pub struct MainProgramNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SubroutineNode {
+    /// The name of the subroutine.
     pub name: String,
+    /// The list of parameter names.
     pub parameters: Vec<String>,
+    /// The specification statements in the subroutine.
     pub specification_part: Vec<SpecificationStmt>,
+    /// The executable statements in the subroutine.
     pub execution_part: Vec<ExecutableStmt>,
+    /// Internal subprograms defined within the subroutine.
     pub internal_subprograms: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -97,13 +121,21 @@ pub struct SubroutineNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FunctionNode {
+    /// The name of the function.
     pub name: String,
+    /// The list of parameter names.
     pub parameters: Vec<String>,
+    /// The optional name of the result variable.
     pub result_name: Option<String>,
+    /// The optional return type specification.
     pub return_type: Option<TypeSpec>,
+    /// The specification statements in the function.
     pub specification_part: Vec<SpecificationStmt>,
+    /// The executable statements in the function.
     pub execution_part: Vec<ExecutableStmt>,
+    /// Internal subprograms defined within the function.
     pub internal_subprograms: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -112,9 +144,13 @@ pub struct FunctionNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ModuleNode {
+    /// The name of the module.
     pub name: String,
+    /// The specification statements in the module.
     pub specification_part: Vec<SpecificationStmt>,
+    /// Subprograms defined within the module.
     pub module_subprograms: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -123,10 +159,15 @@ pub struct ModuleNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SubmoduleNode {
+    /// The name of the parent module.
     pub parent_name: String,
+    /// The name of the submodule.
     pub name: String,
+    /// The specification statements in the submodule.
     pub specification_part: Vec<SpecificationStmt>,
+    /// Subprograms defined within the submodule.
     pub module_subprograms: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -135,8 +176,11 @@ pub struct SubmoduleNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BlockDataNode {
+    /// The optional name of the block data.
     pub name: Option<String>,
+    /// The specification statements in the block data.
     pub specification_part: Vec<SpecificationStmt>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -257,9 +301,13 @@ pub enum CharacterSelector {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeDeclarationNode {
+    /// The type specification for the declared entities.
     pub type_spec: TypeSpec,
+    /// The attributes applied to the declared entities.
     pub attributes: Vec<Attribute>,
+    /// The list of entity declarations.
     pub entities: Vec<EntityDecl>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -336,10 +384,15 @@ pub enum Dimension {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EntityDecl {
+    /// The name of the entity.
     pub name: String,
+    /// The optional array specification.
     pub array_spec: Option<Vec<Dimension>>,
+    /// The optional character length specification.
     pub char_length: Option<Box<ExprNode>>,
+    /// The optional initialization expression.
     pub initialization: Option<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -348,7 +401,9 @@ pub struct EntityDecl {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ParameterNode {
+    /// The list of parameter entity declarations.
     pub entities: Vec<EntityDecl>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -367,7 +422,9 @@ pub enum ImplicitNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ImplicitSpec {
+    /// The type specification for the implicit declaration.
     pub type_spec: TypeSpec,
+    /// The letter ranges for the implicit declaration.
     pub letter_ranges: Vec<LetterRange>,
 }
 
@@ -375,7 +432,9 @@ pub struct ImplicitSpec {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LetterRange {
+    /// The starting letter of the range.
     pub start: char,
+    /// The optional ending letter of the range.
     pub end: Option<char>,
 }
 
@@ -383,10 +442,15 @@ pub struct LetterRange {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UseNode {
+    /// The name of the module to use.
     pub module_name: String,
+    /// The optional module nature (intrinsic or non-intrinsic).
     pub nature: Option<ModuleNature>,
+    /// The list of rename specifications.
     pub rename_list: Vec<Rename>,
+    /// The list of only specifications.
     pub only_list: Vec<Only>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -401,11 +465,13 @@ pub enum ModuleNature {
     NonIntrinsic,
 }
 
-/// Rename
+/// Rename specification
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rename {
+    /// The local name to use.
     pub local_name: String,
+    /// The original name in the module.
     pub use_name: String,
 }
 
@@ -423,7 +489,9 @@ pub enum Only {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ImportNode {
+    /// The list of names to import.
     pub import_names: Vec<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -432,8 +500,11 @@ pub struct ImportNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InterfaceNode {
+    /// The optional generic specification for the interface.
     pub generic_spec: Option<GenericSpec>,
+    /// The interface bodies (procedure interfaces).
     pub interface_bodies: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -458,9 +529,13 @@ pub enum GenericSpec {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProcedureNode {
+    /// The optional interface name for the procedure.
     pub interface_name: Option<String>,
+    /// The attributes applied to the procedure.
     pub attributes: Vec<Attribute>,
+    /// The procedure entity declarations.
     pub entities: Vec<ProcedureEntity>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -469,7 +544,9 @@ pub struct ProcedureNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProcedureEntity {
+    /// The name of the procedure.
     pub name: String,
+    /// The optional binding name.
     pub binding_name: Option<String>,
 }
 
@@ -477,9 +554,13 @@ pub struct ProcedureEntity {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct GenericNode {
+    /// The generic specification.
     pub generic_spec: GenericSpec,
+    /// The optional access specification.
     pub access_spec: Option<Attribute>,
+    /// The list of procedure names bound to this generic.
     pub procedure_names: Vec<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -488,8 +569,11 @@ pub struct GenericNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AssignmentNode {
+    /// The left-hand side variable expression.
     pub variable: Box<ExprNode>,
+    /// The right-hand side expression to assign.
     pub expression: Box<ExprNode>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -498,8 +582,11 @@ pub struct AssignmentNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CallNode {
+    /// The name of the procedure to call.
     pub procedure_name: String,
+    /// The arguments passed to the procedure.
     pub arguments: Vec<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -508,11 +595,17 @@ pub struct CallNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct IfConstructNode {
+    /// The condition expression for the if block.
     pub condition: Box<ExprNode>,
+    /// The statements in the then block.
     pub then_part: Vec<ExecutableStmt>,
+    /// The else-if blocks with their conditions and statements.
     pub else_if_parts: Vec<(Box<ExprNode>, Vec<ExecutableStmt>)>,
+    /// The optional else block statements.
     pub else_part: Option<Vec<ExecutableStmt>>,
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -521,9 +614,13 @@ pub struct IfConstructNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DoConstructNode {
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The optional loop control (iterative, while, or concurrent).
     pub control: Option<DoControl>,
+    /// The statements in the loop body.
     pub body: Vec<ExecutableStmt>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -532,19 +629,35 @@ pub struct DoConstructNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DoControl {
-    /// Iterative
-    Iterative { variable: String, start: Box<ExprNode>, end: Box<ExprNode>, step: Option<Box<ExprNode>> },
-    /// While
+    /// Iterative do loop with variable, start, end, and optional step.
+    Iterative {
+        /// The loop variable name.
+        variable: String,
+        /// The start value expression.
+        start: Box<ExprNode>,
+        /// The end value expression.
+        end: Box<ExprNode>,
+        /// The optional step value expression.
+        step: Option<Box<ExprNode>>,
+    },
+    /// While loop with condition.
     While(Box<ExprNode>),
-    /// Concurrent
-    Concurrent { header: ConcurrentHeader, locality: Vec<LocalitySpec> },
+    /// Concurrent loop with header and locality specs.
+    Concurrent {
+        /// The concurrent header with control list and optional mask.
+        header: ConcurrentHeader,
+        /// The locality specifications.
+        locality: Vec<LocalitySpec>,
+    },
 }
 
 /// Concurrent header
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ConcurrentHeader {
+    /// The list of concurrent controls.
     pub control_list: Vec<ConcurrentControl>,
+    /// The optional mask expression.
     pub mask: Option<Box<ExprNode>>,
 }
 
@@ -552,9 +665,13 @@ pub struct ConcurrentHeader {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ConcurrentControl {
+    /// The index variable name.
     pub name: String,
+    /// The start value expression.
     pub start: Box<ExprNode>,
+    /// The end value expression.
     pub end: Box<ExprNode>,
+    /// The optional step value expression.
     pub step: Option<Box<ExprNode>>,
 }
 
@@ -576,9 +693,13 @@ pub enum LocalitySpec {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SelectCaseNode {
+    /// The expression to match against cases.
     pub expression: Box<ExprNode>,
+    /// The list of case blocks.
     pub cases: Vec<CaseConstruct>,
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -587,7 +708,9 @@ pub struct SelectCaseNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CaseConstruct {
+    /// The case selector (specific values or default).
     pub selector: CaseSelector,
+    /// The statements in this case block.
     pub body: Vec<ExecutableStmt>,
 }
 
@@ -615,10 +738,15 @@ pub enum CaseValue {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WhereConstructNode {
+    /// The mask expression for the where block.
     pub mask: Box<ExprNode>,
+    /// The statements in the where block.
     pub where_body: Vec<ExecutableStmt>,
+    /// The else-where blocks with optional masks and statements.
     pub else_where_parts: Vec<(Option<Box<ExprNode>>, Vec<ExecutableStmt>)>,
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -627,9 +755,13 @@ pub struct WhereConstructNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ForallConstructNode {
+    /// The concurrent header with control list and optional mask.
     pub header: ConcurrentHeader,
+    /// The statements in the forall body.
     pub body: Vec<ExecutableStmt>,
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -638,9 +770,13 @@ pub struct ForallConstructNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AssociateConstructNode {
+    /// The list of associations.
     pub associates: Vec<Associate>,
+    /// The statements in the associate body.
     pub body: Vec<ExecutableStmt>,
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -649,7 +785,9 @@ pub struct AssociateConstructNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Associate {
+    /// The name of the associate.
     pub name: String,
+    /// The expression to associate with.
     pub expression: Box<ExprNode>,
 }
 
@@ -657,9 +795,13 @@ pub struct Associate {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BlockConstructNode {
+    /// The specification statements in the block.
     pub specification_part: Vec<SpecificationStmt>,
+    /// The executable statements in the block.
     pub execution_part: Vec<ExecutableStmt>,
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -668,8 +810,11 @@ pub struct BlockConstructNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CriticalConstructNode {
+    /// The statements in the critical section.
     pub body: Vec<ExecutableStmt>,
+    /// The optional construct name.
     pub name: Option<String>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -678,8 +823,11 @@ pub struct CriticalConstructNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AllocateNode {
+    /// The objects to allocate.
     pub objects: Vec<Allocation>,
+    /// The allocation options.
     pub options: Vec<AllocOpt>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -688,7 +836,9 @@ pub struct AllocateNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Allocation {
+    /// The variable to allocate.
     pub variable: Box<ExprNode>,
+    /// The optional array specification.
     pub array_spec: Option<Vec<Dimension>>,
 }
 
@@ -710,8 +860,11 @@ pub enum AllocOpt {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeallocateNode {
+    /// The objects to deallocate.
     pub objects: Vec<Box<ExprNode>>,
+    /// The deallocation options.
     pub options: Vec<DeallocOpt>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -730,7 +883,9 @@ pub enum DeallocOpt {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NullifyNode {
+    /// The pointer objects to nullify.
     pub pointers: Vec<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -739,8 +894,11 @@ pub struct NullifyNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StopNode {
+    /// The optional stop code expression.
     pub stop_code: Option<Box<ExprNode>>,
+    /// The optional quiet expression.
     pub quiet: Option<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -749,7 +907,9 @@ pub struct StopNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ReturnNode {
+    /// The optional return expression.
     pub expression: Option<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -758,8 +918,11 @@ pub struct ReturnNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ReadNode {
+    /// The I/O control specifications.
     pub io_control_spec: Vec<IoControlSpec>,
+    /// The input items to read into.
     pub input_items: Vec<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -768,8 +931,11 @@ pub struct ReadNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WriteNode {
+    /// The I/O control specifications.
     pub io_control_spec: Vec<IoControlSpec>,
+    /// The output items to write.
     pub output_items: Vec<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -778,8 +944,11 @@ pub struct WriteNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PrintNode {
+    /// The optional format expression.
     pub format: Option<Box<ExprNode>>,
+    /// The output items to print.
     pub output_items: Vec<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -830,8 +999,11 @@ pub enum ExprNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LiteralNode {
+    /// The literal value as a string.
     pub value: String,
+    /// The kind of literal (integer, real, complex, character, logical).
     pub kind: LiteralKind,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -856,8 +1028,11 @@ pub enum LiteralKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ArrayElementNode {
+    /// The name of the array.
     pub name: String,
+    /// The subscript expressions.
     pub subscripts: Vec<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -866,8 +1041,11 @@ pub struct ArrayElementNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FunctionReferenceNode {
+    /// The name of the function being referenced.
     pub name: String,
+    /// The arguments passed to the function.
     pub arguments: Vec<Box<ExprNode>>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -876,8 +1054,11 @@ pub struct FunctionReferenceNode {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnaryOpNode {
+    /// The unary operator.
     pub operator: UnaryOperator,
+    /// The operand expression.
     pub operand: Box<ExprNode>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -898,9 +1079,13 @@ pub enum UnaryOperator {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BinaryOpNode {
+    /// The binary operator.
     pub operator: BinaryOperator,
+    /// The left-hand side expression.
     pub left: Box<ExprNode>,
+    /// The right-hand side expression.
     pub right: Box<ExprNode>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
@@ -947,8 +1132,11 @@ pub enum BinaryOperator {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructureConstructorNode {
+    /// The name of the derived type being constructed.
     pub type_name: String,
+    /// The component initializers as (name, value) pairs.
     pub args: Vec<(Option<String>, Box<ExprNode>)>,
+    /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
