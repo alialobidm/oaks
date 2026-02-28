@@ -6,6 +6,7 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
+/// Element type definitions for Jinja parser.
 pub mod element_type;
 use crate::{
     language::JinjaLanguage,
