@@ -1,11 +1,13 @@
 #![doc = include_str!("readme.md")]
 use oak_core::{Language, LanguageCategory};
 
+/// Rhombus language configuration and metadata.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RhombusLanguage {}
 
 impl RhombusLanguage {
+    /// Creates a new RhombusLanguage instance.
     pub fn new() -> Self {
         Self {}
     }

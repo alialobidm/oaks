@@ -1,5 +1,6 @@
 //! Parser implementation for the Rhombus language.
 
+/// Element type definitions for Rhombus parser.
 pub mod element_type;
 
 use crate::{

@@ -18,10 +18,10 @@ pub(crate) fn parse_expression_statement<'a, S: Source + ?Sized, P: Pratt<JavaLa
 }
 
 /// Parse an anonymous class expression
-pub(crate) fn parse_anonymous_class<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_anonymous_class<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + super::declaration::DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     let cp = state.checkpoint();
-    super::declaration::parse_type(state)?;
+    parser.parse_type(state)?;
     skip_trivia(state);
 
     if state.at(LeftParen) {
@@ -64,7 +64,7 @@ pub(crate) fn skip_trivia<'a, S: Source + ?Sized>(state: &mut State<'a, S>) {
 }
 
 /// Pratt parser primary expression handler
-pub(crate) fn primary<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(parser: &P, state: &mut State<'a, S>) -> &'a GreenNode<'a, JavaLanguage> {
+pub(crate) fn primary<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + super::declaration::DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> &'a GreenNode<'a, JavaLanguage> {
     use JavaTokenType::*;
     skip_trivia(state);
     let cp = state.checkpoint();
@@ -86,7 +86,7 @@ pub(crate) fn primary<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(p
         Some(New) => {
             state.bump();
             skip_trivia(state);
-            super::declaration::parse_type(state).ok();
+            parser.parse_type(state).ok();
             skip_trivia(state);
             if state.at(LeftBracket) {
                 while state.at(LeftBracket) {
@@ -138,7 +138,7 @@ pub(crate) fn primary<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(p
 }
 
 /// Pratt parser prefix expression handler
-pub(crate) fn prefix<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(parser: &P, state: &mut State<'a, S>) -> &'a GreenNode<'a, JavaLanguage> {
+pub(crate) fn prefix<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + super::declaration::DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> &'a GreenNode<'a, JavaLanguage> {
     use JavaTokenType::*;
     skip_trivia(state);
     let cp = state.checkpoint();
@@ -152,7 +152,7 @@ pub(crate) fn prefix<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(pa
             let snapshot = state.checkpoint();
             state.bump();
             skip_trivia(state);
-            if super::declaration::parse_type(state).is_ok() {
+            if parser.parse_type(state).is_ok() {
                 skip_trivia(state);
                 if state.eat(RightParen) {
                     skip_trivia(state);
@@ -174,7 +174,7 @@ pub(crate) fn prefix<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(pa
 }
 
 /// Pratt parser infix expression handler
-pub(crate) fn infix<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + ?Sized>(parser: &P, state: &mut State<'a, S>, left: &'a GreenNode<'a, JavaLanguage>, min_precedence: u8) -> Option<&'a GreenNode<'a, JavaLanguage>> {
+pub(crate) fn infix<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + super::declaration::DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>, left: &'a GreenNode<'a, JavaLanguage>, min_precedence: u8) -> Option<&'a GreenNode<'a, JavaLanguage>> {
     use JavaTokenType::*;
     skip_trivia(state);
     let kind = state.peek_kind()?;

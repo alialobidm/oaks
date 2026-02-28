@@ -22,6 +22,7 @@ impl<'config> RhombusBuilder<'config> {
         Self { config }
     }
 
+    /// Builds a RhombusRoot AST node from a green tree and source text.
     pub fn build_root(&self, green_tree: &oak_core::GreenNode<RhombusLanguage>, source_text: &oak_core::SourceText) -> Result<crate::ast::RhombusRoot, oak_core::OakError> {
         Ok(crate::ast::RhombusRoot { expressions: vec![] })
     }

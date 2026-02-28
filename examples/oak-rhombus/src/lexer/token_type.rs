@@ -1,5 +1,6 @@
 use oak_core::{Token, TokenType, UniversalTokenRole};
 
+/// Token type for Rhombus lexer output.
 pub type RhombusToken = Token<RhombusTokenType>;
 
 impl TokenType for RhombusTokenType {

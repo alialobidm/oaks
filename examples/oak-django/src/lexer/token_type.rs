@@ -196,6 +196,7 @@ impl DjangoTokenType {
         )
     }
 
+    /// Returns true if this token type is trivia (whitespace, newline, or comment).
     pub fn is_trivia(&self) -> bool {
         matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }
