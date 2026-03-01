@@ -1,7 +1,7 @@
 use crate::{
     ValkyrieLanguage,
     ast::*,
-    lexer::token_type::ValkyrieTokenType,
+    lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
     parser::{element_type::ValkyrieElementType, parse_string_segments},
     builder::{ValkyrieBuilder, text},
 };
@@ -541,6 +541,7 @@ impl<'config> ValkyrieBuilder<'config> {
 
     pub(crate) fn build_loop<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
+        let mut kind = LoopKind::default();
         let mut label = None;
         let mut pattern = None;
         let mut condition = None;
@@ -552,6 +553,12 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
                     ValkyrieTokenType::Label => {
                         label = Some(text(source, t.span));
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::For) => {
+                        kind = LoopKind::For;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Loop) => {
+                        kind = LoopKind::Loop;
                     }
                     _ => {}
                 },
@@ -574,7 +581,7 @@ impl<'config> ValkyrieBuilder<'config> {
 
         let body = body.ok_or_else(|| source.syntax_error("Missing loop body".to_string(), span.start))?;
 
-        Ok(Expr::Loop { label, pattern, condition, body, span })
+        Ok(Expr::Loop { kind, label, pattern, condition, body, span })
     }
 
     pub(crate) fn build_return<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {

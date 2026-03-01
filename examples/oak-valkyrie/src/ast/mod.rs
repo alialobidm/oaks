@@ -17,14 +17,20 @@ pub enum LoopKind {
     For,
 }
 
-/// Class keyword kind for deprecation warnings.
+/// Structure keyword kind for class-like definitions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub enum ClassKind {
-    /// Using `class` keyword (preferred).
+pub enum StructureKind {
+    /// Using `class` keyword.
     #[default]
     Class,
     /// Using `struct` keyword (deprecated, use `class` instead).
     Struct,
+    /// Using `structure` keyword.
+    Structure,
+    /// Using `widget` keyword.
+    Widget,
+    /// Using `trait` keyword.
+    Trait,
 }
 
 /// Enums keyword kind for deprecation warnings.
@@ -105,6 +111,7 @@ pub struct Parent {
 /// A class declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Class {
+    pub kind: StructureKind,
     pub name: Identifier,
     pub generics: Vec<GenericParam>,
     pub parents: Vec<Parent>,
@@ -125,6 +132,7 @@ pub struct Flags {
 /// An enum declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Enums {
+    pub kind: EnumsKind,
     pub name: Identifier,
     pub generics: Vec<GenericParam>,
     pub variants: Vec<EnumVariant>,

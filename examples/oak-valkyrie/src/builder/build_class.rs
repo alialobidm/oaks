@@ -1,8 +1,8 @@
 use crate::{
     ValkyrieLanguage,
-    ast::{Class, Enums, Flags, Identifier, Item, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
+    ast::{Class, Enums, EnumsKind, Flags, Identifier, Item, StructureKind, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
     builder::{ValkyrieBuilder, text},
-    lexer::token_type::ValkyrieTokenType,
+    lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
     parser::element_type::ValkyrieElementType,
 };
 use oak_core::{OakError, RedNode, RedTree, Source};
@@ -10,6 +10,7 @@ use oak_core::{OakError, RedNode, RedTree, Source};
 impl<'config> ValkyrieBuilder<'config> {
     pub(crate) fn build_class<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Class, OakError> {
         let span = node.span();
+        let mut kind = StructureKind::default();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut generics = Vec::new();
         let mut annotations = Vec::new();
@@ -23,6 +24,21 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieTokenType::Identifier => {
                         let t_text = text(source, t.span);
                         name = Identifier { name: t_text, span: t.span };
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Class) => {
+                        kind = StructureKind::Class;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Struct) => {
+                        kind = StructureKind::Struct;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Structure) => {
+                        kind = StructureKind::Structure;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Widget) => {
+                        kind = StructureKind::Widget;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Trait) => {
+                        kind = StructureKind::Trait;
                     }
                     _ => {}
                 },
@@ -102,7 +118,7 @@ impl<'config> ValkyrieBuilder<'config> {
                 },
             }
         }
-        Ok(Class { name, generics, annotations, parents, items, span })
+        Ok(Class { kind, name, generics, annotations, parents, items, span })
     }
 
     pub(crate) fn build_flags<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Flags, OakError> {
@@ -147,6 +163,7 @@ impl<'config> ValkyrieBuilder<'config> {
 
     pub(crate) fn build_enums<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Enums, OakError> {
         let span = node.span();
+        let mut kind = EnumsKind::default();
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut generics = Vec::new();
         let mut annotations = Vec::new();
@@ -159,6 +176,15 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieTokenType::Identifier => {
                         let t_text = text(source, t.span);
                         name = Identifier { name: t_text, span: t.span }
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Enums) => {
+                        kind = EnumsKind::Enums;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Enum) => {
+                        kind = EnumsKind::Enum;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Unity) => {
+                        kind = EnumsKind::Unity;
                     }
                     _ => {}
                 },
@@ -186,7 +212,7 @@ impl<'config> ValkyrieBuilder<'config> {
                 },
             }
         }
-        Ok(Enums { name, generics, variants, annotations, span })
+        Ok(Enums { kind, name, generics, variants, annotations, span })
     }
 
     pub(crate) fn build_enum_variant<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<EnumVariant, OakError> {

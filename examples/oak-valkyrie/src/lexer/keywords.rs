@@ -21,6 +21,12 @@ pub enum ValkyrieKeywords {
     /// class Point { x: f64, y: f64 }
     /// ```
     Class,
+    /// Declare a structure (deprecated, use `structure` instead).
+    ///
+    /// ```v
+    /// struct Point { x: f64, y: f64 }
+    /// ```
+    Struct,
     /// Declare a value type (immutable structure).
     ///
     /// ```v
@@ -51,6 +57,18 @@ pub enum ValkyrieKeywords {
     /// enums Priority { High = 3, Normal = 2, Low = 1 }
     /// ```
     Enums,
+    /// Declare an enum (deprecated, use `unity` instead).
+    ///
+    /// ```v
+    /// enum Priority { High, Normal, Low }
+    /// ```
+    Enum,
+    /// Declare a unity (preferred alternative to enum).
+    ///
+    /// ```v
+    /// unity Option<T> { Some(T), None }
+    /// ```
+    Unity,
     /// Declare a union.
     ///
     /// ```v
