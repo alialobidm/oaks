@@ -32,6 +32,8 @@ pub enum ValkyrieElementType {
     Namespace,
     /// Class node.
     Class,
+    /// Structure node (value type).
+    Structure,
     /// Parameter list node.
     ParameterList,
     /// Block expression node.
@@ -90,6 +92,8 @@ pub enum ValkyrieElementType {
     CatchExpression,
     /// Resume expression node.
     ResumeExpression,
+    /// With expression node (functional record update).
+    WithExpression,
     /// Apply block node.
     ApplyBlock,
     /// Object expression node.
@@ -112,6 +116,8 @@ pub enum ValkyrieElementType {
     Enums,
     /// Trait definition node.
     Trait,
+    /// Associated type node.
+    AssociatedType,
     /// Impl definition node.
     Impl,
     /// Field definition node.
@@ -120,6 +126,8 @@ pub enum ValkyrieElementType {
     Method,
     /// Variant definition node.
     Variant,
+    /// Property definition node (getter/setter).
+    Property,
     /// Flags definition node.
     Flags,
     /// Widget definition node.

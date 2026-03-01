@@ -177,6 +177,7 @@ impl crate::lexer::ValkyrieLexer<'_> {
                     "namespace" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Namespace),
                     "using" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Using),
                     "class" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Class),
+                    "structure" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Structure),
                     "singleton" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Singleton),
                     "trait" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Trait),
                     "flags" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Flags),
@@ -214,6 +215,8 @@ impl crate::lexer::ValkyrieLexer<'_> {
                     "resume" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Resume),
                     "from" => ValkyrieTokenType::Keyword(ValkyrieKeywords::From),
                     "as" => ValkyrieTokenType::Keyword(ValkyrieKeywords::As),
+                    "get" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Get),
+                    "set" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Set),
                     "_" => ValkyrieTokenType::Underscore,
                     _ => ValkyrieTokenType::Identifier,
                 };

@@ -21,6 +21,12 @@ pub enum ValkyrieKeywords {
     /// class Point { x: f64, y: f64 }
     /// ```
     Class,
+    /// Declare a value type (immutable structure).
+    ///
+    /// ```v
+    /// structure Point { x: f64, y: f64 }
+    /// ```
+    Structure,
     /// Declare a singleton.
     ///
     /// ```v
@@ -224,4 +230,16 @@ pub enum ValkyrieKeywords {
     /// x as T
     /// ```
     As,
+    /// Getter property.
+    ///
+    /// ```v
+    /// get area(self) -> f64 { self.width * self.height }
+    /// ```
+    Get,
+    /// Setter property.
+    ///
+    /// ```v
+    /// set width(mut self, value: f64) { self.width = value }
+    /// ```
+    Set,
 }

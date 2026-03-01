@@ -7,6 +7,38 @@ pub struct ValkyrieRoot {
 /// Source code span
 pub type Span = oak_core::Range<usize>;
 
+/// Loop keyword kind for deprecation warnings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum LoopKind {
+    /// Using `loop` keyword (preferred).
+    #[default]
+    Loop,
+    /// Using `for` keyword (deprecated, use `loop` instead).
+    For,
+}
+
+/// Class keyword kind for deprecation warnings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum ClassKind {
+    /// Using `class` keyword (preferred).
+    #[default]
+    Class,
+    /// Using `struct` keyword (deprecated, use `class` instead).
+    Struct,
+}
+
+/// Enums keyword kind for deprecation warnings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum EnumsKind {
+    /// Using `enums` keyword (preferred).
+    #[default]
+    Enums,
+    /// Using `enum` keyword (deprecated, use `unity` instead).
+    Enum,
+    /// Using `unity` keyword (preferred alternative).
+    Unity,
+}
+
 /// An identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Identifier {
@@ -32,6 +64,8 @@ pub struct NamePath {
 pub enum Item {
     Namespace(Namespace),
     Class(Class),
+    /// A value type structure (immutable, copied on assignment).
+    Structure(Class),
     Flags(Flags),
     Enums(Enums),
     Trait(Trait),
@@ -42,6 +76,7 @@ pub enum Item {
     Statement(Statement),
     Variant(Variant),
     Effect(Effect),
+    Property(Property),
     TemplateText { content: String, span: Span },
     TemplateControl { items: Vec<Item>, span: Span },
     TemplateInterpolation { expr: Expr, span: Span },
@@ -56,12 +91,23 @@ pub struct Namespace {
     pub span: Span,
 }
 
+/// A parent class with optional alias for renamed inheritance.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+pub struct Parent {
+    /// Optional alias for disambiguation (e.g., "primary" in "primary: Parent1").
+    pub alias: Option<Identifier>,
+    /// Parent class name path.
+    pub name: NamePath,
+    /// Source span.
+    pub span: Span,
+}
+
 /// A class declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Class {
     pub name: Identifier,
     pub generics: Vec<GenericParam>,
-    pub parents: Vec<NamePath>,
+    pub parents: Vec<Parent>,
     pub items: Vec<Item>,
     pub annotations: Vec<Attribute>,
     pub span: Span,
@@ -92,6 +138,17 @@ pub struct Trait {
     pub name: Identifier,
     pub generics: Vec<GenericParam>,
     pub methods: Vec<Function>,
+    pub associated_types: Vec<AssociatedType>,
+    pub annotations: Vec<Attribute>,
+    pub span: Span,
+}
+
+/// An associated type declaration in a trait.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+pub struct AssociatedType {
+    pub name: Identifier,
+    pub bounds: Vec<Type>,
+    pub default: Option<Type>,
     pub annotations: Vec<Attribute>,
     pub span: Span,
 }
@@ -157,6 +214,36 @@ pub struct Effect {
     pub span: Span,
 }
 
+/// The kind of a property (getter or setter).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PropertyKind {
+    /// A getter property.
+    Getter,
+    /// A setter property.
+    Setter,
+}
+
+/// A property declaration (getter or setter).
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Property {
+    /// The name of the property.
+    pub name: Identifier,
+    /// Whether this is a getter or setter.
+    pub kind: PropertyKind,
+    /// Generic parameters for the property.
+    pub generics: Vec<GenericParam>,
+    /// Annotations on the property.
+    pub annotations: Vec<Attribute>,
+    /// Parameters for the property (self for getter, self + value for setter).
+    pub params: Vec<Param>,
+    /// Return type for getter, None for setter.
+    pub return_type: Option<Type>,
+    /// The body of the property.
+    pub body: Block,
+    /// Source span.
+    pub span: Span,
+}
+
 /// A statement
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Statement {
@@ -210,13 +297,29 @@ pub enum Expr {
     },
     If { pattern: Option<Pattern>, condition: Box<Expr>, then_branch: Block, else_branch: Option<Block>, span: Span },
     Match { scrutinee: Box<Expr>, arms: Vec<MatchArm>, span: Span },
-    Loop { label: Option<String>, pattern: Option<Pattern>, condition: Option<Box<Expr>>, body: Block, span: Span },
+    Loop { kind: LoopKind, label: Option<String>, pattern: Option<Pattern>, condition: Option<Box<Expr>>, body: Block, span: Span },
     Return { expr: Option<Box<Expr>>, span: Span },
     Break { label: Option<String>, expr: Option<Box<Expr>>, span: Span },
     Continue { label: Option<String>, span: Span },
     Yield { expr: Option<Box<Expr>>, yield_from: bool, span: Span },
     Raise { expr: Box<Expr>, span: Span },
     Catch { expr: Box<Expr>, arms: Vec<MatchArm>, span: Span },
+    /// With expression for functional record updates.
+    ///
+    /// Creates a new record by copying an existing one and updating specified fields.
+    ///
+    /// ```v
+    /// let p2 = p1.with { x: 20.0, y: 30.0 }
+    /// let updated = config.with { timeout: 60 }
+    /// ```
+    With {
+        /// The base expression to copy from.
+        base: Box<Expr>,
+        /// Field updates to apply.
+        updates: Vec<(Identifier, Expr)>,
+        /// Source span.
+        span: Span,
+    },
 }
 
 /// A block of statements
