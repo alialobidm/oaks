@@ -1,6 +1,6 @@
 use crate::{
     ValkyrieLanguage,
-    ast::{Class, Enums, EnumsKind, Flags, Identifier, Item, StructureKind, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
+    ast::{Class, Enums, EnumsKind, Flags, Identifier, Item, Parent, StructureKind, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
     builder::{ValkyrieBuilder, text},
     lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
     parser::element_type::ValkyrieElementType,
@@ -50,13 +50,23 @@ impl<'config> ValkyrieBuilder<'config> {
                         generics = self.build_generic_params(n, source)?;
                     }
                     ValkyrieElementType::NamePath => {
-                        parents.push(self.build_name_path(n, source)?);
+                        let parent = Parent {
+                            alias: None,
+                            name: self.build_name_path(n, source)?,
+                            span: n.span(),
+                        };
+                        parents.push(parent);
                     }
                     ValkyrieElementType::Type => {
                         for child in n.children() {
                             if let RedTree::Node(inner) = child {
                                 if inner.green.kind == ValkyrieElementType::NamePath {
-                                    parents.push(self.build_name_path(inner, source)?);
+                                    let parent = Parent {
+                                        alias: None,
+                                        name: self.build_name_path(inner, source)?,
+                                        span: inner.span(),
+                                    };
+                                    parents.push(parent);
                                 }
                             }
                         }
@@ -349,6 +359,7 @@ impl<'config> ValkyrieBuilder<'config> {
         let mut generics = Vec::new();
         let mut annotations = Vec::new();
         let mut methods = Vec::new();
+        let mut associated_types = Vec::new();
 
         for child in node.children() {
             match child {
@@ -387,7 +398,7 @@ impl<'config> ValkyrieBuilder<'config> {
                 },
             }
         }
-        Ok(Trait { name, generics, methods, annotations, span })
+        Ok(Trait { name, generics, methods, associated_types, annotations, span })
     }
 
     pub(crate) fn build_widget<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Widget, OakError> {
