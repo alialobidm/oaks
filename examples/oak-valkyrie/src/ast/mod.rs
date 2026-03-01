@@ -118,6 +118,8 @@ pub struct Class {
     pub items: Vec<Item>,
     pub annotations: Vec<Attribute>,
     pub span: Span,
+    /// Whether this class is abstract (cannot be instantiated directly).
+    pub is_abstract: bool,
 }
 
 /// A flags (bitflags) declaration
@@ -189,6 +191,8 @@ pub struct MicroDefinition {
     pub body: Block,
     pub annotations: Vec<Attribute>,
     pub span: Span,
+    /// Whether this function is abstract (has no body implementation).
+    pub is_abstract: bool,
 }
 
 /// A type function declaration
@@ -414,6 +418,8 @@ pub struct Function{
     pub body: Option<Block>,
     pub annotations: Vec<Attribute>,
     pub span: Span,
+    /// Whether this function is abstract (has no body implementation).
+    pub is_abstract: bool,
 }
 
 /// An enum variant

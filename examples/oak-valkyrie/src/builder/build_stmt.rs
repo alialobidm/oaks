@@ -1,7 +1,7 @@
 use crate::{
     ValkyrieLanguage,
     ast::*,
-    lexer::token_type::ValkyrieTokenType,
+    lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
     parser::element_type::ValkyrieElementType,
     builder::{ValkyrieBuilder, text},
 };
@@ -156,6 +156,7 @@ impl<'config> ValkyrieBuilder<'config> {
         let mut params = Vec::new();
         let mut return_type = None;
         let mut body = None;
+        let mut is_abstract = false;
 
         for child in node.children() {
             match child {
@@ -166,6 +167,9 @@ impl<'config> ValkyrieBuilder<'config> {
                             name.name = text(source, t.span);
                             name.span = t.span;
                         }
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Abstract) => {
+                        is_abstract = true;
                     }
                     _ => {}
                 },
@@ -191,7 +195,7 @@ impl<'config> ValkyrieBuilder<'config> {
             }
         }
 
-        Ok(Function { name, generics, params, return_type, body, annotations, span })
+        Ok(Function { name, generics, params, return_type, body, annotations, span, is_abstract })
     }
 
     pub(crate) fn build_attribute<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Attribute, OakError> {

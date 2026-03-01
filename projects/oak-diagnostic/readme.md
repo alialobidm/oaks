@@ -3,16 +3,56 @@
 [![Crates.io](https://img.shields.io/crates/v/oak-diagnostic.svg)](https://crates.io/crates/oak-diagnostic)
 [![Documentation](https://docs.rs/oak-diagnostic/badge.svg)](https://docs.rs/oak-diagnostic)
 
-**Core component of the Oak ecosystem** — Providing a solid foundation for building modern programming language toolchains.
+**Diagnostic Reporting for Oak Languages** — Structured error and warning reporting for language analysis tools.
 
 ## 🎯 Project Vision
 
-`oak-diagnostic` is a key module in the Oak ecosystem, focusing on providing efficient and scalable low-level functionality to help developers quickly build robust programming language-related tools.
+Diagnostics are the feedback mechanism that helps developers fix issues in their code. `oak-diagnostic` provides a unified infrastructure for reporting errors, warnings, and hints with precise source locations and actionable messages.
 
 ## ✨ Core Features
 
-- **⚡ Blazing Fast**: Fully utilizes Rust's performance advantages to achieve sub-millisecond parsing response times.
-- **🔄 Incremental Parsing**: Built-in support for partial updates, demonstrating extremely high efficiency when processing large files.
-- **🌳 Structured Output**: Provides a clear, easy-to-traverse syntax tree or data structure.
-- **🛡️ Robustness**: Features a comprehensive error recovery mechanism, ensuring normal operation even when input is incomplete.
-- **🧩 Easy Integration**: Designed with high cohesion and low coupling, allowing for quick integration into existing Rust projects.
+- **📊 Structured Diagnostics**: Rich diagnostic types with severity, message, and location.
+- **📍 Precise Locations**: Byte-offset based ranges for accurate error highlighting.
+- **🔧 Related Information**: Support for related locations and additional context.
+- **🎯 Severity Levels**: Error, warning, information, and hint severity levels.
+- **🔄 Serde Support**: Optional serialization for LSP integration.
+
+## 🏗️ Architecture
+
+### Diagnostic Types
+
+```rust
+pub enum DiagnosticSeverity {
+    Error,       // Blocking issues
+    Warning,     // Potential problems
+    Information, // Informational messages
+    Hint,        // Suggestions for improvement
+}
+```
+
+### Integration with Oak Core
+
+Diagnostics integrate with `oak-core`'s error types:
+
+```rust
+use oak_diagnostic::{Diagnostic, DiagnosticSeverity};
+use oak_core::Range;
+
+let diagnostic = Diagnostic {
+    range: Range { start: 10, end: 20 },
+    severity: DiagnosticSeverity::Error,
+    message: "Unexpected token".to_string(),
+    related_info: vec![],
+};
+```
+
+## 🔗 Integration
+
+`oak-diagnostic` is used by:
+- `oak-lsp` for `textDocument/publishDiagnostics`
+- Language parsers for syntax error reporting
+- Static analysis tools for linting
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.

@@ -16,6 +16,7 @@ impl<'config> ValkyrieBuilder<'config> {
         let mut annotations = Vec::new();
         let mut parents = Vec::new();
         let mut items = Vec::new();
+        let mut is_abstract = false;
 
         for child in node.children() {
             match child {
@@ -27,6 +28,9 @@ impl<'config> ValkyrieBuilder<'config> {
                     }
                     ValkyrieTokenType::Keyword(ValkyrieKeywords::Class) => {
                         kind = StructureKind::Class;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Abstract) => {
+                        is_abstract = true;
                     }
                     ValkyrieTokenType::Keyword(ValkyrieKeywords::Struct) => {
                         kind = StructureKind::Struct;
@@ -128,7 +132,7 @@ impl<'config> ValkyrieBuilder<'config> {
                 },
             }
         }
-        Ok(Class { kind, name, generics, annotations, parents, items, span })
+        Ok(Class { kind, name, generics, annotations, parents, items, span, is_abstract })
     }
 
     pub(crate) fn build_flags<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Flags, OakError> {

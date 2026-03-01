@@ -21,6 +21,16 @@ pub enum ValkyrieKeywords {
     /// class Point { x: f64, y: f64 }
     /// ```
     Class,
+    /// Declare an abstract class or abstract method.
+    ///
+    /// ```v
+    /// abstract class Shape { ... }
+    /// ```
+    ///
+    /// ```v
+    /// abstract micro method()
+    /// ```
+    Abstract,
     /// Declare a structure (deprecated, use `structure` instead).
     ///
     /// ```v

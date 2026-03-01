@@ -177,6 +177,7 @@ impl crate::lexer::ValkyrieLexer<'_> {
                     "namespace" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Namespace),
                     "using" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Using),
                     "class" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Class),
+                    "abstract" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Abstract),
                     "struct" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Struct),
                     "structure" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Structure),
                     "singleton" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Singleton),

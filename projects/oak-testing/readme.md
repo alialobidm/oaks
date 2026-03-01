@@ -3,16 +3,50 @@
 [![Crates.io](https://img.shields.io/crates/v/oak-testing.svg)](https://crates.io/crates/oak-testing)
 [![Documentation](https://docs.rs/oak-testing/badge.svg)](https://docs.rs/oak-testing)
 
-**Core component of the Oak ecosystem** — Providing a solid foundation for building modern programming language toolchains.
+**Testing Utilities for Oak Parsers** — Helpers and macros for testing Oak language implementations.
 
 ## 🎯 Project Vision
 
-`oak-testing` is a key module in the Oak ecosystem, focusing on providing efficient and scalable low-level functionality to help developers quickly build robust programming language-related tools.
+Testing parsers requires specialized utilities for comparing syntax trees, checking error recovery, and validating incremental parsing. `oak-testing` provides these tools to make writing tests for Oak language parsers straightforward and maintainable.
 
 ## ✨ Core Features
 
-- **⚡ Blazing Fast**: Fully utilizes Rust's performance advantages to achieve sub-millisecond parsing response times.
-- **🔄 Incremental Parsing**: Built-in support for partial updates, demonstrating extremely high efficiency when processing large files.
-- **🌳 Structured Output**: Provides a clear, easy-to-traverse syntax tree or data structure.
-- **🛡️ Robustness**: Features a comprehensive error recovery mechanism, ensuring normal operation even when input is incomplete.
-- **🧩 Easy Integration**: Designed with high cohesion and low coupling, allowing for quick integration into existing Rust projects.
+- **🧪 Parse Testing**: Helpers for parsing and validating syntax trees.
+- **📊 Snapshot Testing**: Compare parsed output against expected snapshots.
+- **🔍 Error Checking**: Validate error recovery and diagnostic output.
+- **⚡ Incremental Testing**: Test incremental parsing behavior.
+- **📝 Macro Support**: Convenient macros for common test patterns.
+
+## 🏗️ Architecture
+
+### Test Helpers
+
+```rust
+use oak_testing::{assert_parse_ok, assert_parse_err};
+
+// Test successful parsing
+assert_parse_ok!(parser, "fn main() {}", expected_tree);
+
+// Test error recovery
+assert_parse_err!(parser, "fn main(}", expected_errors);
+```
+
+### Snapshot Testing
+
+```rust
+use oak_testing::snapshot_test;
+
+// Compare against stored snapshot
+snapshot_test!(parser, source_file, "tests/snapshots/test_name.snap");
+```
+
+## 🔗 Integration
+
+`oak-testing` is used by:
+- All Oak language parsers for unit tests
+- Integration tests for LSP features
+- Continuous integration pipelines
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.

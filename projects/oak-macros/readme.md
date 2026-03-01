@@ -3,16 +3,48 @@
 [![Crates.io](https://img.shields.io/crates/v/oak-macros.svg)](https://crates.io/crates/oak-macros)
 [![Documentation](https://docs.rs/oak-macros/badge.svg)](https://docs.rs/oak-macros)
 
-**Core component of the Oak ecosystem** — Providing a solid foundation for building modern programming language toolchains.
+**Procedural Macros for Oak** — Derive macros and helper attributes for Oak language implementations.
 
 ## 🎯 Project Vision
 
-`oak-macros` is a key module in the Oak ecosystem, focusing on providing efficient and scalable low-level functionality to help developers quickly build robust programming language-related tools.
+Procedural macros reduce boilerplate in language implementations. `oak-macros` provides derive macros and helper attributes that simplify implementing Oak traits and generating boilerplate code for language parsers.
 
 ## ✨ Core Features
 
-- **⚡ Blazing Fast**: Fully utilizes Rust's performance advantages to achieve sub-millisecond parsing response times.
-- **🔄 Incremental Parsing**: Built-in support for partial updates, demonstrating extremely high efficiency when processing large files.
-- **🌳 Structured Output**: Provides a clear, easy-to-traverse syntax tree or data structure.
-- **🛡️ Robustness**: Features a comprehensive error recovery mechanism, ensuring normal operation even when input is incomplete.
-- **🧩 Easy Integration**: Designed with high cohesion and low coupling, allowing for quick integration into existing Rust projects.
+- **🔧 Derive Macros**: Automatically implement common Oak traits.
+- **📝 Code Generation**: Generate repetitive code patterns.
+- **🎯 Type-Safe**: Compile-time verification of generated code.
+- **⚡ Zero Runtime Cost**: Macros expand at compile time.
+
+## 🏗️ Architecture
+
+### Available Macros
+
+| Macro | Purpose |
+|-------|---------|
+| `#[derive(Language)]` | Auto-implement the `Language` trait |
+| `json!` | JSON literal construction using oak-json |
+
+### Usage Example
+
+```rust
+use oak_macros::json;
+
+// Create JSON values with literal syntax
+let value = json!({
+    "name": "Oak",
+    "features": ["fast", "incremental"],
+    "version": 1
+});
+```
+
+## 🔗 Integration
+
+`oak-macros` is used by:
+- Language parser implementations
+- Test code generation
+- AST construction utilities
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.

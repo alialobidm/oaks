@@ -3,16 +3,46 @@
 [![Crates.io](https://img.shields.io/crates/v/oak-resolver.svg)](https://crates.io/crates/oak-resolver)
 [![Documentation](https://docs.rs/oak-resolver/badge.svg)](https://docs.rs/oak-resolver)
 
-**Core component of the Oak ecosystem** — Providing a solid foundation for building modern programming language toolchains.
+**Symbol Resolution for Oak Languages** — Cross-file symbol resolution and import handling for language analysis.
 
 ## 🎯 Project Vision
 
-`oak-resolver` is a key module in the Oak ecosystem, focusing on providing efficient and scalable low-level functionality to help developers quickly build robust programming language-related tools.
+Modern codebases span multiple files and modules. `oak-resolver` provides the infrastructure for resolving symbol references across file boundaries, handling imports, and building symbol indexes for workspace-wide analysis.
 
 ## ✨ Core Features
 
-- **⚡ Blazing Fast**: Fully utilizes Rust's performance advantages to achieve sub-millisecond parsing response times.
-- **🔄 Incremental Parsing**: Built-in support for partial updates, demonstrating extremely high efficiency when processing large files.
-- **🌳 Structured Output**: Provides a clear, easy-to-traverse syntax tree or data structure.
-- **🛡️ Robustness**: Features a comprehensive error recovery mechanism, ensuring normal operation even when input is incomplete.
-- **🧩 Easy Integration**: Designed with high cohesion and low coupling, allowing for quick integration into existing Rust projects.
+- **🔍 Cross-File Resolution**: Resolve symbols across multiple source files.
+- **📦 Import Handling**: Process import statements and module dependencies.
+- **📊 Symbol Indexing**: Build and query symbol indexes for fast lookups.
+- **🌐 Workspace Support**: Scale from single files to large projects.
+- **🔄 Incremental Updates**: Efficiently update resolution results on file changes.
+
+## 🏗️ Architecture
+
+### Resolution Process
+
+1. **Parse**: Parse source files into syntax trees.
+2. **Collect**: Extract symbol definitions from each file.
+3. **Index**: Build a workspace-wide symbol index.
+4. **Resolve**: Match references to their definitions.
+
+### Integration with VFS
+
+```rust
+use oak_resolver::Resolver;
+use oak_vfs::Vfs;
+
+let resolver = Resolver::new(&vfs);
+let definition = resolver.resolve_definition(uri, offset);
+```
+
+## 🔗 Integration
+
+`oak-resolver` integrates with:
+- `oak-vfs` for file system access
+- `oak-navigation` for definition/reference providers
+- `oak-lsp` for workspace symbol support
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.

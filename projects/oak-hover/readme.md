@@ -3,16 +3,57 @@
 [![Crates.io](https://img.shields.io/crates/v/oak-hover.svg)](https://crates.io/crates/oak-hover)
 [![Documentation](https://docs.rs/oak-hover/badge.svg)](https://docs.rs/oak-hover)
 
-**Core component of the Oak ecosystem** — Providing a solid foundation for building modern programming language toolchains.
+**Hover Information Provider for the Oak Ecosystem** — A lightweight, trait-based library for providing hover information (documentation, type info, etc.) in editors and IDEs.
 
 ## 🎯 Project Vision
 
-`oak-hover` is a key module in the Oak ecosystem, focusing on providing efficient and scalable low-level functionality to help developers quickly build robust programming language-related tools.
+Hover information is essential for modern developer experience — it provides instant feedback about symbols, types, and documentation without leaving the editor. `oak-hover` provides a simple, unified interface for implementing hover support in any Oak-based language parser, enabling seamless integration with LSP clients and other editor tooling.
 
 ## ✨ Core Features
 
-- **⚡ Blazing Fast**: Fully utilizes Rust's performance advantages to achieve sub-millisecond parsing response times.
-- **🔄 Incremental Parsing**: Built-in support for partial updates, demonstrating extremely high efficiency when processing large files.
-- **🌳 Structured Output**: Provides a clear, easy-to-traverse syntax tree or data structure.
-- **🛡️ Robustness**: Features a comprehensive error recovery mechanism, ensuring normal operation even when input is incomplete.
-- **🧩 Easy Integration**: Designed with high cohesion and low coupling, allowing for quick integration into existing Rust projects.
+- **🎯 Trait-Based Design**: The `HoverProvider` trait provides a clean interface for implementing language-specific hover logic.
+- **📝 Markdown Support**: Hover content is returned as markdown strings, enabling rich formatting for documentation.
+- **📍 Range-Aware**: Optional range information allows editors to highlight the relevant span when showing hover.
+- **🔄 Serde Integration**: Optional serde support for easy serialization in LSP implementations.
+- **🧩 Zero Dependencies**: Minimal dependencies with optional serde support.
+
+## 🏗️ Architecture
+
+The crate provides two main types:
+
+### `Hover` Struct
+Represents hover information returned to the editor:
+- `contents`: Markdown-formatted hover content
+- `range`: Optional source range for the hover target
+
+### `HoverProvider` Trait
+Implement this trait to provide hover information for your language:
+
+```rust
+use oak_hover::{Hover, HoverProvider};
+use oak_core::{Language, tree::RedNode};
+use core::range::Range;
+
+struct MyHoverProvider;
+
+impl<L: Language> HoverProvider<L> for MyHoverProvider {
+    fn hover(&self, root: &RedNode<L>, range: Range<usize>) -> Option<Hover> {
+        // Find the node at the given range and return hover info
+        Some(Hover {
+            contents: "My hover content".to_string(),
+            range: Some(range),
+        })
+    }
+}
+```
+
+## 🔗 Integration
+
+`oak-hover` is designed to work seamlessly with:
+- `oak-lsp` for full Language Server Protocol support
+- `oak-core` for syntax tree traversal
+- Any editor that supports hover information display
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.

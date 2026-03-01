@@ -3,16 +3,50 @@
 [![Crates.io](https://img.shields.io/crates/v/oak-visualize.svg)](https://crates.io/crates/oak-visualize)
 [![Documentation](https://docs.rs/oak-visualize/badge.svg)](https://docs.rs/oak-visualize)
 
-**Core component of the Oak ecosystem** — Providing a solid foundation for building modern programming language toolchains.
+**AST Visualization for Oak Languages** — Render syntax trees as graphs and diagrams for debugging and documentation.
 
 ## 🎯 Project Vision
 
-`oak-visualize` is a key module in the Oak ecosystem, focusing on providing efficient and scalable low-level functionality to help developers quickly build robust programming language-related tools.
+Visualizing syntax trees helps developers understand parser behavior and debug issues. `oak-visualize` provides tools for rendering Oak syntax trees as visual graphs, making it easier to inspect tree structure, debug parsing issues, and generate documentation.
 
 ## ✨ Core Features
 
-- **⚡ Blazing Fast**: Fully utilizes Rust's performance advantages to achieve sub-millisecond parsing response times.
-- **🔄 Incremental Parsing**: Built-in support for partial updates, demonstrating extremely high efficiency when processing large files.
-- **🌳 Structured Output**: Provides a clear, easy-to-traverse syntax tree or data structure.
-- **🛡️ Robustness**: Features a comprehensive error recovery mechanism, ensuring normal operation even when input is incomplete.
-- **🧩 Easy Integration**: Designed with high cohesion and low coupling, allowing for quick integration into existing Rust projects.
+- **📊 Graph Rendering**: Convert syntax trees to visual graph representations.
+- **🎨 Multiple Output Formats**: Support for various visualization formats (SVG, DOT, etc.).
+- **🔍 Tree Inspection**: Interactive exploration of tree structure.
+- **📝 Documentation Generation**: Generate visual documentation for language grammars.
+- **🧩 Language Agnostic**: Works with any Oak language parser.
+
+## 🏗️ Architecture
+
+### Visualization Output
+
+Generate visual representations of syntax trees:
+
+```rust
+use oak_visualize::TreeVisualizer;
+use oak_core::tree::RedNode;
+
+let visualizer = TreeVisualizer::new();
+let svg_output = visualizer.to_svg(&root);
+let dot_output = visualizer.to_dot(&root);
+```
+
+### Supported Formats
+
+| Format | Use Case |
+|--------|----------|
+| SVG | Web display, documentation |
+| DOT (Graphviz) | Further processing, research |
+| JSON | Tooling integration |
+
+## 🔗 Integration
+
+`oak-visualize` is used by:
+- Parser developers for debugging
+- Documentation generators
+- IDE extensions for tree inspection
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
