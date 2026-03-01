@@ -5,44 +5,30 @@
 
 **Symbol Resolution for Oak Languages** — Cross-file symbol resolution and import handling for language analysis.
 
-## 🎯 Project Vision
+## 🎯 Why oak-resolver?
 
-Modern codebases span multiple files and modules. `oak-resolver` provides the infrastructure for resolving symbol references across file boundaries, handling imports, and building symbol indexes for workspace-wide analysis.
+Modern codebases span multiple files and modules. `oak-resolver` provides the infrastructure for resolving symbol references across file boundaries, handling imports, and building symbol indexes.
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **🔍 Cross-File Resolution**: Resolve symbols across multiple source files.
-- **📦 Import Handling**: Process import statements and module dependencies.
-- **📊 Symbol Indexing**: Build and query symbol indexes for fast lookups.
-- **🌐 Workspace Support**: Scale from single files to large projects.
-- **🔄 Incremental Updates**: Efficiently update resolution results on file changes.
+- **🔍 Cross-File Resolution** — Resolve symbols across multiple source files
+- **📦 Import Handling** — Process import statements and module dependencies
+- **📊 Symbol Indexing** — Build and query symbol indexes for fast lookups
+- **🌐 Workspace Support** — Scale from single files to large projects
+- **🔄 Incremental Updates** — Efficiently update resolution on file changes
 
 ## 🏗️ Architecture
 
-### Resolution Process
+Resolution process: Parse → Collect → Index → Resolve
 
-1. **Parse**: Parse source files into syntax trees.
-2. **Collect**: Extract symbol definitions from each file.
-3. **Index**: Build a workspace-wide symbol index.
-4. **Resolve**: Match references to their definitions.
+## 🔗 Ecosystem Integration
 
-### Integration with VFS
+Integrates with `oak-vfs` for file access, `oak-navigation` for definition/reference providers, and `oak-lsp` for workspace symbol support.
 
-```rust
-use oak_resolver::Resolver;
-use oak_vfs::Vfs;
+## 📖 Documentation
 
-let resolver = Resolver::new(&vfs);
-let definition = resolver.resolve_definition(uri, offset);
-```
-
-## 🔗 Integration
-
-`oak-resolver` integrates with:
-- `oak-vfs` for file system access
-- `oak-navigation` for definition/reference providers
-- `oak-lsp` for workspace symbol support
+For usage examples and API details, see the [API documentation](https://docs.rs/oak-resolver).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.

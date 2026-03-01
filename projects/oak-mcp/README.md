@@ -5,17 +5,17 @@
 
 **Model Context Protocol Integration for Oak** — Enable AI assistants to understand and analyze code through the MCP standard.
 
-## 🎯 Project Vision
+## 🎯 Why oak-mcp?
 
-The Model Context Protocol (MCP) is an open standard that enables AI assistants to interact with development tools and codebases. `oak-mcp` bridges Oak's parsing capabilities with MCP, allowing AI agents to perform code analysis, navigation, and understanding tasks through a standardized interface.
+The Model Context Protocol (MCP) is an open standard that enables AI assistants to interact with development tools and codebases. `oak-mcp` bridges Oak's parsing capabilities with MCP, allowing AI agents to perform code analysis and understanding tasks.
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **🤖 MCP Server Implementation**: Provides a standard MCP server that exposes Oak's language analysis capabilities.
-- **📊 Code Analysis Tools**: Exposes parsing, symbol extraction, and navigation as MCP tools.
-- **🔍 Semantic Understanding**: AI assistants can query symbol definitions, references, and documentation.
-- **📁 Project-Wide Analysis**: Integration with `oak-vfs` for multi-file project understanding.
-- **🌐 Language Agnostic**: Works with any Oak language parser through the standard interface.
+- **🤖 MCP Server Implementation** — Standard MCP server exposing Oak's language analysis
+- **📊 Code Analysis Tools** — Parsing, symbol extraction, and navigation as MCP tools
+- **🔍 Semantic Understanding** — Query symbol definitions, references, and documentation
+- **📁 Project-Wide Analysis** — Multi-file project understanding via `oak-vfs`
+- **🌐 Language Agnostic** — Works with any Oak language parser
 
 ## 🏗️ Architecture
 
@@ -23,41 +23,20 @@ The Model Context Protocol (MCP) is an open standard that enables AI assistants 
 
 | Tool | Description |
 |------|-------------|
-| `parse_file` | Parse a source file and return its AST structure |
+| `parse_file` | Parse source file and return AST structure |
 | `find_symbols` | Search for symbols matching a query |
-| `get_definition` | Get the definition location of a symbol |
+| `get_definition` | Get definition location of a symbol |
 | `find_references` | Find all references to a symbol |
 | `get_hover` | Get hover information for a position |
 
-### Server Setup
+## 🔗 Ecosystem Integration
 
-```rust
-use oak_mcp::McpServer;
+Integrates with `oak-core` for parsing, `oak-vfs` for file access, `oak-navigation` for code navigation, and any MCP-compatible AI assistant.
 
-// Create an MCP server for a specific language
-let server = McpServer::new(language_parser);
+## 📖 Documentation
 
-// Run the server (typically via stdio for MCP communication)
-server.run().await?;
-```
-
-### Integration with AI Assistants
-
-`oak-mcp` enables AI assistants to:
-- Understand code structure without language-specific knowledge
-- Navigate codebases using semantic information
-- Provide accurate code suggestions based on actual definitions
-- Analyze project dependencies and relationships
-
-## 🔗 Integration
-
-`oak-mcp` integrates with:
-- `oak-core` for parsing infrastructure
-- `oak-vfs` for file system access
-- `oak-navigation` for code navigation features
-- `oak-symbols` for symbol extraction
-- Any MCP-compatible AI assistant
+For usage examples and API details, see the [API documentation](https://docs.rs/oak-mcp).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.

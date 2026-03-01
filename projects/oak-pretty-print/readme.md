@@ -5,45 +5,30 @@
 
 **Code Formatting and Pretty Printing for Oak** — Lossless code formatting infrastructure for Oak language parsers.
 
-## 🎯 Project Vision
+## 🎯 Why oak-pretty-print?
 
-Code formatting is essential for readability and consistency. `oak-pretty-print` provides the infrastructure for implementing code formatters that preserve all source details, including comments and whitespace, while applying consistent formatting rules.
+Code formatting is essential for readability and consistency. `oak-pretty-print` provides the infrastructure for implementing formatters that preserve all source details while applying consistent formatting rules.
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **📝 Lossless Formatting**: Preserves all source details including comments and trivia.
-- **🌳 Tree-Based**: Works directly with Oak's syntax trees for accurate formatting.
-- **🔧 Configurable**: Support for different formatting styles and options.
-- **⚡ Incremental**: Efficient re-formatting of changed sections only.
-- **🧩 Language Agnostic**: Works with any Oak language parser.
+- **📝 Lossless Formatting** — Preserves all source details including comments and trivia
+- **🌳 Tree-Based** — Works directly with Oak's syntax trees for accuracy
+- **🔧 Configurable** — Support for different formatting styles and options
+- **⚡ Incremental** — Efficient re-formatting of changed sections only
+- **🧩 Language Agnostic** — Works with any Oak language parser
 
 ## 🏗️ Architecture
 
-### Formatting Approach
+Operates on the Green/Red tree structure via trivia manipulation, rule-based formatting, and lossless round-trip processing.
 
-`oak-pretty-print` operates on the Green/Red tree structure:
+## 🔗 Ecosystem Integration
 
-1. **Trivia Manipulation**: Adjust whitespace, line breaks, and comments within `GreenNode`.
-2. **Rule-Based**: Apply language-specific formatting rules to tree nodes.
-3. **Lossless Round-Trip**: Reconstruct source text with formatting applied.
+Integrates with `oak-lsp` for `textDocument/formatting`, language-specific formatters, and code style enforcement tools.
 
-### Integration with Oak
+## 📖 Documentation
 
-```rust
-use oak_pretty_print::Formatter;
-use oak_core::tree::GreenNode;
-
-// Format a syntax tree
-let formatted = formatter.format(&green_tree);
-```
-
-## 🔗 Integration
-
-`oak-pretty-print` integrates with:
-- `oak-lsp` for `textDocument/formatting` support
-- Language-specific formatters
-- Code style enforcement tools
+For usage examples and API details, see the [API documentation](https://docs.rs/oak-pretty-print).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.

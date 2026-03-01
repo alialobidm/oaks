@@ -5,67 +5,31 @@
 
 **Code Folding Support for Oak Languages** — Identify collapsible regions in source code for IDE outline views and editor folding.
 
-## 🎯 Project Vision
+## 🎯 Why oak-folding?
 
-Code folding helps developers manage large files by collapsing sections of code. `oak-folding` provides a trait-based interface for identifying foldable regions like functions, classes, comments, and import sections in any Oak-supported language.
+Code folding helps developers manage large files by collapsing sections of code. `oak-folding` provides a trait-based interface for identifying foldable regions in any Oak-supported language.
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **📁 Folding Provider Trait**: The `FoldingProvider` trait for implementing language-specific folding logic.
-- **🎯 Folding Range Types**: Built-in support for comments, imports, and custom regions.
-- **📍 Precise Ranges**: Byte-offset based ranges for accurate folding in editors.
-- **🔄 Serde Support**: Optional serialization for LSP integration.
+- **📁 Folding Provider Trait** — `FoldingProvider` for language-specific folding logic
+- **🎯 Folding Range Types** — Comments, imports, and custom regions
+- **📍 Precise Ranges** — Byte-offset based for accurate folding
+- **🔄 Serde Support** — Optional serialization for LSP integration
 
 ## 🏗️ Architecture
 
-### `FoldingRange` Struct
+- `FoldingRange` — Represents a foldable region with optional kind
+- `FoldingRangeKind` — Comment, Imports, or Region
+- `FoldingProvider<L>` — Trait for providing folding ranges
 
-Represents a foldable region:
+## 🔗 Ecosystem Integration
 
-```rust
-pub struct FoldingRange {
-    pub range: Range<usize>,        // Byte range to fold
-    pub kind: Option<FoldingRangeKind>, // Type of folding
-}
-```
+Used by `oak-lsp` for `textDocument/foldingRange` support, IDE extensions for code outline views, and code formatters.
 
-### `FoldingRangeKind` Enum
+## 📖 Documentation
 
-Predefined folding types:
-
-```rust
-pub enum FoldingRangeKind {
-    Comment,  // Comment blocks
-    Imports,  // Import sections
-    Region,   // Custom defined regions
-}
-```
-
-### `FoldingProvider` Trait
-
-Implement to provide folding ranges:
-
-```rust
-use oak_folding::{FoldingProvider, FoldingRange, FoldingRangeKind};
-use oak_core::{Language, tree::RedNode};
-
-struct MyFoldingProvider;
-
-impl<L: Language> FoldingProvider<L> for MyFoldingProvider {
-    fn folding_ranges(&self, root: &RedNode<L>) -> Vec<FoldingRange> {
-        // Return all foldable regions in the document
-        vec![]
-    }
-}
-```
-
-## 🔗 Integration
-
-`oak-folding` is used by:
-- `oak-lsp` for LSP `textDocument/foldingRange` support
-- IDE extensions for code outline views
-- Code formatters and analysis tools
+For usage examples and API details, see the [API documentation](https://docs.rs/oak-folding).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.

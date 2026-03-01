@@ -1,207 +1,119 @@
 # 🌳 Oak Language Parsers
 
-This directory contains language-specific parsers built on the Oak framework. Each parser follows a consistent architecture while providing language-specific optimizations and features.
+A collection of high-performance, incremental parsers built on the Oak framework. Each parser delivers sub-millisecond performance with robust error recovery and full IDE integration support.
 
 ## 📚 Available Parsers
 
 ### System & Compiled Languages
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-ada](./oak-ada) | Ada parser for safety-critical systems | Active |
-| [oak-c](./oak-c) | C parser for systems programming | Mature |
-| [oak-cpp](./oak-cpp) | C++ parser with modern standard support | Active |
-| [oak-d](./oak-d) | D parser for systems programming | Active |
-| [oak-go](./oak-go) | Go parser for cloud-native development | Mature |
-| [oak-nim](./oak-nim) | Nim parser with indentation support | Active |
-| [oak-rust](./oak-rust) | Rust parser for the Rust ecosystem | Mature |
-| [oak-swift](./oak-swift) | Swift parser for Apple platforms | Active |
-| [oak-vlang](./oak-vlang) | V parser for simple systems programming | Active |
-| [oak-zig](./oak-zig) | Zig parser with comptime support | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-ada](./oak-ada) | Ada for safety-critical systems |
+| [oak-c](./oak-c) | C for systems programming |
+| [oak-cpp](./oak-cpp) | C++ with modern standard support |
+| [oak-d](./oak-d) | D for systems programming |
+| [oak-go](./oak-go) | Go for cloud-native development |
+| [oak-nim](./oak-nim) | Nim with indentation support |
+| [oak-rust](./oak-rust) | Rust for the Rust ecosystem |
+| [oak-swift](./oak-swift) | Swift for Apple platforms |
+| [oak-vlang](./oak-vlang) | V for simple systems programming |
+| [oak-zig](./oak-zig) | Zig with comptime support |
 
 ### Web & Scripting Languages
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-bash](./oak-bash) | Bash parser for shell scripting | Active |
-| [oak-cmd](./oak-cmd) | Windows batch script parser | Active |
-| [oak-css](./oak-css) | CSS parser with modern features | Active |
-| [oak-dart](./oak-dart) | Dart parser for Flutter/Dart ecosystem | Active |
-| [oak-html](./oak-html) | HTML parser with HTML5 support | Active |
-| [oak-javascript](./oak-javascript) | JavaScript parser | Active |
-| [oak-lua](./oak-lua) | Lua parser for game/embedded scripting | Active |
-| [oak-perl](./oak-perl) | Perl parser | Active |
-| [oak-php](./oak-php) | PHP parser with modern features | Active |
-| [oak-python](./oak-python) | Python parser with type hint support | Mature |
-| [oak-ruby](./oak-ruby) | Ruby parser | Active |
-| [oak-sass](./oak-sass) | Sass parser | Active |
-| [oak-scss](./oak-scss) | SCSS parser | Active |
-| [oak-typescript](./oak-typescript) | TypeScript parser | Active |
-| [oak-vue](./oak-vue) | Vue SFC parser | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-bash](./oak-bash) | Bash shell scripting |
+| [oak-cmd](./oak-cmd) | Windows batch scripts |
+| [oak-css](./oak-css) | CSS with modern features |
+| [oak-dart](./oak-dart) | Dart for Flutter/Dart ecosystem |
+| [oak-html](./oak-html) | HTML with HTML5 support |
+| [oak-lua](./oak-lua) | Lua for game/embedded scripting |
+| [oak-perl](./oak-perl) | Perl |
+| [oak-php](./oak-php) | PHP with modern features |
+| [oak-python](./oak-python) | Python with type hint support |
+| [oak-ruby](./oak-ruby) | Ruby |
+| [oak-sass](./oak-sass) | Sass |
+| [oak-scss](./oak-scss) | SCSS |
+| [oak-vue](./oak-vue) | Vue SFC |
 
 ### Data & Configuration
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-csv](./oak-csv) | CSV parser | Active |
-| [oak-dsv](./oak-dsv) | Delimiter-separated values parser | Active |
-| [oak-ini](./oak-ini) | INI configuration parser | Active |
-| [oak-json](./oak-json) | JSON parser with JSON5 support | Mature |
-| [oak-nix](./oak-nix) | Nix expression parser | Active |
-| [oak-toml](./oak-toml) | TOML parser for Rust configs | Active |
-| [oak-tsv](./oak-tsv) | TSV parser | Active |
-| [oak-xml](./oak-xml) | XML parser | Active |
-| [oak-yaml](./oak-yaml) | YAML parser with anchor support | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-csv](./oak-csv) | CSV |
+| [oak-dsv](./oak-dsv) | Delimiter-separated values |
+| [oak-ini](./oak-ini) | INI configuration |
+| [oak-json](./oak-json) | JSON with JSON5 support |
+| [oak-nix](./oak-nix) | Nix expressions |
+| [oak-toml](./oak-toml) | TOML for Rust configs |
+| [oak-tsv](./oak-tsv) | TSV |
+| [oak-xml](./oak-xml) | XML |
+| [oak-yaml](./oak-yaml) | YAML with anchor support |
 
 ### JVM & Functional Languages
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-clojure](./oak-clojure) | Clojure parser | Active |
-| [oak-elixir](./oak-elixir) | Elixir parser | Active |
-| [oak-elm](./oak-elm) | Elm parser | Active |
-| [oak-erlang](./oak-erlang) | Erlang parser | Active |
-| [oak-fsharp](./oak-fsharp) | F# parser | Active |
-| [oak-haskell](./oak-haskell) | Haskell parser | Active |
-| [oak-java](./oak-java) | Java parser with modern features | Mature |
-| [oak-kotlin](./oak-kotlin) | Kotlin parser | Active |
-| [oak-ocaml](./oak-ocaml) | OCaml parser | Active |
-| [oak-scala](./oak-scala) | Scala parser | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-elm](./oak-elm) | Elm |
+| [oak-java](./oak-java) | Java with modern features |
+| [oak-kotlin](./oak-kotlin) | Kotlin |
+| [oak-ocaml](./oak-ocaml) | OCaml |
+| [oak-scala](./oak-scala) | Scala |
 
 ### WebAssembly & Low-Level
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-wat](./oak-wat) | WebAssembly Text Format parser | Active |
-| [oak-wgsl](./oak-wgsl) | WebGPU Shading Language parser | Active |
-| [oak-hlsl](./oak-hlsl) | HLSL shader parser | Active |
-| [oak-gsgl](./oak-gsgl) | GSGL shader parser | Active |
-| [oak-msil](./oak-msil) | MSIL/CIL parser | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-wat](./oak-wat) | WebAssembly Text Format |
+| [oak-wgsl](./oak-wgsl) | WebGPU Shading Language |
+| [oak-hlsl](./oak-hlsl) | HLSL shaders |
+| [oak-gsgl](./oak-gsgl) | GSGL shaders |
+| [oak-msil](./oak-msil) | MSIL/CIL |
 
 ### Proof Assistants & Formal Methods
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-coq](./oak-coq) | Coq proof assistant parser | Active |
-| [oak-lean](./oak-lean) | Lean theorem prover parser | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-coq](./oak-coq) | Coq proof assistant |
+| [oak-lean](./oak-lean) | Lean theorem prover |
 
 ### Specialized Languages
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-apl](./oak-apl) | APL array language parser | Active |
-| [oak-j](./oak-j) | J array language parser | Active |
-| [oak-koka](./oak-koka) | Koka effect handler parser | Active |
-| [oak-r](./oak-r) | R statistical language parser | Active |
-| [oak-sql](./oak-sql) | SQL parser with multi-dialect support | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-apl](./oak-apl) | APL array language |
+| [oak-j](./oak-j) | J array language |
+| [oak-koka](./oak-koka) | Koka effect handlers |
+| [oak-r](./oak-r) | R statistical language |
+| [oak-sql](./oak-sql) | SQL with multi-dialect support |
 
 ### Markup & Documentation
 
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-dot](./oak-dot) | DOT graph description parser | Active |
-| [oak-markdown](./oak-markdown) | Markdown parser | Active |
-| [oak-tex](./oak-tex) | TeX/LaTeX parser | Active |
-| [oak-typst](./oak-typst) | Typst parser | Active |
-
-### Internal & Experimental
-
-| Parser | Description | Status |
-|--------|-------------|--------|
-| [oak-c4](./oak-c4) | C4 model parser | Active |
-| [oak-gsgl](./oak-gsgl) | GSGL parser | Active |
-| [oak-jasm](./oak-jasm) | JASM assembly parser | Active |
-| [oak-mojo](./oak-mojo) | Mojo parser | Active |
-| [oak-voc](./oak-voc) | VOC parser | Active |
-| [oak-voml](./oak-voml) | VOML parser | Active |
-| [oak-von](./oak-von) | VON parser | Active |
+| Parser | Description |
+|--------|-------------|
+| [oak-dot](./oak-dot) | DOT graph description |
+| [oak-tex](./oak-tex) | TeX/LaTeX |
+| [oak-typst](./oak-typst) | Typst |
 
 ## 🏗️ Common Architecture
 
-All Oak language parsers follow a consistent architecture:
+All Oak parsers follow a consistent architecture:
 
-### 1. SyntaxKind Enum
-Defines all possible syntax elements (tokens and nodes) for the language.
+- **Green/Red Trees** — Efficient immutable syntax trees with lossless round-trips
+- **Incremental Parsing** — Re-parse only changed portions
+- **Error Recovery** — Continue parsing after errors for better IDE experience
+- **Trivia Preservation** — Retain whitespace and comments for formatting
 
-### 2. Language Implementation
-Implements the `Language` trait from `oak-core`, providing:
-- Token types (`TokenType`)
-- Element types (`ElementType`)
-- Language metadata
+## 🚀 Adding a New Parser
 
-### 3. Lexer
-Tokenizes source text into a stream of tokens with:
-- Whitespace and comment handling (trivia)
-- Error recovery for invalid tokens
+1. Define `SyntaxKind` enum for tokens and nodes
+2. Implement the `Language` trait from `oak-core`
+3. Build the lexer and parser
+4. Add to workspace `Cargo.toml`
 
-### 4. Parser
-Converts token streams into syntax trees:
-- Green tree construction
-- Error recovery for partial parsing
-- Incremental parsing support
-
-### 5. AST (Optional)
-Typed wrappers over the syntax tree for convenient access.
-
-## 🚀 Quick Start: Adding a New Parser
-
-1. **Create the directory structure:**
-   ```
-   examples/oak-{language}/
-   ├── Cargo.toml
-   ├── readme.md
-   └── src/
-       └── lib.rs
-   ```
-
-2. **Define SyntaxKind:**
-   ```rust
-   #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-   pub enum SyntaxKind {
-       // Tokens
-       Identifier,
-       Number,
-       // Nodes
-       FunctionDef,
-       // ...
-   }
-   ```
-
-3. **Implement the Language trait:**
-   ```rust
-   use oak_core::Language;
-
-   pub struct MyLanguage;
-   impl Language for MyLanguage {
-       type TokenType = MyTokenType;
-       type ElementType = MyElementType;
-       // ...
-   }
-   ```
-
-4. **Implement the Lexer and Parser:**
-   ```rust
-   pub struct MyLexer { /* ... */ }
-   pub struct MyParser { /* ... */ }
-   ```
-
-5. **Add to workspace:**
-   Add the new crate to the root `Cargo.toml`.
-
-## 📖 Reference Implementations
-
-For well-documented reference implementations, see:
-- [oak-c](./oak-c) — Mature C parser
-- [oak-json](./oak-json) — Clean, simple parser
-- [oak-python](./oak-python) — Complex indentation-based parser
-- [oak-rust](./oak-rust) — Rust parser with complex syntax
+See [oak-c](./oak-c), [oak-json](./oak-json), or [oak-python](./oak-python) for reference implementations.
 
 ## 🤝 Contributing
 
-Contributions are welcome! When adding a new language parser:
-1. Follow the existing architecture pattern
-2. Include comprehensive documentation
-3. Add tests for parsing correctness
-4. Ensure error recovery works properly
-
-For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! When adding a new parser, follow the existing architecture pattern and include comprehensive tests.

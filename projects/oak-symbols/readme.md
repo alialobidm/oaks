@@ -5,80 +5,32 @@
 
 **Symbol Management for Oak Languages** — Extract and manage symbol information for document outlines, workspace search, and navigation.
 
-## 🎯 Project Vision
+## 🎯 Why oak-symbols?
 
-Symbols are the building blocks of code — functions, classes, variables, and more. `oak-symbols` provides a unified interface for extracting symbol information from syntax trees, enabling features like document outlines, workspace symbol search, and breadcrumb navigation.
+Symbols are the building blocks of code — functions, classes, variables, and more. `oak-symbols` provides a unified interface for extracting symbol information from syntax trees.
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **📊 Symbol Provider Trait**: The `SymbolProvider` trait for implementing symbol extraction.
-- **🔍 Symbol Information**: Rich `SymbolInformation` type with name, role, location, and container.
-- **🌐 Universal Provider**: Built-in `UniversalSymbolProvider` that works with any Oak language.
-- **📂 Document & Workspace**: Support for both document-level and workspace-wide symbol queries.
-- **🔄 Serde Support**: Optional serialization for LSP integration.
+- **📊 Symbol Provider Trait** — `SymbolProvider` for symbol extraction
+- **🔍 Symbol Information** — Rich type with name, role, location, and container
+- **🌐 Universal Provider** — Built-in `UniversalSymbolProvider` for any Oak language
+- **📂 Document & Workspace** — Document-level and workspace-wide symbol queries
+- **🔄 Serde Support** — Optional serialization for LSP integration
 
 ## 🏗️ Architecture
 
-### `SymbolInformation` Struct
+- `SymbolInformation` — Symbol name, role, URI, range, and container
+- `SymbolProvider<L>` — Trait for document and workspace symbol queries
+- `UniversalSymbolProvider` — Ready-to-use provider for any language
 
-Represents information about a symbol:
+## 🔗 Ecosystem Integration
 
-```rust
-pub struct SymbolInformation {
-    pub name: String,                    // Symbol name
-    pub role: UniversalElementRole,      // Function, class, variable, etc.
-    pub uri: Arc<str>,                   // File URI
-    pub range: Range<usize>,             // Full symbol range
-    pub container_name: Option<String>,  // Parent symbol name
-}
-```
+Used by `oak-lsp` for `textDocument/documentSymbol` and `workspace/symbol`, `oak-structural-view` for outline views, and `oak-mcp` for AI-assisted symbol discovery.
 
-### `SymbolProvider` Trait
+## 📖 Documentation
 
-Implement to provide symbol information:
-
-```rust
-use oak_symbols::{SymbolProvider, SymbolInformation};
-use oak_core::{Language, source::Source, tree::RedNode};
-
-struct MySymbolProvider;
-
-impl<L: Language> SymbolProvider<L> for MySymbolProvider {
-    fn document_symbols<S: Source + ?Sized>(
-        &self,
-        uri: &str,
-        root: &RedNode<L>,
-        source: &S
-    ) -> Vec<SymbolInformation> {
-        // Return all symbols defined in the document
-        vec![]
-    }
-
-    fn workspace_symbols(&self, query: &str) -> Vec<SymbolInformation> {
-        // Return symbols matching the query across the workspace
-        vec![]
-    }
-}
-```
-
-### `UniversalSymbolProvider`
-
-A ready-to-use provider that works with any language:
-
-```rust
-use oak_symbols::UniversalSymbolProvider;
-
-let provider = UniversalSymbolProvider::new();
-let symbols = provider.document_symbols(uri, &root, &source);
-```
-
-## 🔗 Integration
-
-`oak-symbols` is used by:
-- `oak-lsp` for `textDocument/documentSymbol` and `workspace/symbol`
-- `oak-structural-view` for outline views
-- `oak-mcp` for AI-assisted symbol discovery
+For usage examples and API details, see the [API documentation](https://docs.rs/oak-symbols).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.

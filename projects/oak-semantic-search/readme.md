@@ -5,51 +5,32 @@
 
 **Semantic Search for Oak Languages** — Search code by meaning, not just text.
 
-## 🎯 Project Vision
+## 🎯 Why oak-semantic-search?
 
-Traditional text search finds literal matches, but semantic search understands code meaning. `oak-semantic-search` enables searching for concepts like "all functions that return Result" or "all implementations of this trait" by leveraging Oak's syntax tree understanding.
+Traditional text search finds literal matches, but semantic search understands code meaning. Search for concepts like "all functions that return Result" or "all implementations of this trait."
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **🔍 Semantic Queries**: Search by code structure and meaning.
-- **📊 Pattern Matching**: Match code patterns across the codebase.
-- **🌐 Workspace-Wide**: Search across multiple files and projects.
-- **⚡ Fast Indexing**: Efficient indexing for quick searches.
-- **🧩 Language Agnostic**: Works with any Oak language parser.
+- **🔍 Semantic Queries** — Search by code structure and meaning
+- **📊 Pattern Matching** — Match code patterns across the codebase
+- **🌐 Workspace-Wide** — Search across multiple files and projects
+- **⚡ Fast Indexing** — Efficient indexing for quick searches
+- **🧩 Language Agnostic** — Works with any Oak language parser
 
 ## 🏗️ Architecture
 
-### Query Types
+- `SemanticQuery` — Query types for semantic searches
+- `SearchPattern` — Pattern-based code matching
+- `SearchIndex` — Workspace-wide symbol indexing
 
-```rust
-use oak_semantic_search::{SemanticQuery, SearchPattern};
+## 🔗 Ecosystem Integration
 
-// Find all function definitions
-let query = SemanticQuery::FindDefinitions { kind: DefinitionKind::Function };
+Integrates with `oak-vfs` for file access, `oak-symbols` for symbol extraction, and IDE extensions for advanced search.
 
-// Find all implementations of a trait
-let query = SemanticQuery::FindImplementations { trait_name: "Display" };
+## 📖 Documentation
 
-// Pattern-based search
-let pattern = SearchPattern::parse("fn $name($args) -> Result<$type, _>");
-```
-
-### Index Building
-
-```rust
-use oak_semantic_search::SearchIndex;
-
-let index = SearchIndex::build(&vfs, &parsers);
-let results = index.search(query);
-```
-
-## 🔗 Integration
-
-`oak-semantic-search` integrates with:
-- `oak-vfs` for file access
-- `oak-symbols` for symbol extraction
-- IDE extensions for advanced search
+For usage examples and API details, see the [API documentation](https://docs.rs/oak-semantic-search).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.

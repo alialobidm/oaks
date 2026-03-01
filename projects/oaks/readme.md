@@ -5,16 +5,16 @@
 
 **The Unified Oak Library** — A single crate that re-exports all Oak components for convenient access.
 
-## 🎯 Project Vision
+## 🎯 Why oaks?
 
-While Oak is designed as a modular ecosystem, sometimes you need everything in one place. `oaks` is the unified library that re-exports all core Oak crates, providing a single dependency for projects that want the complete Oak experience.
+While Oak is designed as a modular ecosystem, sometimes you need everything in one place. `oaks` is the unified library that re-exports all core Oak crates, providing a single dependency for the complete Oak experience.
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **📦 Single Dependency**: One crate to rule them all.
-- **🔄 Re-exports**: Direct access to all Oak components.
-- **🎯 Convenience**: No need to manage multiple crate versions.
-- **🧩 Feature Flags**: Optional features for smaller compile times.
+- **📦 Single Dependency** — One crate for all Oak components
+- **🔄 Re-exports** — Direct access to all modules
+- **🎯 Convenience** — No need to manage multiple crate versions
+- **🧩 Feature Flags** — Optional features for smaller compile times
 
 ## 🏗️ Architecture
 
@@ -32,44 +32,16 @@ While Oak is designed as a modular ecosystem, sometimes you need everything in o
 | `oak-semantic-tokens` | Semantic highlighting |
 | `oak-structural-view` | Document structure views |
 
-### Usage
+## 🔗 When to Use
 
-```rust
-// Instead of multiple dependencies:
-// use oak_core::{...};
-// use oak_lsp::{...};
-// use oak_vfs::{...};
+Use `oaks` when you need the complete Oak toolkit, simplified dependency management, or quick prototyping.
 
-// Use the unified crate:
-use oaks::{
-    // Core
-    SourceText, Parser, GreenNode, RedNode,
-    // LSP
-    LanguageService, LspServer,
-    // VFS
-    Vfs, MemoryVfs,
-    // Features
-    Hover, HoverProvider,
-    DefinitionProvider, ReferencesProvider,
-    FoldingProvider, FoldingRange,
-    SymbolProvider, SymbolInformation,
-    SemanticTokensProvider, SemanticToken,
-    StructureProvider, StructureItem,
-};
-```
+Use individual crates when you need minimal dependencies, faster compile times, or specific functionality only.
 
-## 🔗 Integration
+## 📖 Documentation
 
-Use `oaks` when you need:
-- The complete Oak toolkit
-- Simplified dependency management
-- Quick prototyping with all features available
-
-Use individual crates when you need:
-- Minimal dependencies
-- Faster compile times
-- Specific functionality only
+For usage examples and API details, see the [API documentation](https://docs.rs/oaks).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.

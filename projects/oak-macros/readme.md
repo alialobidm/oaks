@@ -5,16 +5,16 @@
 
 **Procedural Macros for Oak** — Derive macros and helper attributes for Oak language implementations.
 
-## 🎯 Project Vision
+## 🎯 Why oak-macros?
 
-Procedural macros reduce boilerplate in language implementations. `oak-macros` provides derive macros and helper attributes that simplify implementing Oak traits and generating boilerplate code for language parsers.
+Procedural macros reduce boilerplate in language implementations. `oak-macros` provides derive macros and helper attributes that simplify implementing Oak traits.
 
-## ✨ Core Features
+## ✨ Key Features
 
-- **🔧 Derive Macros**: Automatically implement common Oak traits.
-- **📝 Code Generation**: Generate repetitive code patterns.
-- **🎯 Type-Safe**: Compile-time verification of generated code.
-- **⚡ Zero Runtime Cost**: Macros expand at compile time.
+- **🔧 Derive Macros** — Automatically implement common Oak traits
+- **📝 Code Generation** — Generate repetitive code patterns
+- **🎯 Type-Safe** — Compile-time verification of generated code
+- **⚡ Zero Runtime Cost** — Macros expand at compile time
 
 ## 🏗️ Architecture
 
@@ -23,28 +23,16 @@ Procedural macros reduce boilerplate in language implementations. `oak-macros` p
 | Macro | Purpose |
 |-------|---------|
 | `#[derive(Language)]` | Auto-implement the `Language` trait |
-| `json!` | JSON literal construction using oak-json |
+| `json!` | JSON literal construction |
 
-### Usage Example
+## 🔗 Ecosystem Integration
 
-```rust
-use oak_macros::json;
+Used by language parser implementations, test code generation, and AST construction utilities.
 
-// Create JSON values with literal syntax
-let value = json!({
-    "name": "Oak",
-    "features": ["fast", "incremental"],
-    "version": 1
-});
-```
+## 📖 Documentation
 
-## 🔗 Integration
-
-`oak-macros` is used by:
-- Language parser implementations
-- Test code generation
-- AST construction utilities
+For usage examples and API details, see the [API documentation](https://docs.rs/oak-macros).
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.
