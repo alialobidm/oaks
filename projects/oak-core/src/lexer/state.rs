@@ -263,7 +263,7 @@ impl<'s, S: Source + ?Sized, L: Language> LexerState<'s, S, L> {
         let rest = self.rest_bytes();
         let skipped = crate::source::SimdScanner::skip_ascii_hexdigits(rest);
         self.advance(skipped);
-        start..self.get_position()
+        (start..self.get_position()).into()
     }
 
     /// Finds the first occurrence of the target byte in the remaining text.

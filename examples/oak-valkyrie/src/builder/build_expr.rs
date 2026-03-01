@@ -2,10 +2,33 @@ use crate::{
     ValkyrieLanguage,
     ast::*,
     lexer::token_type::ValkyrieTokenType,
-    parser::element_type::ValkyrieElementType,
+    parser::{element_type::ValkyrieElementType, parse_string_segments},
     builder::{ValkyrieBuilder, text},
 };
 use oak_core::{OakError, RedNode, RedTree, Source};
+
+/// Counts the number of leading double quotes in a string.
+fn count_leading_quotes(text: &str) -> u8 {
+    let mut count = 0u8;
+    for ch in text.chars() {
+        if ch == '"' {
+            count += 1;
+        } else {
+            break;
+        }
+    }
+    count
+}
+
+/// Extracts the content of a string literal by removing leading and trailing quotes.
+fn extract_content(text: &str, quote_count: u8) -> &str {
+    let start = quote_count as usize;
+    let end = text.len().saturating_sub(quote_count as usize);
+    if start >= end {
+        return "";
+    }
+    &text[start..end]
+}
 
 impl<'config> ValkyrieBuilder<'config> {
     pub(crate) fn build_expr<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
@@ -33,25 +56,62 @@ impl<'config> ValkyrieBuilder<'config> {
             ValkyrieElementType::CatchExpression => self.build_catch(node, source),
             ValkyrieElementType::IdentifierExpression => self.build_identifier_expr(node, source),
             ValkyrieElementType::PathExpression => self.build_path_expr(node, source),
+            ValkyrieElementType::AnonymousClass => self.build_anonymous_class(node, source),
             _ => Err(source.syntax_error(format!("Unexpected expression kind: {:?}", node.green.kind), span.start)),
         }
     }
 
     pub(crate) fn build_literal<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
-        let mut value = String::new();
+        let mut prefix: Option<Identifier> = None;
+        let mut string_value: Option<String> = None;
+        let mut string_span: Option<oak_core::Range<usize>> = None;
+
         for child in node.children() {
             if let RedTree::Leaf(t) = child {
                 match t.kind {
                     ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
-                    ValkyrieTokenType::IntegerLiteral | ValkyrieTokenType::FloatLiteral | ValkyrieTokenType::StringLiteral => {
-                        value = text(source, t.span);
+                    ValkyrieTokenType::StringPrefix => {
+                        let prefix_text = text(source, t.span);
+                        prefix = Some(Identifier {
+                            name: prefix_text,
+                            span: t.span,
+                        });
+                    }
+                    ValkyrieTokenType::StringLiteral => {
+                        string_value = Some(text(source, t.span));
+                        string_span = Some(t.span);
+                    }
+                    ValkyrieTokenType::IntegerLiteral | ValkyrieTokenType::FloatLiteral => {
+                        let value = text(source, t.span);
+                        return Ok(Expr::StringLiteral(StringLiteral {
+                            prefix: None,
+                            quote_count: 0,
+                            segments: vec![StringSegment::Text { content: value, span: t.span }],
+                            span,
+                        }));
                     }
                     _ => {}
                 }
             }
         }
-        Ok(Expr::Literal { value, span })
+
+        if let (Some(raw_text), Some(str_span)) = (string_value, string_span) {
+            let quote_count = count_leading_quotes(&raw_text);
+            let content = extract_content(&raw_text, quote_count);
+            let is_raw = prefix.as_ref().map(|p| p.name == "r").unwrap_or(false);
+            let content_start = str_span.start + quote_count as usize;
+            let segments = parse_string_segments(content, content_start, is_raw);
+
+            Ok(Expr::StringLiteral(StringLiteral {
+                prefix,
+                quote_count,
+                segments,
+                span,
+            }))
+        } else {
+            Err(source.syntax_error("Missing string literal value".to_string(), span.start))
+        }
     }
 
     pub(crate) fn build_bool_literal<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
@@ -681,5 +741,60 @@ impl<'config> ValkyrieBuilder<'config> {
             }
         }
         Ok(NamePath { parts, span })
+    }
+
+    /// Builds an anonymous class expression.
+    ///
+    /// Syntax: `class { ... }` or `class: Trait { ... }`
+    pub(crate) fn build_anonymous_class<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut parents = Vec::new();
+        let mut items = Vec::new();
+        let mut captures = Vec::new();
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        parents.push(text(source, t.span));
+                    }
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::NamePath => {
+                        let path = self.build_name_path(n, source)?;
+                        if let Some(first) = path.parts.first() {
+                            parents.push(first.name.clone());
+                        }
+                    }
+                    ValkyrieElementType::BlockExpression => {
+                        for inner_child in n.children() {
+                            if let RedTree::Node(inner_n) = inner_child {
+                                if let Ok(item) = self.build_item(inner_n, source) {
+                                    items.push(item);
+                                }
+                            }
+                        }
+                    }
+                    ValkyrieElementType::LetStatement => {
+                        let stmt = self.build_let(n, source)?;
+                        items.push(Item::Statement(stmt));
+                    }
+                    ValkyrieElementType::ExprStatement => {
+                        let stmt = self.build_expr_stmt(n, source)?;
+                        items.push(Item::Statement(stmt));
+                    }
+                    ValkyrieElementType::Micro => {
+                        let micro = self.build_micro(n, source)?;
+                        items.push(Item::Micro(micro));
+                    }
+                    _ => {}
+                },
+            }
+        }
+
+        Ok(Expr::AnonymousClass { parents, items, captures, span })
     }
 }

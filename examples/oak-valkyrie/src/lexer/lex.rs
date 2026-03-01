@@ -57,6 +57,39 @@ impl crate::lexer::ValkyrieLexer<'_> {
     }
 
     fn lex_string_literal<S: Source + ?Sized>(&self, state: &mut State<'_, S>) -> bool {
+        let initial_start = state.get_position();
+
+        let prefix_start = state.get_position();
+        let mut prefix_end = prefix_start;
+
+        if let Some(ch) = state.current() {
+            if is_xid_start(ch) {
+                state.advance(ch.len_utf8());
+                while let Some(ch) = state.current() {
+                    if is_xid_continue(ch) {
+                        state.advance(ch.len_utf8());
+                    }
+                    else {
+                        break;
+                    }
+                }
+                prefix_end = state.get_position();
+            }
+        }
+
+        let has_prefix = prefix_end > prefix_start;
+
+        if has_prefix {
+            if let Some('"') = state.current() {
+                state.add_token(ValkyrieTokenType::StringPrefix, prefix_start, prefix_end);
+                return self.lex_symmetric_string(state, '"', ValkyrieTokenType::StringLiteral);
+            }
+            else {
+                state.set_position(initial_start);
+                return false;
+            }
+        }
+
         self.lex_symmetric_string(state, '"', ValkyrieTokenType::StringLiteral)
     }
 

@@ -181,7 +181,7 @@ pub enum Statement {
 pub enum Expr {
     Ident(Identifier),
     Path(NamePath),
-    Literal { value: String, span: Span },
+    StringLiteral(StringLiteral),
     Bool { value: bool, span: Span },
     Binary { left: Box<Expr>, op: crate::kind::ValkyrieSyntaxKind, right: Box<Expr>, span: Span },
     Unary { op: crate::kind::ValkyrieSyntaxKind, expr: Box<Expr>, span: Span },
@@ -192,7 +192,22 @@ pub enum Expr {
     Block(Block),
     Lambda(LambdaExpr),
     Object { callee: Box<Expr>, block: Block, span: Span },
-    AnonymousClass { parents: Vec<String>, items: Vec<Item>, span: Span },
+    /// Anonymous class expression.
+    ///
+    /// ```v
+    /// let obj = class { x: 10, y: 20 }
+    /// let impl_trait = class: Trait { ... }
+    /// ```
+    AnonymousClass {
+        /// Parent traits or classes to implement/extend.
+        parents: Vec<String>,
+        /// Fields and methods defined in the anonymous class.
+        items: Vec<Item>,
+        /// Variables captured from the enclosing scope.
+        captures: Vec<Identifier>,
+        /// Source span.
+        span: Span,
+    },
     If { pattern: Option<Pattern>, condition: Box<Expr>, then_branch: Block, else_branch: Option<Block>, span: Span },
     Match { scrutinee: Box<Expr>, arms: Vec<MatchArm>, span: Span },
     Loop { label: Option<String>, pattern: Option<Pattern>, condition: Option<Box<Expr>>, body: Block, span: Span },
@@ -313,4 +328,38 @@ pub struct Attribute{
     pub name: Identifier,
     pub args: Vec<Expr>,
     pub span: Span,
+}
+
+/// 字符串字面量节点
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StringLiteral {
+    /// DSL 前缀 (如 `s`, `f`, `r`, `sql`)
+    pub prefix: Option<Identifier>,
+    /// 引号数量 (1, 2, 3, 4, ...)
+    pub quote_count: u8,
+    /// 字符串片段
+    pub segments: Vec<StringSegment>,
+    /// 源码位置
+    pub span: Span,
+}
+
+/// 字符串片段
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum StringSegment {
+    /// 文本内容
+    Text {
+        /// 文本内容
+        content: String,
+        /// 源码位置
+        span: Span,
+    },
+    /// 插值表达式
+    Interpolation {
+        /// 插值表达式
+        expr: Box<Expr>,
+        /// 是否为 Fluent 变量 (带有 ߷ 标记)
+        is_fluent: bool,
+        /// 源码位置
+        span: Span,
+    },
 }

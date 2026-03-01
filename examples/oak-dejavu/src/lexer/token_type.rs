@@ -54,7 +54,7 @@ pub enum DejavuTokenType {
     At,
     /// Bang operator `!`.
     Bang,
-    /// Bolt symbol `↯`.
+    /// Bolt symbol `@`.
     Bolt,
     /// Caret operator `^`.
     Caret,

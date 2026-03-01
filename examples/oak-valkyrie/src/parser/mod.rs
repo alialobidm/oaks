@@ -30,3 +30,8 @@ impl<'config> ValkyrieParser<'config> {
 
 /// Element type definitions for the Valkyrie parser.
 pub mod element_type;
+
+/// String segment parser for interpolation and escape handling.
+pub mod string_segments;
+
+pub use string_segments::parse_string_segments;

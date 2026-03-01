@@ -28,6 +28,8 @@ pub enum ValkyrieTokenType {
     BoolLiteral,
     /// String literal token.
     StringLiteral,
+    /// String prefix token (e.g., `s`, `f`, `r`, `sql` in `s"..."`).
+    StringPrefix,
     /// Character literal token.
     CharLiteral,
     /// Identifier token.
@@ -141,7 +143,7 @@ impl TokenType for ValkyrieTokenType {
             Self::Eof => UniversalTokenRole::Eof,
             Self::Error => UniversalTokenRole::Error,
             Self::Keyword(_) => UniversalTokenRole::Keyword,
-            Self::Identifier => UniversalTokenRole::Name,
+            Self::Identifier | Self::StringPrefix => UniversalTokenRole::Name,
             Self::StringLiteral | Self::CharLiteral => UniversalTokenRole::Literal,
             Self::IntegerLiteral | Self::FloatLiteral | Self::BoolLiteral => UniversalTokenRole::Literal,
             _ => UniversalTokenRole::None,

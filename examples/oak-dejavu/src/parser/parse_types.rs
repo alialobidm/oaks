@@ -44,7 +44,7 @@ impl super::DejavuParser {
             state.bump();
         }
         else {
-            return Err(OakError::custom_error(format!("Expected @ or ↯, but found {:?}", state.current().map(|t| t.kind))));
+            return Err(OakError::custom_error(format!("Expected @ or @, but found {:?}", state.current().map(|t| t.kind))));
         }
         self.skip_trivia(state);
         if state.at(LeftBracket) {
