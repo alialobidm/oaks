@@ -409,6 +409,8 @@ impl crate::lexer::ValkyrieLexer<'_> {
                 '?' => ValkyrieTokenType::Question,
                 '⟨' => ValkyrieTokenType::LeftAngle,
                 '⟩' => ValkyrieTokenType::RightAngle,
+                '⁅' => ValkyrieTokenType::LeftOffset,
+                '⁆' => ValkyrieTokenType::RightOffset,
                 _ => return false,
             };
             state.advance(ch.len_utf8());

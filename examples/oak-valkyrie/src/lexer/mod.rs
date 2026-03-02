@@ -11,6 +11,7 @@ use oak_core::{
 pub(crate) type State<'a, S> = LexerState<'a, S, ValkyrieLanguage>;
 
 /// Valkyrie lexer implementation.
+#[derive(Clone)]
 pub struct ValkyrieLexer<'config> {
     pub(crate) config: &'config ValkyrieLanguage,
 }

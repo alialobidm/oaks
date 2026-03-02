@@ -1,5 +1,6 @@
 /// Valkyrie root node.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ValkyrieRoot {
     /// The collection of top-level items in the Valkyrie module.
     pub items: Vec<Item>,

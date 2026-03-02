@@ -98,6 +98,10 @@ pub enum ValkyrieTokenType {
     LeftAngle,
     /// Right mathematical angle bracket `⟩` (U+27E9).
     RightAngle,
+    /// 左基数索引括号 `⁅` (U+2045)。
+    LeftOffset,
+    /// 右基数索引括号 `⁆` (U+2046)。
+    RightOffset,
     /// Minus operator `-`.
     Minus,
     /// Not equal operator `!=`.
