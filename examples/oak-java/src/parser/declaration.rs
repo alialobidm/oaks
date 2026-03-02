@@ -1,9 +1,9 @@
 use crate::{
     language::JavaLanguage,
     lexer::token_type::JavaTokenType,
-    parser::{State, element_type::JavaElementType, expression::ExpressionParser, statement::StatementParser},
+    parser::{State, element_type::JavaElementType},
 };
-use oak_core::{OakError, parser::pratt::PrattParser, source::Source};
+use oak_core::{OakError, parser::pratt::{Pratt, PrattParser}, source::Source};
 
 /// Declaration parsing implementation for Java
 ///
@@ -14,9 +14,19 @@ use oak_core::{OakError, parser::pratt::PrattParser, source::Source};
 /// - Method and field declarations
 /// - Annotations
 /// - Type parameters
-pub trait DeclarationParser: ExpressionParser {
+pub trait DeclarationParser: Pratt<JavaLanguage> {
+    /// Skip trivia tokens (whitespace, comments)
+    fn skip_trivia<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) {
+        super::expression::skip_trivia(state);
+    }
+
+    /// Parse a block statement
+    fn parse_block_statement<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
+        super::statement::parse_block_statement(self, state)
+    }
+
     /// Parse a declaration (class, interface, enum, method, field, etc.)
-    fn parse_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+    fn parse_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
         use JavaTokenType::*;
         let cp = state.checkpoint();
         self.skip_trivia(state);
@@ -212,7 +222,7 @@ pub trait DeclarationParser: ExpressionParser {
     }
 
     /// Parse an annotation
-    fn parse_annotation<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+    fn parse_annotation<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
         use JavaTokenType::*;
         let cp = state.checkpoint();
         state.expect(At).ok();
@@ -305,7 +315,7 @@ pub trait DeclarationParser: ExpressionParser {
     }
 
     /// Parse a variable declaration
-    fn parse_variable_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
+    fn parse_variable_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
         use JavaTokenType::*;
         self.parse_type(state)?;
         self.skip_trivia(state);
@@ -322,5 +332,3 @@ pub trait DeclarationParser: ExpressionParser {
         Ok(())
     }
 }
-
-impl<'config> DeclarationParser for super::JavaParser<'config> {}

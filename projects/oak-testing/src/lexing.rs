@@ -4,12 +4,16 @@
 //! including file-based testing, expected output comparison, and
 //! test result serialization.
 
-use crate::{create_file, json_from_path, source_from_path};
+use crate::{create_file, source_from_path};
 use oak_core::{
     Language, Lexer, Source, TokenType,
     errors::{OakDiagnostics, OakError},
 };
+
+#[cfg(feature = "serde")]
 use serde::Serialize;
+#[cfg(feature = "serde")]
+use crate::json_from_path;
 
 use std::{
     path::{Path, PathBuf},

@@ -34,6 +34,13 @@ pub enum Error {
     Generic(String),
 }
 
+impl Error {
+    /// Creates a generic error with a message.
+    pub fn msg<M: Into<String>>(message: M) -> Self {
+        Error::Generic(message.into())
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

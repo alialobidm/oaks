@@ -4,9 +4,13 @@
 //! including file-based testing, expected output comparison, timeout handling,
 //! and test result serialization for typed root structures.
 
-use crate::{create_file, json_from_path, source_from_path};
+use crate::{create_file, source_from_path};
 use oak_core::{Builder, Language, errors::OakError};
+
+#[cfg(feature = "serde")]
 use serde::Serialize;
+#[cfg(feature = "serde")]
+use crate::json_from_path;
 
 #[cfg(feature = "serde")]
 use serde_json::Value as JsonValue;

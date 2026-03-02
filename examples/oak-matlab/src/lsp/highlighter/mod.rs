@@ -1,7 +1,5 @@
 #![doc = include_str!("readme.md")]
 
-use oak_highlight::highlighter::{HighlightKind, Highlighter};
-
 /// Local definition of highlight kinds
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighlightKind {

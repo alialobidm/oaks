@@ -4,9 +4,13 @@
 //! including file-based testing, expected output comparison, timeout handling,
 //! and test result serialization.
 
-use crate::{create_file, json_from_path, source_from_path};
+use crate::{create_file, source_from_path};
 use oak_core::{Language, Parser, errors::OakError};
+
+#[cfg(feature = "serde")]
 use serde::Serialize;
+#[cfg(feature = "serde")]
+use crate::json_from_path;
 
 use std::{
     fmt::Debug,

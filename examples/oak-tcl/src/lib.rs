@@ -39,5 +39,7 @@ pub use crate::lsp::formatter::TclFormatter;
 /// MCP service implementation.
 #[cfg(feature = "mcp")]
 pub use crate::mcp::serve_tcl_mcp;
+/// Token type for Tcl lexer.
 pub use lexer::token_type::TclTokenType;
+/// Element type for Tcl parser.
 pub use parser::element_type::TclElementType;

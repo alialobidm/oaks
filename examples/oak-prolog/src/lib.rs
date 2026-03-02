@@ -26,7 +26,7 @@ pub mod parser;
 pub use crate::{ast::PrologRoot, builder::PrologBuilder, language::PrologLanguage, lexer::token_type::PrologTokenType, parser::PrologParser};
 
 #[cfg(feature = "lsp")]
-pub use crate::lsp::highlighter::{HighlightKind, Highlighter, PrologHighlighter};
+pub use crate::lsp::highlighter::PrologHighlighter;
 
 #[cfg(feature = "lsp")]
 pub use crate::lsp::PrologLanguageService;

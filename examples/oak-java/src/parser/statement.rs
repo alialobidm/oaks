@@ -11,7 +11,7 @@ use oak_core::{
 use super::declaration::DeclarationParser;
 
 /// Parse a statement
-pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     super::expression::skip_trivia(state);
     let cp = state.checkpoint();
@@ -163,7 +163,7 @@ pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + D
 }
 
 /// Parse an if statement
-pub(crate) fn parse_if_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_if_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
     super::expression::skip_trivia(state);
@@ -183,7 +183,7 @@ pub(crate) fn parse_if_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> 
 }
 
 /// Parse a while statement
-pub(crate) fn parse_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
     super::expression::skip_trivia(state);
@@ -198,7 +198,7 @@ pub(crate) fn parse_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguag
 }
 
 /// Parse a do-while statement
-pub(crate) fn parse_do_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_do_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
     super::expression::skip_trivia(state);
@@ -217,7 +217,7 @@ pub(crate) fn parse_do_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLang
 }
 
 /// Parse a for statement
-pub(crate) fn parse_for_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_for_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
     state.expect(LeftParen).ok();
@@ -268,7 +268,7 @@ pub(crate) fn parse_for_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage>
 }
 
 /// Parse a switch statement
-pub(crate) fn parse_switch_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_switch_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
     super::expression::skip_trivia(state);
@@ -315,7 +315,7 @@ pub(crate) fn parse_switch_statement<'a, S: Source + ?Sized, P: Pratt<JavaLangua
 }
 
 /// Parse a block statement
-pub(crate) fn parse_block_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_block_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     let cp = state.checkpoint();
     state.expect(JavaTokenType::LeftBrace).ok();
     while state.not_at_end() && !state.at(JavaTokenType::RightBrace) {
@@ -332,7 +332,7 @@ pub(crate) fn parse_block_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguag
 }
 
 /// Parse a return statement
-pub(crate) fn parse_return_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser + ?Sized>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
+pub(crate) fn parse_return_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     state.bump();
     if !state.at(JavaTokenType::Semicolon) && !state.at(JavaTokenType::RightBrace) {
         PrattParser::parse(state, 0, parser);

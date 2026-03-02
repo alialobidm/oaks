@@ -25,6 +25,7 @@ pub mod mcp;
 pub mod parser;
 /// Syntax module.
 pub use crate::ast::ScssRoot;
+/// Re-exports of core SCSS types.
 pub use crate::{builder::ScssBuilder, language::ScssLanguage, lexer::ScssLexer, parser::ScssParser};
 
 /// Highlighter implementation.
@@ -40,5 +41,7 @@ pub use crate::lsp::formatter::ScssFormatter;
 /// MCP service implementation.
 #[cfg(feature = "mcp")]
 pub use crate::mcp::serve_scss_mcp;
+/// Token type for SCSS lexing.
 pub use lexer::token_type::ScssTokenType;
+/// Element type for SCSS parsing.
 pub use parser::element_type::ScssElementType;

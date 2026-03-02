@@ -1,3 +1,4 @@
+/// Element type definitions for the Go language parser.
 pub mod element_type;
 
 use crate::{language::GoLanguage, lexer::GoLexer};
@@ -8,14 +9,17 @@ use oak_core::{
     tree::GreenNode,
 };
 
+/// Parser state type alias for the Go language.
 pub(crate) type State<'a, S> = ParserState<'a, GoLanguage, S>;
 
-/// Go language parser
+/// Go language parser that constructs syntax trees from tokens.
 pub struct GoParser<'config> {
+    /// The language configuration reference.
     pub(crate) config: &'config GoLanguage,
 }
 
 impl<'config> GoParser<'config> {
+    /// Creates a new Go parser with the given language configuration.
     pub fn new(config: &'config GoLanguage) -> Self {
         Self { config }
     }

@@ -178,6 +178,8 @@ impl crate::lexer::ValkyrieLexer<'_> {
                     "using" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Using),
                     "class" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Class),
                     "abstract" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Abstract),
+                    "sealed" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Sealed),
+                    "final" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Final),
                     "struct" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Struct),
                     "structure" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Structure),
                     "singleton" => ValkyrieTokenType::Keyword(ValkyrieKeywords::Singleton),

@@ -132,6 +132,8 @@ pub enum ValkyrieElementType {
     Flags,
     /// Widget definition node.
     Widget,
+    /// Singleton definition node.
+    Singleton,
     /// Effect definition node.
     EffectDefinition,
     /// Using statement node.

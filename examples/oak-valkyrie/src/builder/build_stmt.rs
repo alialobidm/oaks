@@ -157,6 +157,7 @@ impl<'config> ValkyrieBuilder<'config> {
         let mut return_type = None;
         let mut body = None;
         let mut is_abstract = false;
+        let mut is_final = false;
 
         for child in node.children() {
             match child {
@@ -170,6 +171,9 @@ impl<'config> ValkyrieBuilder<'config> {
                     }
                     ValkyrieTokenType::Keyword(ValkyrieKeywords::Abstract) => {
                         is_abstract = true;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Final) => {
+                        is_final = true;
                     }
                     _ => {}
                 },
@@ -195,7 +199,7 @@ impl<'config> ValkyrieBuilder<'config> {
             }
         }
 
-        Ok(Function { name, generics, params, return_type, body, annotations, span, is_abstract })
+        Ok(Function { name, generics, params, return_type, body, annotations, span, is_abstract, is_final })
     }
 
     pub(crate) fn build_attribute<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Attribute, OakError> {

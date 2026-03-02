@@ -31,6 +31,25 @@ pub enum ValkyrieKeywords {
     /// abstract micro method()
     /// ```
     Abstract,
+    /// Declare a sealed class (restricted inheritance).
+    ///
+    /// Sealed classes restrict which classes can inherit from them.
+    /// All subclasses must be declared in the same file as the sealed class.
+    ///
+    /// ```v
+    /// sealed class Shape { ... }
+    /// ```
+    Sealed,
+    /// Declare a final class or final method that cannot be inherited or overridden.
+    ///
+    /// ```v
+    /// final class Constants { ... }
+    /// ```
+    ///
+    /// ```v
+    /// final micro get_value() -> i32 { ... }
+    /// ```
+    Final,
     /// Declare a structure (deprecated, use `structure` instead).
     ///
     /// ```v

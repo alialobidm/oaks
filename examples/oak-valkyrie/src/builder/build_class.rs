@@ -1,6 +1,6 @@
 use crate::{
     ValkyrieLanguage,
-    ast::{Class, Enums, EnumsKind, Flags, Identifier, Item, Parent, StructureKind, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
+    ast::{Class, Enums, EnumsKind, Flags, Identifier, Item, Parent, Singleton, StructureKind, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
     builder::{ValkyrieBuilder, text},
     lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
     parser::element_type::ValkyrieElementType,
@@ -17,6 +17,8 @@ impl<'config> ValkyrieBuilder<'config> {
         let mut parents = Vec::new();
         let mut items = Vec::new();
         let mut is_abstract = false;
+        let mut is_sealed = false;
+        let mut is_final = false;
 
         for child in node.children() {
             match child {
@@ -31,6 +33,12 @@ impl<'config> ValkyrieBuilder<'config> {
                     }
                     ValkyrieTokenType::Keyword(ValkyrieKeywords::Abstract) => {
                         is_abstract = true;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Sealed) => {
+                        is_sealed = true;
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::Final) => {
+                        is_final = true;
                     }
                     ValkyrieTokenType::Keyword(ValkyrieKeywords::Struct) => {
                         kind = StructureKind::Struct;
@@ -132,7 +140,7 @@ impl<'config> ValkyrieBuilder<'config> {
                 },
             }
         }
-        Ok(Class { kind, name, generics, annotations, parents, items, span, is_abstract })
+        Ok(Class { kind, name, generics, annotations, parents, items, span, is_abstract, is_sealed, is_final })
     }
 
     pub(crate) fn build_flags<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Flags, OakError> {
@@ -234,6 +242,7 @@ impl<'config> ValkyrieBuilder<'config> {
         let mut name = Identifier { name: String::new(), span: Default::default() };
         let mut fields = Vec::new();
         let mut annotations = Vec::new();
+        let mut value = None;
 
         for child in node.children() {
             match child {
@@ -252,11 +261,17 @@ impl<'config> ValkyrieBuilder<'config> {
                             fields.push(field);
                         }
                     }
-                    _ => {}
+                    _ => {
+                        if value.is_none() {
+                            if let Ok(expr) = self.build_expr(n, source) {
+                                value = Some(expr);
+                            }
+                        }
+                    }
                 },
             }
         }
-        Ok(EnumVariant { name, fields, annotations, span })
+        Ok(EnumVariant { name, fields, annotations, span, value })
     }
 
     pub(crate) fn build_field<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Field, OakError> {

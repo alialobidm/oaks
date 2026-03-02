@@ -45,4 +45,4 @@ pub fn parse(source: &str) -> Result<FSharpRoot, oak_core::OakError> {
 
 /// LSP implementation.
 #[cfg(feature = "lsp")]
-pub use crate::lsp::FSharpLanguageService;
+pub use crate::lsp::FsharpLanguageService;

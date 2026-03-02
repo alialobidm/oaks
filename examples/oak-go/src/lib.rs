@@ -9,7 +9,6 @@ pub mod ast;
 /// Builder module.
 pub mod builder;
 
-/// Kind definition module.
 /// Language configuration module.
 pub mod language;
 /// Lexer module.

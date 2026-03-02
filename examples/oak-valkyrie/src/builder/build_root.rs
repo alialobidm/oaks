@@ -58,6 +58,10 @@ impl<'config> ValkyrieBuilder<'config> {
                 let widget = self.build_widget(n, source)?;
                 Ok(Item::Widget(widget))
             }
+            ValkyrieElementType::Singleton => {
+                let singleton = self.build_singleton(n, source)?;
+                Ok(Item::Singleton(singleton))
+            }
             ValkyrieElementType::UsingStatement => {
                 let us = self.build_using(n, source)?;
                 Ok(Item::Using(us))
