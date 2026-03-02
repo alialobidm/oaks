@@ -407,6 +407,8 @@ impl crate::lexer::ValkyrieLexer<'_> {
                 ';' => ValkyrieTokenType::Semicolon,
                 '$' => ValkyrieTokenType::Dollar,
                 '?' => ValkyrieTokenType::Question,
+                '⟨' => ValkyrieTokenType::LeftAngle,
+                '⟩' => ValkyrieTokenType::RightAngle,
                 _ => return false,
             };
             state.advance(ch.len_utf8());

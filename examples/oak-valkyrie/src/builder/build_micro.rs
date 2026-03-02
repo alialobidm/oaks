@@ -231,7 +231,7 @@ impl<'config> ValkyrieBuilder<'config> {
             }
         }
 
-        if let (Some(base), true, Some(name)) = (base_ident, has_double_colon, associated_name) {
+        if let (Some(base), true, Some(name)) = (base_ident.clone(), has_double_colon, associated_name) {
             Ok(Type::AssociatedType { base, name, span })
         } else if let Some(base) = base_ident {
             Ok(Type::Named { 
