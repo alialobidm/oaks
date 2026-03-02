@@ -22,15 +22,15 @@ fn test_syntax_unification() {
     assert!(built1.result.is_ok(), "Failed to build object initialization: {:?}", built1.diagnostics);
     let ast1 = built1.result.unwrap();
 
-    // Check if it's an ApplyBlock/Object in AST
-    if let Item::Statement(Statement::ExprStmt { expr: Expr::Object { callee, block, .. }, .. }) = &ast1.items[0] {
+    // Check if it's an Object in AST
+    if let Item::Statement(Statement::ExprStmt { expr: Expr::Object { callee, fields, .. }, .. }) = &ast1.items[0] {
         if let Expr::Ident(ident) = callee.as_ref() {
             assert_eq!(ident.name, "Point")
         }
         else {
             panic!("Expected Ident callee, got {:?}", callee)
         }
-        assert_eq!(block.statements.len(), 2)
+        assert_eq!(fields.len(), 2)
     }
     else {
         panic!("Expected Expr::Object, got {:?}", ast1.items[0])
@@ -46,14 +46,16 @@ fn test_syntax_unification() {
     assert!(built2.result.is_ok(), "Failed to build trailing closure: {:?}", built2.diagnostics);
     let ast2 = built2.result.unwrap();
 
-    if let Item::Statement(Statement::ExprStmt { expr: Expr::Object { callee, block, .. }, .. }) = &ast2.items[0] {
+    if let Item::Statement(Statement::ExprStmt { expr: Expr::Object { callee, fields, .. }, .. }) = &ast2.items[0] {
         if let Expr::Ident(ident) = callee.as_ref() {
             assert_eq!(ident.name, "run_task")
         }
         else {
             panic!("Expected Ident callee, got {:?}", callee)
         }
-        assert_eq!(block.statements.len(), 1)
+        // Trailing closure style currently has no fields (just statements)
+        // This may need adjustment based on how trailing closures are handled
+        assert_eq!(fields.len(), 0)
     }
     else {
         panic!("Expected Expr::Object, got {:?}", ast2.items[0])

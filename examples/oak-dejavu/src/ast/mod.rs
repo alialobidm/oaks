@@ -1,3 +1,3 @@
-pub use structure::*;
+pub use structure_nodes::*;
 
-mod structure;
+mod structure_nodes;

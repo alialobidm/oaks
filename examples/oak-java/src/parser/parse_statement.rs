@@ -1,4 +1,4 @@
-use super::declaration::DeclarationParser;
+use super::parse_declaration::DeclarationParser;
 use crate::{
     language::JavaLanguage,
     lexer::token_type::JavaTokenType,
@@ -13,7 +13,7 @@ use oak_core::{
 /// Parse a statement
 pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     let cp = state.checkpoint();
     let pk = state.peek_kind();
     match pk {
@@ -31,7 +31,7 @@ pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + D
         Some(Identifier) => {
             let snapshot = state.checkpoint();
             if parser.parse_type(state).is_ok() {
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
                 if state.at(Identifier) {
                     state.restore(snapshot);
                     if let Err(_e) = parser.parse_variable_declaration(state) {
@@ -41,13 +41,13 @@ pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + D
                 }
                 else {
                     state.restore(snapshot);
-                    super::expression::parse_expression_statement(parser, state);
+                    super::parse_expression::parse_expression_statement(parser, state);
                     state.finish_at(cp, JavaElementType::ExpressionStatement);
                 }
             }
             else {
                 state.restore(snapshot);
-                super::expression::parse_expression_statement(parser, state);
+                super::parse_expression::parse_expression_statement(parser, state);
                 state.finish_at(cp, JavaElementType::ExpressionStatement);
             }
         }
@@ -107,29 +107,29 @@ pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + D
             if let Err(_e) = parse_block_statement(parser, state) {
                 skip_until_catch_or_finally(state);
             }
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             while state.at(Catch) {
                 let c_cp = state.checkpoint();
                 state.bump();
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
                 state.expect(LeftParen).ok();
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
                 let p_cp = state.checkpoint();
                 parser.parse_type(state).ok();
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
                 state.expect(Identifier).ok();
                 state.finish_at(p_cp, JavaElementType::Parameter);
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
                 state.expect(RightParen).ok();
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
                 if let Err(_e) = parse_block_statement(parser, state) {
                     skip_until_catch_or_finally(state);
                 }
                 state.finish_at(c_cp, JavaElementType::CatchClause);
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
             }
             if state.eat(Finally) {
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
                 if let Err(_e) = parse_block_statement(parser, state) {
                     skip_until_closing_brace(state);
                 }
@@ -138,9 +138,9 @@ pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + D
         }
         Some(Throw) => {
             state.bump();
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             PrattParser::parse(state, 0, parser);
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             state.eat(Semicolon);
             state.finish_at(cp, JavaElementType::ThrowStatement);
         }
@@ -155,7 +155,7 @@ pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + D
             }
         }
         _ => {
-            super::expression::parse_expression_statement(parser, state);
+            super::parse_expression::parse_expression_statement(parser, state);
             state.finish_at(cp, JavaElementType::ExpressionStatement);
         }
     }
@@ -166,17 +166,17 @@ pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + D
 pub(crate) fn parse_if_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(LeftParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     PrattParser::parse(state, 0, parser);
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(RightParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     parse_statement(parser, state)?;
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     if state.eat(Else) {
-        super::expression::skip_trivia(state);
+        super::parse_expression::skip_trivia(state);
         parse_statement(parser, state)?;
     }
     Ok(())
@@ -186,13 +186,13 @@ pub(crate) fn parse_if_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> 
 pub(crate) fn parse_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(LeftParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     PrattParser::parse(state, 0, parser);
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(RightParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     parse_statement(parser, state)?;
     Ok(())
 }
@@ -201,17 +201,17 @@ pub(crate) fn parse_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguag
 pub(crate) fn parse_do_while_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     parse_statement(parser, state)?;
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(While).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(LeftParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     PrattParser::parse(state, 0, parser);
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(RightParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.eat(Semicolon);
     Ok(())
 }
@@ -221,7 +221,7 @@ pub(crate) fn parse_for_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage>
     use JavaTokenType::*;
     state.bump();
     state.expect(LeftParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
 
     if !state.at(Semicolon) {
         let cp = state.checkpoint();
@@ -249,19 +249,19 @@ pub(crate) fn parse_for_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage>
         }
     }
     state.expect(Semicolon).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
 
     if !state.at(Semicolon) {
         PrattParser::parse(state, 0, parser);
     }
     state.expect(Semicolon).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
 
     if !state.at(RightParen) {
         PrattParser::parse(state, 0, parser);
     }
     state.expect(RightParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
 
     parse_statement(parser, state)?;
     Ok(())
@@ -271,43 +271,43 @@ pub(crate) fn parse_for_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage>
 pub(crate) fn parse_switch_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {
     use JavaTokenType::*;
     state.bump();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(LeftParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     PrattParser::parse(state, 0, parser);
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(RightParen).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     state.expect(LeftBrace).ok();
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
     while state.not_at_end() && !state.at(RightBrace) {
-        super::expression::skip_trivia(state);
+        super::parse_expression::skip_trivia(state);
         let cp = state.checkpoint();
         if state.eat(Case) {
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             PrattParser::parse(state, 0, parser);
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             state.expect(Colon).ok();
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             while state.not_at_end() && !state.at(Case) && !state.at(Default) && !state.at(RightBrace) {
                 parse_statement(parser, state).ok();
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
             }
             state.finish_at(cp, JavaElementType::SwitchCase);
         }
         else if state.eat(Default) {
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             state.expect(Colon).ok();
-            super::expression::skip_trivia(state);
+            super::parse_expression::skip_trivia(state);
             while state.not_at_end() && !state.at(Case) && !state.at(Default) && !state.at(RightBrace) {
                 parse_statement(parser, state).ok();
-                super::expression::skip_trivia(state)
+                super::parse_expression::skip_trivia(state)
             }
             state.finish_at(cp, JavaElementType::DefaultCase);
         }
         else {
             state.bump();
-            super::expression::skip_trivia(state)
+            super::parse_expression::skip_trivia(state)
         }
     }
     state.expect(RightBrace).ok();
@@ -319,12 +319,12 @@ pub(crate) fn parse_block_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguag
     let cp = state.checkpoint();
     state.expect(JavaTokenType::LeftBrace).ok();
     while state.not_at_end() && !state.at(JavaTokenType::RightBrace) {
-        super::expression::skip_trivia(state);
+        super::parse_expression::skip_trivia(state);
         if state.at(JavaTokenType::RightBrace) {
             break;
         }
         parse_statement(parser, state).ok();
-        super::expression::skip_trivia(state)
+        super::parse_expression::skip_trivia(state)
     }
     state.expect(JavaTokenType::RightBrace).ok();
     state.finish_at(cp, JavaElementType::BlockStatement);
@@ -346,10 +346,10 @@ pub(crate) fn skip_until_semicolon<'a, S: Source + ?Sized>(state: &mut State<'a,
     use JavaTokenType::*;
     while state.not_at_end() && !state.at(Semicolon) && !state.at(LeftBrace) && !state.at(RightBrace) {
         state.bump();
-        super::expression::skip_trivia(state);
+        super::parse_expression::skip_trivia(state);
     }
     state.eat(Semicolon);
-    super::expression::skip_trivia(state);
+    super::parse_expression::skip_trivia(state);
 }
 
 /// Skip until closing brace for error recovery
@@ -363,7 +363,7 @@ pub(crate) fn skip_until_closing_brace<'a, S: Source + ?Sized>(state: &mut State
             _ => {}
         }
         state.bump();
-        super::expression::skip_trivia(state);
+        super::parse_expression::skip_trivia(state);
     }
 }
 
@@ -372,7 +372,7 @@ pub(crate) fn skip_until_catch_or_finally<'a, S: Source + ?Sized>(state: &mut St
     use JavaTokenType::*;
     while state.not_at_end() && !state.at(Catch) && !state.at(Finally) && !state.at(RightBrace) {
         state.bump();
-        super::expression::skip_trivia(state);
+        super::parse_expression::skip_trivia(state);
     }
 }
 
@@ -387,7 +387,7 @@ pub(crate) fn recover_from_error<'a, S: Source + ?Sized>(state: &mut State<'a, S
             }
             _ => {
                 state.bump();
-                super::expression::skip_trivia(state);
+                super::parse_expression::skip_trivia(state);
             }
         }
     }

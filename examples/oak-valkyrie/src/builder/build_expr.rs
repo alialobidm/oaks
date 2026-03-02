@@ -383,7 +383,7 @@ impl<'config> ValkyrieBuilder<'config> {
     pub(crate) fn build_object<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
         let span = node.span();
         let mut callee = None;
-        let mut block = None;
+        let mut fields = Vec::new();
 
         for child in node.children() {
             match child {
@@ -394,7 +394,34 @@ impl<'config> ValkyrieBuilder<'config> {
                 RedTree::Node(n) => match n.green.kind {
                     ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
                     ValkyrieElementType::BlockExpression => {
-                        block = Some(self.build_block(n, source)?);
+                        for block_child in n.children() {
+                            if let RedTree::Node(stmt_n) = block_child {
+                                match stmt_n.green.kind {
+                                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                                    ValkyrieElementType::ExprStatement => {
+                                        for expr_child in stmt_n.children() {
+                                            if let RedTree::Node(expr_n) = expr_child {
+                                                match expr_n.green.kind {
+                                                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                                                    ValkyrieElementType::BinaryExpression => {
+                                                        if let Some((name, value)) = self.extract_field_from_binary(&expr_n, source)? {
+                                                            fields.push((name, Some(value)));
+                                                        }
+                                                    }
+                                                    ValkyrieElementType::IdentifierExpression => {
+                                                        if let Ok(Expr::Ident(ident)) = self.build_identifier_expr(expr_n.clone(), source) {
+                                                            fields.push((ident, None));
+                                                        }
+                                                    }
+                                                    _ => {}
+                                                }
+                                            }
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
                     }
                     _ => {
                         if callee.is_none() {
@@ -406,9 +433,40 @@ impl<'config> ValkyrieBuilder<'config> {
         }
 
         let callee = callee.ok_or_else(|| source.syntax_error("Missing object callee".to_string(), span.start))?;
-        let block = block.ok_or_else(|| source.syntax_error("Missing object block".to_string(), span.start))?;
 
-        Ok(Expr::Object { callee, block, span })
+        Ok(Expr::Object { callee, fields, span })
+    }
+
+    fn extract_field_from_binary<S: Source + ?Sized>(&self, node: &RedNode<ValkyrieLanguage>, source: &S) -> Result<Option<(Identifier, Expr)>, OakError> {
+        let mut field_name = None;
+        let mut value = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Eq => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::IdentifierExpression => {
+                        if field_name.is_none() {
+                            if let Ok(Expr::Ident(ident)) = self.build_identifier_expr(n.clone(), source) {
+                                field_name = Some(ident);
+                            }
+                        }
+                    }
+                    _ => {
+                        if field_name.is_some() && value.is_none() {
+                            value = Some(self.build_expr(n, source)?);
+                        }
+                    }
+                },
+            }
+        }
+
+        if let (Some(name), Some(val)) = (field_name, value) { Ok(Some((name, val))) } else { Ok(None) }
     }
 
     pub(crate) fn build_identifier_expr<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {

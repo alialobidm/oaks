@@ -434,4 +434,252 @@ pub struct IfExpressionNode {
 }
 
 /// Match expression node.
-#[derive
+#[derive(Debug, Clone, PartialEq)]
+pub struct MatchExpressionNode {
+    /// Scrutinee expression.
+    pub scrutinee: Box<ExpressionNode>,
+    /// Match arms.
+    pub arms: Vec<MatchArmNode>,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Lambda expression node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LambdaExpressionNode {
+    /// Lambda parameters.
+    pub params: Vec<ParameterNode>,
+    /// Return type annotation.
+    pub return_type: Option<String>,
+    /// Lambda body.
+    pub body: BlockNode,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Object expression node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ObjectExpressionNode {
+    /// Callee expression.
+    pub callee: Box<ExpressionNode>,
+    /// Object block.
+    pub block: BlockNode,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Loop expression node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LoopExpressionNode {
+    /// Optional loop label.
+    pub label: Option<String>,
+    /// Optional pattern for condition binding.
+    pub pattern: Option<PatternNode>,
+    /// Optional condition expression.
+    pub condition: Option<Box<ExpressionNode>>,
+    /// Loop body.
+    pub body: BlockNode,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Return expression node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ReturnExpressionNode {
+    /// Optional return value.
+    pub expr: Option<Box<ExpressionNode>>,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Break expression node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BreakExpressionNode {
+    /// Optional target label.
+    pub label: Option<String>,
+    /// Optional break value.
+    pub expr: Option<Box<ExpressionNode>>,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Continue expression node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContinueExpressionNode {
+    /// Optional target label.
+    pub label: Option<String>,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Yield expression node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct YieldExpressionNode {
+    /// Optional yielded value.
+    pub expr: Option<Box<ExpressionNode>>,
+    /// Whether this is a yield from.
+    pub yield_from: bool,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Raise expression node for throwing errors.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RaiseExpressionNode {
+    /// Error expression.
+    pub expr: Box<ExpressionNode>,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Catch expression node for error handling.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CatchExpressionNode {
+    /// Optional return type.
+    pub return_type: Option<NamePathNode>,
+    /// Expression to catch errors from.
+    pub expr: Box<ExpressionNode>,
+    /// Catch arms.
+    pub arms: Vec<MatchArmNode>,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Resume expression node for error recovery.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResumeExpressionNode {
+    /// Optional resume value.
+    pub expr: Option<Box<ExpressionNode>>,
+    /// Source span of the expression.
+    pub span: Range<usize>,
+}
+
+/// Pattern node for pattern matching.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PatternNode {
+    /// Variable pattern.
+    Variable(VariablePatternNode),
+    /// Wildcard pattern.
+    Wildcard(WildcardPatternNode),
+    /// Literal pattern.
+    Literal(LiteralPatternNode),
+    /// Tuple pattern.
+    Tuple(TuplePatternNode),
+    /// Array pattern.
+    Array(ArrayPatternNode),
+    /// Object pattern.
+    Object(ObjectPatternNode),
+    /// Or pattern.
+    Or(OrPatternNode),
+    /// Type pattern.
+    Type(TypePatternNode),
+    /// Class pattern.
+    Class(ClassPatternNode),
+}
+
+/// Variable pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct VariablePatternNode {
+    /// Variable name.
+    pub name: IdentifierNode,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Wildcard pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WildcardPatternNode {
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Literal pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LiteralPatternNode {
+    /// Literal value.
+    pub value: String,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Tuple pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TuplePatternNode {
+    /// Tuple element patterns.
+    pub items: Vec<PatternNode>,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Array pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ArrayPatternNode {
+    /// Array element patterns.
+    pub items: Vec<PatternNode>,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Object pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ObjectPatternNode {
+    /// Object property patterns.
+    pub props: Vec<(IdentifierNode, PatternNode)>,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Or pattern node for alternatives.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OrPatternNode {
+    /// Alternative patterns.
+    pub patterns: Vec<PatternNode>,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Type pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TypePatternNode {
+    /// Type name.
+    pub name: NamePathNode,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Class pattern node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClassPatternNode {
+    /// Class name.
+    pub name: NamePathNode,
+    /// Field patterns.
+    pub fields: Vec<(IdentifierNode, PatternNode)>,
+    /// Source span of the pattern.
+    pub span: Range<usize>,
+}
+
+/// Match arm node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MatchArmNode {
+    /// Match pattern.
+    pub pattern: PatternNode,
+    /// Optional guard expression.
+    pub guard: Option<Box<ExpressionNode>>,
+    /// Arm body.
+    pub body: Box<ExpressionNode>,
+    /// Source span of the arm.
+    pub span: Range<usize>,
+}
+
+/// Effect definition node.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EffectDefinition {
+    /// Effect name.
+    pub name: IdentifierNode,
+    /// Effect annotations.
+    pub annotations: Vec<AttributeNode>,
+    /// Effect items.
+    pub items: Vec<ItemNode>,
+    /// Source span of the definition.
+    pub span: Range<usize>,
+}

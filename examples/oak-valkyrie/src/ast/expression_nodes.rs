@@ -93,11 +93,18 @@ pub enum Expr {
     /// A lambda expression.
     Lambda(LambdaExpr),
     /// An object expression.
+    ///
+    /// Creates a new object instance with specified field values.
+    ///
+    /// ```v
+    /// let p = Point { x: 10, y: 20 }
+    /// let shorthand = Point { x, y }  // shorthand syntax
+    /// ```
     Object {
         /// The callee expression.
         callee: Box<Expr>,
-        /// The object body block.
-        block: Block,
+        /// The field-value pairs. None for shorthand syntax.
+        fields: Vec<(Identifier, Option<Expr>)>,
         /// The source code span.
         #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,

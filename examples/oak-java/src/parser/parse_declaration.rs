@@ -21,7 +21,7 @@ use oak_core::{
 pub trait DeclarationParser: Pratt<JavaLanguage> {
     /// Skip trivia tokens (whitespace, comments)
     fn skip_trivia<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) {
-        super::expression::skip_trivia(state);
+        super::parse_expression::skip_trivia(state);
     }
 
     /// Parse a block statement
@@ -29,7 +29,7 @@ pub trait DeclarationParser: Pratt<JavaLanguage> {
     where
         Self: Sized,
     {
-        super::statement::parse_block_statement(self, state)
+        super::parse_statement::parse_block_statement(self, state)
     }
 
     /// Parse a declaration (class, interface, enum, method, field, etc.)

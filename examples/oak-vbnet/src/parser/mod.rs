@@ -1,10 +1,10 @@
 /// Element type module
 pub mod element_type;
 
-mod declaration;
-mod expression;
-mod member;
-mod statement;
+mod parse_declaration;
+mod parse_expression;
+mod parse_member;
+mod parse_statement;
 
 use crate::{language::VbNetLanguage, lexer::token_type::VbNetTokenType, parser::element_type::VbNetElementType};
 use oak_core::{

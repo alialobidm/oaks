@@ -50,11 +50,17 @@ pub enum Pattern {
         span: Span,
     },
     /// A class pattern for destructuring.
+    ///
+    /// ```v
+    /// let Point { x, y } = p           // shorthand syntax
+    /// let Point { x: a, y: b } = p     // explicit binding
+    /// let Point { x, y: new_y } = p    // mixed syntax
+    /// ```
     Class {
         /// The class name path.
         name: NamePath,
-        /// The field patterns.
-        fields: Vec<(Identifier, Pattern)>,
+        /// The field patterns. None for shorthand syntax.
+        fields: Vec<(Identifier, Option<Pattern>)>,
         /// The source code span.
         #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,

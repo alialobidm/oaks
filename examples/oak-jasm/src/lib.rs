@@ -9,8 +9,6 @@ pub mod ast;
 /// Builder module.
 pub mod builder;
 
-pub mod formatter;
-
 /// Type definitions module.
 /// Language configuration module.
 pub mod language;
@@ -32,11 +30,11 @@ pub use crate::{ast::JasmRoot, builder::JasmBuilder, language::JasmLanguage, lex
 #[cfg(feature = "oak-highlight")]
 pub use crate::lsp::highlighter::JasmHighlighter;
 
-#[cfg(feature = "oak-pretty-print")]
-pub use crate::formatter::JasmFormatter;
 /// LSP implementation.
 #[cfg(feature = "lsp")]
 pub use crate::lsp::JasmLanguageService;
+#[cfg(feature = "oak-pretty-print")]
+pub use crate::lsp::formatter::JasmFormatter;
 
 /// MCP service implementation.
 #[cfg(feature = "mcp")]
