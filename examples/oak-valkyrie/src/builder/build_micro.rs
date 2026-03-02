@@ -193,25 +193,54 @@ impl<'config> ValkyrieBuilder<'config> {
 
     pub(crate) fn build_type<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Type, OakError> {
         let span = node.span();
-        
+        let mut base_ident: Option<Identifier> = None;
+        let mut has_double_colon = false;
+        let mut associated_name: Option<Identifier> = None;
+
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
                     ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        if base_ident.is_none() {
+                            base_ident = Some(Identifier { name: text(source, t.span), span: t.span });
+                        } else if has_double_colon && associated_name.is_none() {
+                            associated_name = Some(Identifier { name: text(source, t.span), span: t.span });
+                        }
+                    }
+                    ValkyrieTokenType::Keyword(ValkyrieKeywords::SelfType) => {
+                        if base_ident.is_none() {
+                            base_ident = Some(Identifier { name: "Self".to_string(), span: t.span });
+                        }
+                    }
+                    ValkyrieTokenType::ColonColon => {
+                        has_double_colon = true;
+                    }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
                     ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
                     ValkyrieElementType::NamePath => {
-                        let path = self.build_name_path(n, source)?;
-                        return Ok(Type::Named { path, span });
+                        if base_ident.is_none() {
+                            let path = self.build_name_path(n, source)?;
+                            return Ok(Type::Named { path, span });
+                        }
                     }
                     _ => {}
                 },
             }
         }
 
-        Ok(Type::Named { path: NamePath { parts: Vec::new(), span }, span })
+        if let (Some(base), true, Some(name)) = (base_ident, has_double_colon, associated_name) {
+            Ok(Type::AssociatedType { base, name, span })
+        } else if let Some(base) = base_ident {
+            Ok(Type::Named { 
+                path: NamePath { parts: vec![base], span }, 
+                span 
+            })
+        } else {
+            Ok(Type::Named { path: NamePath { parts: Vec::new(), span }, span })
+        }
     }
 
     pub(crate) fn build_params<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Vec<Param>, OakError> {

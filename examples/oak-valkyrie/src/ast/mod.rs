@@ -763,6 +763,26 @@ pub enum Type {
         /// The source code span.
         span: Span,
     },
+    /// An associated type projection (e.g., `Self::Item`, `T::Output`).
+    AssociatedType {
+        /// The base type (e.g., `Self` or a type parameter name).
+        base: Identifier,
+        /// The associated type name.
+        name: Identifier,
+        /// The source code span.
+        span: Span,
+    },
+    /// A qualified associated type (e.g., `<T as Trait>::Item`).
+    QualifiedAssociatedType {
+        /// The type being projected from.
+        ty: Box<Type>,
+        /// The trait providing the associated type.
+        trait_path: NamePath,
+        /// The associated type name.
+        name: Identifier,
+        /// The source code span.
+        span: Span,
+    },
 }
 
 /// A generic parameter

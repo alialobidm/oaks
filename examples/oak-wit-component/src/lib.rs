@@ -2,6 +2,7 @@
 #![feature(new_range_api)]
 #![warn(missing_docs)]
 
+/// AST module.
 pub mod ast;
 /// Builder for constructing WIT AST from source text.
 pub mod builder;

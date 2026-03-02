@@ -23,4 +23,5 @@ pub use crate::lsp::highlighter::{HighlightKind, Highlighter, PurescriptHighligh
 // pub mod mcp;
 // #[cfg(feature = "mcp")]
 // pub use crate::mcp::serve_purescript_mcp;
+/// Re-export of parser types.
 pub use parser::element_type::PurescriptElementType;

@@ -7,6 +7,7 @@ pub struct OrgModeBuilder {}
 
 impl OrgModeBuilder {
     /// Creates a new `OrgModeBuilder`.
+    /// Creates a new OrgModeBuilder with the given language configuration.
     pub fn new(config: &OrgModeLanguage) -> Self {
         Self {}
     }

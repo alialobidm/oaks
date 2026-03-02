@@ -16,7 +16,7 @@ pub struct DartParser<'a> {
 }
 
 impl<'a> DartParser<'a> {
-    /// Creates a new `DartParser`.
+    /// Creates a new DartParser with the given language configuration.
     pub fn new(language: &'a DartLanguage) -> Self {
         Self { _language: language }
     }

@@ -5,6 +5,7 @@
 #![warn(missing_docs)]
 
 /// AST module.
+/// AST module.
 pub mod ast;
 /// Builder module.
 pub mod builder;

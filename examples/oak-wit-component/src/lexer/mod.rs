@@ -43,6 +43,7 @@ impl<'config> WitLexer<'config> {
     /// # Arguments
     ///
     /// * `config` - A reference to the `WitLanguage` configuration.
+    /// Creates a new WitComponentLexer with the given language configuration.
     pub fn new(config: &'config WitLanguage) -> Self {
         Self { config }
     }

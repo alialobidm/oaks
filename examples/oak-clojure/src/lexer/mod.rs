@@ -30,6 +30,7 @@ impl<'config> Lexer<ClojureLanguage> for ClojureLexer<'config> {
 }
 
 impl<'config> ClojureLexer<'config> {
+    /// Creates a new ClojureLexer with the given language configuration.
     pub fn new(config: &'config ClojureLanguage) -> Self {
         Self { config }
     }

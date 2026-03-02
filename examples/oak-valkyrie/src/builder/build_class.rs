@@ -483,4 +483,75 @@ impl<'config> ValkyrieBuilder<'config> {
         }
         Ok(Widget { name, generics, items, annotations, span })
     }
+
+    pub(crate) fn build_singleton<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Singleton, OakError> {
+        let span = node.span();
+        let mut name = Identifier { name: String::new(), span: Default::default() };
+        let mut generics = Vec::new();
+        let mut parents = Vec::new();
+        let mut annotations = Vec::new();
+        let mut items = Vec::new();
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Identifier => {
+                        name = Identifier { name: text(source, t.span), span: t.span };
+                    }
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Attribute => annotations.push(self.build_attribute(n, source)?),
+                    ValkyrieElementType::GenericParameterList => {
+                        generics = self.build_generic_params(n, source)?;
+                    }
+                    ValkyrieElementType::NamePath => {
+                        let parent = Parent {
+                            alias: None,
+                            name: self.build_name_path(n, source)?,
+                            span: n.span(),
+                        };
+                        parents.push(parent);
+                    }
+                    ValkyrieElementType::Type => {
+                        for child in n.children() {
+                            if let RedTree::Node(inner) = child {
+                                if inner.green.kind == ValkyrieElementType::NamePath {
+                                    let parent = Parent {
+                                        alias: None,
+                                        name: self.build_name_path(inner, source)?,
+                                        span: inner.span(),
+                                    };
+                                    parents.push(parent);
+                                }
+                            }
+                        }
+                    }
+                    ValkyrieElementType::Namespace => {
+                        let ns = self.build_namespace(n, source)?;
+                        items.push(Item::Namespace(ns))
+                    }
+                    ValkyrieElementType::Class => {
+                        let class = self.build_class(n, source)?;
+                        items.push(Item::Class(class))
+                    }
+                    ValkyrieElementType::Micro => {
+                        let micro = self.build_micro(n, source)?;
+                        items.push(Item::Micro(micro))
+                    }
+                    ValkyrieElementType::LetStatement => {
+                        let stmt = self.build_let(n, source)?;
+                        items.push(Item::Statement(stmt))
+                    }
+                    ValkyrieElementType::ExprStatement => {
+                        let stmt = self.build_expr_stmt(n, source)?;
+                        items.push(Item::Statement(stmt))
+                    }
+                    _ => {}
+                },
+            }
+        }
+        Ok(Singleton { name, generics, parents, items, annotations, span })
+    }
 }

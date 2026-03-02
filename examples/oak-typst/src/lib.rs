@@ -27,6 +27,7 @@ pub mod parser;
 pub use crate::ast::TypstRoot;
 pub use builder::TypstBuilder;
 pub use language::TypstLanguage;
+/// Re-export of lexer types.
 pub use lexer::TypstLexer;
 pub use parser::TypstParser;
 

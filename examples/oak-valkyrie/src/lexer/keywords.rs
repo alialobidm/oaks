@@ -289,4 +289,33 @@ pub enum ValkyrieKeywords {
     /// set width(mut self, value: f64) { self.width = value }
     /// ```
     Set,
+    /// Self type reference.
+    ///
+    /// Used in trait implementations and associated type paths.
+    ///
+    /// ```v
+    /// trait Iterator {
+    ///     type Item
+    ///     micro next(self) -> Self::Item?
+    /// }
+    /// ```
+    SelfType,
+    /// Type alias declaration.
+    ///
+    /// ```v
+    /// type Point = (f64, f64)
+    /// ```
+    TypeAlias,
+    /// Implement a trait for a type.
+    ///
+    /// ```v
+    /// impl Show for Point { ... }
+    /// ```
+    Impl,
+    /// Where clause for generic constraints.
+    ///
+    /// ```v
+    /// micro foo<T>(x: T) where T: Clone { ... }
+    /// ```
+    Where,
 }

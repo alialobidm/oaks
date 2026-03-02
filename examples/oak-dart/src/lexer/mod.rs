@@ -24,6 +24,7 @@ impl<'config> Lexer<DartLanguage> for DartLexer<'config> {
 }
 
 impl<'config> DartLexer<'config> {
+    /// Creates a new DartLexer with the given language configuration.
     pub fn new(config: &'config DartLanguage) -> Self {
         Self { config }
     }

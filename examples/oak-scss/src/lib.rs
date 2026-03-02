@@ -42,6 +42,7 @@ pub use crate::lsp::formatter::ScssFormatter;
 #[cfg(feature = "mcp")]
 pub use crate::mcp::serve_scss_mcp;
 /// Token type for SCSS lexing.
+/// Re-export of lexer types.
 pub use lexer::token_type::ScssTokenType;
 /// Element type for SCSS parsing.
 pub use parser::element_type::ScssElementType;

@@ -4,6 +4,7 @@
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![warn(missing_docs)]
 
+/// AST module.
 pub mod ast;
 pub mod builder;
 

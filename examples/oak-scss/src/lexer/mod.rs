@@ -1,5 +1,6 @@
 #![doc = include_str!("readme.md")]
 /// Token type definitions for the SCSS lexer.
+/// Token type definitions for SCSS.
 pub mod token_type;
 
 use crate::{language::ScssLanguage, lexer::token_type::ScssTokenType};
