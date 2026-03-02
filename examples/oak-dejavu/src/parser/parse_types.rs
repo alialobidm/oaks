@@ -449,10 +449,16 @@ impl super::DejavuParser {
 
     pub(crate) fn parse_generic_parameter_list<'a, S: oak_core::source::Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<&'a GreenNode<'a, crate::DejavuLanguage>, OakError> {
         let cp = state.checkpoint();
-        state.expect(LessThan)?;
+        let use_angle_brackets = state.at(LeftAngle);
+        if use_angle_brackets {
+            state.expect(LeftAngle)?;
+        } else {
+            state.expect(LessThan)?;
+        }
         self.skip_trivia(state);
 
-        while state.not_at_end() && !state.at(GreaterThan) {
+        let end_token = if use_angle_brackets { RightAngle } else { GreaterThan };
+        while state.not_at_end() && !state.at(end_token) {
             state.expect(Identifier)?;
             self.skip_trivia(state);
             if state.at(Comma) {
@@ -461,16 +467,22 @@ impl super::DejavuParser {
             }
         }
 
-        state.expect(GreaterThan)?;
+        state.expect(end_token)?;
         Ok(state.finish_at(cp, GenericParameterList))
     }
 
     pub(crate) fn parse_generic_argument_list<'a, S: oak_core::source::Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<&'a GreenNode<'a, crate::DejavuLanguage>, OakError> {
         let cp = state.checkpoint();
-        state.expect(LessThan)?;
+        let use_angle_brackets = state.at(LeftAngle);
+        if use_angle_brackets {
+            state.expect(LeftAngle)?;
+        } else {
+            state.expect(LessThan)?;
+        }
         self.skip_trivia(state);
 
-        while state.not_at_end() && !state.at(GreaterThan) {
+        let end_token = if use_angle_brackets { RightAngle } else { GreaterThan };
+        while state.not_at_end() && !state.at(end_token) {
             let cp_type = state.checkpoint();
             self.parse_name_path(state)?;
             state.finish_at(cp_type, Type);
@@ -481,7 +493,7 @@ impl super::DejavuParser {
             }
         }
 
-        state.expect(GreaterThan)?;
+        state.expect(end_token)?;
         Ok(state.finish_at(cp, GenericArgumentList))
     }
 

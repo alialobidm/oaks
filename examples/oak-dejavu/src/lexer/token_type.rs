@@ -90,6 +90,10 @@ pub enum DejavuTokenType {
     LessEq,
     /// Less than operator `<`.
     LessThan,
+    /// Left mathematical angle bracket `⟨` (U+27E8).
+    LeftAngle,
+    /// Right mathematical angle bracket `⟩` (U+27E9).
+    RightAngle,
     /// Minus operator `-`.
     Minus,
     /// Minus assignment operator `-=`.
