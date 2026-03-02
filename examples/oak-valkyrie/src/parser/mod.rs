@@ -32,6 +32,6 @@ impl<'config> ValkyrieParser<'config> {
 pub mod element_type;
 
 /// String segment parser for interpolation and escape handling.
-pub mod string_segments;
+pub mod parse_string_segments;
 
-pub use string_segments::parse_string_segments;
+pub use parse_string_segments::parse_string_segments;
