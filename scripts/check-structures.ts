@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXAMPLES_DIR = path.join(__dirname, '..', 'examples');
 const MAX_LINES = 1000;
 const ALLOWED_SRC_DIRS = ['ast', 'builder', 'parser', 'lexer', 'language', 'lsp', 'mcp'];
