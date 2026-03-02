@@ -1,3 +1,4 @@
+/// Token type definitions for D2.
 pub mod token_type;
 
 use crate::{D2TokenType, language::D2Language};
@@ -7,11 +8,13 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
+/// Lexer for D2 diagram language.
 pub struct D2Lexer<'config> {
     config: &'config D2Language,
 }
 
 impl<'config> D2Lexer<'config> {
+    /// Creates a new D2Lexer with the given language configuration.
     pub fn new(config: &'config D2Language) -> Self {
         Self { config }
     }

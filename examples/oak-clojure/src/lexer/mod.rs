@@ -1,4 +1,5 @@
 #![doc = include_str!("readme.md")]
+/// Token type definitions for Clojure.
 pub mod token_type;
 pub use token_type::ClojureTokenType;
 
@@ -9,6 +10,7 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
+/// Lexer for Clojure source code.
 #[derive(Clone, Debug)]
 pub struct ClojureLexer<'config> {
     pub(crate) config: &'config ClojureLanguage,

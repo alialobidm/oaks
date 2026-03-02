@@ -60,22 +60,28 @@ pub struct FunctionDeclaration {
     pub span: Range<usize>,
 }
 
-/// Variable declaration in Dart
+/// Variable declaration in Dart.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq, Clone)]
 pub struct VariableDeclaration {
+    /// The variable name.
     pub name: Identifier,
+    /// Optional type annotation.
     pub type_annotation: Option<Identifier>,
+    /// Optional initial value.
     pub value: Option<Expression>,
+    /// The source span of the entire variable declaration.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
 }
 
-/// Parameter in a Dart function
+/// Parameter in a Dart function.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq, Clone)]
 pub struct Parameter {
+    /// The parameter name.
     pub name: Identifier,
+    /// Optional type annotation.
     pub type_annotation: Option<Identifier>,
 }
 

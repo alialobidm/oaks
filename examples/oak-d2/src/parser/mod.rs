@@ -1,3 +1,4 @@
+/// Element type definitions for D2.
 pub mod element_type;
 
 use crate::{D2TokenType, language::D2Language, lexer::D2Lexer};
@@ -7,11 +8,13 @@ use oak_core::{
     source::{Source, TextEdit},
 };
 
+/// Parser for D2 diagram language.
 pub struct D2Parser<'config> {
     config: &'config D2Language,
 }
 
 impl<'config> D2Parser<'config> {
+    /// Creates a new D2Parser with the given language configuration.
     pub fn new(config: &'config D2Language) -> Self {
         Self { config }
     }
