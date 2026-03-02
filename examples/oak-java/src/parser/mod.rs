@@ -3,9 +3,9 @@ use oak_core::TokenType;
 /// Java element types.
 pub mod element_type;
 
-mod declaration;
-mod expression;
-mod statement;
+mod parse_declaration;
+mod parse_expression;
+mod parse_statement;
 
 use crate::{
     language::JavaLanguage,
@@ -92,25 +92,25 @@ impl<'config> JavaParser<'config> {
     }
 
     fn parse_item<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> {
-        statement::parse_statement(self, state)
+        parse_statement::parse_statement(self, state)
     }
 }
 
 impl<'config> Pratt<JavaLanguage> for JavaParser<'config> {
     fn primary<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> &'a GreenNode<'a, JavaLanguage> {
-        expression::primary(self, state)
+        parse_expression::primary(self, state)
     }
 
     fn prefix<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> &'a GreenNode<'a, JavaLanguage> {
-        expression::prefix(self, state)
+        parse_expression::prefix(self, state)
     }
 
     fn infix<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>, left: &'a GreenNode<'a, JavaLanguage>, min_precedence: u8) -> Option<&'a GreenNode<'a, JavaLanguage>> {
-        expression::infix(self, state, left, min_precedence)
+        parse_expression::infix(self, state, left, min_precedence)
     }
 }
 
-impl<'config> declaration::DeclarationParser for JavaParser<'config> {}
+impl<'config> parse_declaration::DeclarationParser for JavaParser<'config> {}
 
 impl<'config> Parser<JavaLanguage> for JavaParser<'config> {
     /// Parses Java source code into an abstract syntax tree

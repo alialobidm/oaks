@@ -14,6 +14,6 @@ pub mod themes;
 
 pub use crate::{
     exporters::{AnsiExporter, CssExporter, ExportFormat, Exporter, HtmlExporter, JsonExporter},
-    highlighter::{HighlightResult, HighlightSegment, HighlightStyle, HighlightTheme, Highlighter, OakHighlighter},
+    highlighter::{HighlightResult, HighlightSegment, HighlightSpan, HighlightStyle, HighlightTheme, Highlighter, OakHighlighter},
     themes::Theme,
 };

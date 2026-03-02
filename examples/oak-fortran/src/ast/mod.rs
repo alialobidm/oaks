@@ -1,13 +1,13 @@
 #![doc = include_str!("readme.md")]
 
-mod executable;
-mod expression;
-mod root;
-mod specification;
-mod types;
+mod executable_nodes;
+mod expression_nodes;
+mod root_nodes;
+mod specification_nodes;
+mod types_nodes;
 
-pub use executable::*;
-pub use expression::*;
-pub use root::*;
-pub use specification::*;
-pub use types::*;
+pub use executable_nodes::*;
+pub use expression_nodes::*;
+pub use root_nodes::*;
+pub use specification_nodes::*;
+pub use types_nodes::*;
