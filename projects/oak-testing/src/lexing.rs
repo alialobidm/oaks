@@ -11,9 +11,9 @@ use oak_core::{
 };
 
 #[cfg(feature = "serde")]
-use serde::Serialize;
-#[cfg(feature = "serde")]
 use crate::json_from_path;
+#[cfg(feature = "serde")]
+use serde::Serialize;
 
 use std::{
     path::{Path, PathBuf},

@@ -16,7 +16,7 @@ static TCL_COMMENT: CommentConfig = CommentConfig { line_marker: "#", block_star
 static TCL_STRING: StringConfig = StringConfig { quotes: &['"'], escape: Some('\\') };
 
 /// A lexer for the Tcl programming language.
-/// 
+///
 /// This lexer tokenizes Tcl source code into a sequence of tokens that can be
 /// processed by the parser.
 #[derive(Clone)]

@@ -15,7 +15,7 @@ use oak_core::{
 pub(crate) type State<'a, S> = ParserState<'a, TclLanguage, S>;
 
 /// A parser for the Tcl programming language.
-/// 
+///
 /// This parser processes tokens produced by the lexer and constructs
 /// an abstract syntax tree (AST) for Tcl source code.
 pub struct TclParser<'config> {

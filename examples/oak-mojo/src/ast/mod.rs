@@ -71,27 +71,27 @@ pub enum MojoExpression {
     /// Identifier expression.
     Identifier(String),
     /// Binary expression with left operand, operator, and right operand.
-    Binary { 
+    Binary {
         /// Left operand.
-        left: Box<MojoExpression>, 
+        left: Box<MojoExpression>,
         /// Operator.
-        op: String, 
+        op: String,
         /// Right operand.
-        right: Box<MojoExpression> 
+        right: Box<MojoExpression>,
     },
     /// Unary expression with operator and operand.
-    Unary { 
+    Unary {
         /// Operator.
-        op: String, 
+        op: String,
         /// Operand.
-        right: Box<MojoExpression> 
+        right: Box<MojoExpression>,
     },
     /// Function call expression.
-    Call { 
+    Call {
         /// Callee expression.
-        callee: Box<MojoExpression>, 
+        callee: Box<MojoExpression>,
         /// Call arguments.
-        args: Vec<MojoExpression> 
+        args: Vec<MojoExpression>,
     },
 }
 

@@ -39,7 +39,7 @@ impl ValkyrieLanguage {
     }
 
     /// Gets the template configuration.
-    pub fn template(&self) -> &oak_dejavu::language::TemplateConfig{
+    pub fn template(&self) -> &oak_dejavu::language::TemplateConfig {
         &self.base.template
     }
 }

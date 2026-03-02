@@ -1,9 +1,9 @@
 use crate::{
     ValkyrieLanguage,
     ast::*,
-    lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
-    parser::{element_type::ValkyrieElementType, parse_string_segments},
     builder::{ValkyrieBuilder, text},
+    lexer::{ValkyrieKeywords, token_type::ValkyrieTokenType},
+    parser::{element_type::ValkyrieElementType, parse_string_segments},
 };
 use oak_core::{OakError, RedNode, RedTree, Source};
 
@@ -13,7 +13,8 @@ fn count_leading_quotes(text: &str) -> u8 {
     for ch in text.chars() {
         if ch == '"' {
             count += 1;
-        } else {
+        }
+        else {
             break;
         }
     }
@@ -74,10 +75,7 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
                     ValkyrieTokenType::StringPrefix => {
                         let prefix_text = text(source, t.span);
-                        prefix = Some(Identifier {
-                            name: prefix_text,
-                            span: t.span,
-                        });
+                        prefix = Some(Identifier { name: prefix_text, span: t.span });
                     }
                     ValkyrieTokenType::StringLiteral => {
                         string_value = Some(text(source, t.span));
@@ -85,12 +83,7 @@ impl<'config> ValkyrieBuilder<'config> {
                     }
                     ValkyrieTokenType::IntegerLiteral | ValkyrieTokenType::FloatLiteral => {
                         let value = text(source, t.span);
-                        return Ok(Expr::StringLiteral(StringLiteral {
-                            prefix: None,
-                            quote_count: 0,
-                            segments: vec![StringSegment::Text { content: value, span: t.span }],
-                            span,
-                        }));
+                        return Ok(Expr::StringLiteral(StringLiteral { prefix: None, quote_count: 0, segments: vec![StringSegment::Text { content: value, span: t.span }], span }));
                     }
                     _ => {}
                 }
@@ -104,13 +97,9 @@ impl<'config> ValkyrieBuilder<'config> {
             let content_start = str_span.start + quote_count as usize;
             let segments = parse_string_segments(content, content_start, is_raw);
 
-            Ok(Expr::StringLiteral(StringLiteral {
-                prefix,
-                quote_count,
-                segments,
-                span,
-            }))
-        } else {
+            Ok(Expr::StringLiteral(StringLiteral { prefix, quote_count, segments, span }))
+        }
+        else {
             Err(source.syntax_error("Missing string literal value".to_string(), span.start))
         }
     }
@@ -150,7 +139,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     _ => {
                         if left.is_none() {
                             left = Some(Box::new(self.build_expr(n, source)?));
-                        } else if right.is_none() {
+                        }
+                        else if right.is_none() {
                             right = Some(Box::new(self.build_expr(n, source)?));
                         }
                     }
@@ -280,7 +270,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     _ => {
                         if receiver.is_none() {
                             receiver = Some(Box::new(self.build_expr(n, source)?));
-                        } else if index.is_none() {
+                        }
+                        else if index.is_none() {
                             index = Some(Box::new(self.build_expr(n, source)?));
                         }
                     }
@@ -314,7 +305,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     _ => {
                         if receiver.is_none() {
                             receiver = Some(Box::new(self.build_expr(n, source)?));
-                        } else if offset.is_none() {
+                        }
+                        else if offset.is_none() {
                             offset = Some(Box::new(self.build_expr(n, source)?));
                         }
                     }
@@ -459,7 +451,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieElementType::BlockExpression => {
                         if then_branch.is_none() {
                             then_branch = Some(self.build_block(n, source)?);
-                        } else {
+                        }
+                        else {
                             else_branch = Some(self.build_block(n, source)?);
                         }
                     }
@@ -530,7 +523,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     _ => {
                         if body.is_none() {
                             body = Some(self.build_expr(n, source)?);
-                        } else if guard.is_none() {
+                        }
+                        else if guard.is_none() {
                             guard = Some(self.build_expr(n, source)?);
                         }
                     }

@@ -33,16 +33,14 @@ impl<'config> Builder<ValkyrieLanguage> for ValkyrieBuilder<'config> {
         let parse_result = parser.parse(source, edits, &mut parse_cache);
 
         match parse_result.result {
-            Ok(green_tree) => {
-                match self.build_root(green_tree, source) {
-                    Ok(ast_root) => OakDiagnostics { result: Ok(ast_root), diagnostics: parse_result.diagnostics },
-                    Err(build_error) => {
-                        let mut diagnostics = parse_result.diagnostics;
-                        diagnostics.push(build_error.clone());
-                        OakDiagnostics { result: Err(build_error), diagnostics }
-                    }
+            Ok(green_tree) => match self.build_root(green_tree, source) {
+                Ok(ast_root) => OakDiagnostics { result: Ok(ast_root), diagnostics: parse_result.diagnostics },
+                Err(build_error) => {
+                    let mut diagnostics = parse_result.diagnostics;
+                    diagnostics.push(build_error.clone());
+                    OakDiagnostics { result: Err(build_error), diagnostics }
                 }
-            }
+            },
             Err(e) => OakDiagnostics { result: Err(e), diagnostics: parse_result.diagnostics },
         }
     }

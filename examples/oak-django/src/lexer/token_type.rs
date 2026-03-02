@@ -4,7 +4,7 @@ use oak_core::{Token, TokenType, UniversalTokenRole};
 pub type DjangoToken = Token<DjangoTokenType>;
 
 /// Token types for the Django template lexer.
-/// 
+///
 /// This enum represents all possible token types in Django templates,
 /// including template tags, variables, filters, and HTML content.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

@@ -1,3 +1,4 @@
+use super::declaration::DeclarationParser;
 use crate::{
     language::JavaLanguage,
     lexer::token_type::JavaTokenType,
@@ -8,7 +9,6 @@ use oak_core::{
     parser::pratt::{Pratt, PrattParser},
     source::Source,
 };
-use super::declaration::DeclarationParser;
 
 /// Parse a statement
 pub(crate) fn parse_statement<'a, S: Source + ?Sized, P: Pratt<JavaLanguage> + DeclarationParser>(parser: &P, state: &mut State<'a, S>) -> Result<(), OakError> {

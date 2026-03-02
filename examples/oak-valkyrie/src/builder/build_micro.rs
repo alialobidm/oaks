@@ -1,9 +1,9 @@
 use crate::{
     ValkyrieLanguage,
     ast::*,
-    lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
-    parser::element_type::ValkyrieElementType,
     builder::{ValkyrieBuilder, text},
+    lexer::{ValkyrieKeywords, token_type::ValkyrieTokenType},
+    parser::element_type::ValkyrieElementType,
 };
 use oak_core::{OakError, RedNode, RedTree, Source};
 
@@ -104,11 +104,7 @@ impl<'config> ValkyrieBuilder<'config> {
             }
         }
 
-        let body = if is_abstract {
-            Block { statements: Vec::new(), span: span.clone() }
-        } else {
-            body.ok_or_else(|| source.syntax_error(format!("Missing micro body at {:?}", span), span.start))?
-        };
+        let body = if is_abstract { Block { statements: Vec::new(), span: span.clone() } } else { body.ok_or_else(|| source.syntax_error(format!("Missing micro body at {:?}", span), span.start))? };
 
         Ok(MicroDefinition { name, generics, annotations, params, return_type, body, span, is_abstract, is_final })
     }
@@ -204,7 +200,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieTokenType::Identifier => {
                         if base_ident.is_none() {
                             base_ident = Some(Identifier { name: text(source, t.span), span: t.span });
-                        } else if has_double_colon && associated_name.is_none() {
+                        }
+                        else if has_double_colon && associated_name.is_none() {
                             associated_name = Some(Identifier { name: text(source, t.span), span: t.span });
                         }
                     }
@@ -233,12 +230,11 @@ impl<'config> ValkyrieBuilder<'config> {
 
         if let (Some(base), true, Some(name)) = (base_ident.clone(), has_double_colon, associated_name) {
             Ok(Type::AssociatedType { base, name, span })
-        } else if let Some(base) = base_ident {
-            Ok(Type::Named { 
-                path: NamePath { parts: vec![base], span }, 
-                span 
-            })
-        } else {
+        }
+        else if let Some(base) = base_ident {
+            Ok(Type::Named { path: NamePath { parts: vec![base], span }, span })
+        }
+        else {
             Ok(Type::Named { path: NamePath { parts: Vec::new(), span }, span })
         }
     }
@@ -290,10 +286,6 @@ impl<'config> ValkyrieBuilder<'config> {
                 },
             }
         }
-        if let Some(name) = name { 
-            Ok(Param { name, ty, default, span }) 
-        } else { 
-            Err(source.syntax_error(format!("Missing name in parameter at {:?}", span), span.start)) 
-        }
+        if let Some(name) = name { Ok(Param { name, ty, default, span }) } else { Err(source.syntax_error(format!("Missing name in parameter at {:?}", span), span.start)) }
     }
 }

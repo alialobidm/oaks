@@ -8,9 +8,9 @@ use crate::{create_file, source_from_path};
 use oak_core::{Builder, Language, errors::OakError};
 
 #[cfg(feature = "serde")]
-use serde::Serialize;
-#[cfg(feature = "serde")]
 use crate::json_from_path;
+#[cfg(feature = "serde")]
+use serde::Serialize;
 
 #[cfg(feature = "serde")]
 use serde_json::Value as JsonValue;

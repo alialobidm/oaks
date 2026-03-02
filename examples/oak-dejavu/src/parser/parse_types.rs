@@ -452,7 +452,8 @@ impl super::DejavuParser {
         let use_angle_brackets = state.at(LeftAngle);
         if use_angle_brackets {
             state.expect(LeftAngle)?;
-        } else {
+        }
+        else {
             state.expect(LessThan)?;
         }
         self.skip_trivia(state);
@@ -476,7 +477,8 @@ impl super::DejavuParser {
         let use_angle_brackets = state.at(LeftAngle);
         if use_angle_brackets {
             state.expect(LeftAngle)?;
-        } else {
+        }
+        else {
             state.expect(LessThan)?;
         }
         self.skip_trivia(state);

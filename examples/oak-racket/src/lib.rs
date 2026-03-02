@@ -1,5 +1,5 @@
 //! Racket language support library.
-//! 
+//!
 //! This crate provides lexer, parser, and LSP support for the Racket programming language.
 
 #![feature(new_range_api)]

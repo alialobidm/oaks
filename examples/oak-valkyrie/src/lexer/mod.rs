@@ -1,5 +1,5 @@
-pub use token_type::ValkyrieTokenType;
 pub use keywords::ValkyrieKeywords;
+pub use token_type::ValkyrieTokenType;
 
 use crate::ValkyrieLanguage;
 use oak_core::{

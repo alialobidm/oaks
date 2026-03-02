@@ -1,5 +1,7 @@
-use oak_valkyrie::ast::{Expr, Identifier, Span, StringSegment};
-use oak_valkyrie::parser::parse_string_segments;
+use oak_valkyrie::{
+    ast::{Expr, Identifier, Span, StringSegment},
+    parser::parse_string_segments,
+};
 
 #[test]
 fn test_plain_text() {
@@ -77,12 +79,10 @@ fn test_nested_braces() {
     assert_eq!(segments.len(), 3);
 
     match &segments[1] {
-        StringSegment::Interpolation { expr, .. } => {
-            match expr.as_ref() {
-                Expr::Ident(ident) => assert_eq!(ident.name, "foo{bar}"),
-                _ => panic!("Expected Identifier"),
-            }
-        }
+        StringSegment::Interpolation { expr, .. } => match expr.as_ref() {
+            Expr::Ident(ident) => assert_eq!(ident.name, "foo{bar}"),
+            _ => panic!("Expected Identifier"),
+        },
         _ => panic!("Expected Interpolation segment"),
     }
 }
@@ -94,20 +94,18 @@ fn test_multiple_interpolations() {
 
     for (i, segment) in segments.iter().enumerate() {
         match segment {
-            StringSegment::Interpolation { expr, .. } => {
-                match expr.as_ref() {
-                    Expr::Ident(ident) => {
-                        let expected = match i {
-                            0 => "a",
-                            1 => "b",
-                            2 => "c",
-                            _ => unreachable!(),
-                        };
-                        assert_eq!(ident.name, expected);
-                    }
-                    _ => panic!("Expected Identifier"),
+            StringSegment::Interpolation { expr, .. } => match expr.as_ref() {
+                Expr::Ident(ident) => {
+                    let expected = match i {
+                        0 => "a",
+                        1 => "b",
+                        2 => "c",
+                        _ => unreachable!(),
+                    };
+                    assert_eq!(ident.name, expected);
                 }
-            }
+                _ => panic!("Expected Identifier"),
+            },
             _ => panic!("Expected Interpolation segment"),
         }
     }

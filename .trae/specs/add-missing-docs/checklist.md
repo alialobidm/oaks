@@ -1,4 +1,0 @@
-- [x] `oak-typst` crate has no missing_docs warnings
-- [x] `oak-clojure` crate has no missing_docs warnings
-- [x] `oak-dart` crate has no missing_docs warnings
-- [x] `cargo check` completes without missing_docs warnings for the affected crates

@@ -40,10 +40,7 @@ const FLUENT_MARKER: char = '\u{07DF}';
 /// ```
 pub fn parse_string_segments(content: &str, span_start: usize, is_raw: bool) -> Vec<StringSegment> {
     if is_raw {
-        return vec![StringSegment::Text {
-            content: content.to_string(),
-            span: Span { start: span_start, end: span_start + content.len() },
-        }];
+        return vec![StringSegment::Text { content: content.to_string(), span: Span { start: span_start, end: span_start + content.len() } }];
     }
 
     let mut segments = Vec::new();
@@ -66,18 +63,11 @@ pub fn parse_string_segments(content: &str, span_start: usize, is_raw: bool) -> 
             }
             '{' => {
                 if !current_text.is_empty() {
-                    segments.push(StringSegment::Text {
-                        content: current_text.clone(),
-                        span: Span { start: text_start, end: span_start + idx },
-                    });
+                    segments.push(StringSegment::Text { content: current_text.clone(), span: Span { start: text_start, end: span_start + idx } });
                     current_text.clear();
                 }
 
-                let is_fluent = if let Some((_, next_ch)) = chars.peek() {
-                    *next_ch == FLUENT_MARKER
-                } else {
-                    false
-                };
+                let is_fluent = if let Some((_, next_ch)) = chars.peek() { *next_ch == FLUENT_MARKER } else { false };
 
                 if is_fluent {
                     chars.next();
@@ -109,14 +99,7 @@ pub fn parse_string_segments(content: &str, span_start: usize, is_raw: bool) -> 
                 }
 
                 let trimmed_expr = expr_content.trim();
-                segments.push(StringSegment::Interpolation {
-                    expr: Box::new(Expr::Ident(Identifier {
-                        name: trimmed_expr.to_string(),
-                        span: Span { start: expr_start, end: expr_end },
-                    })),
-                    is_fluent,
-                    span: Span { start: expr_start, end: expr_end + 1 },
-                });
+                segments.push(StringSegment::Interpolation { expr: Box::new(Expr::Ident(Identifier { name: trimmed_expr.to_string(), span: Span { start: expr_start, end: expr_end } })), is_fluent, span: Span { start: expr_start, end: expr_end + 1 } });
 
                 text_start = expr_end + 1;
             }
@@ -127,10 +110,7 @@ pub fn parse_string_segments(content: &str, span_start: usize, is_raw: bool) -> 
     }
 
     if !current_text.is_empty() {
-        segments.push(StringSegment::Text {
-            content: current_text,
-            span: Span { start: text_start, end: span_start + content_len },
-        });
+        segments.push(StringSegment::Text { content: current_text, span: Span { start: text_start, end: span_start + content_len } });
     }
 
     segments

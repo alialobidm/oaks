@@ -147,7 +147,8 @@ impl AsDocument for RbqType {
             RbqType::Named { path, generic_args, .. } => {
                 if generic_args.is_empty() {
                     path.as_str().into()
-                } else {
+                }
+                else {
                     doc!(path.as_str(), "<", Document::join(generic_args.iter().map(|t| t.as_document()), doc!(",", soft_space)), ">")
                 }
             }
@@ -208,10 +209,6 @@ impl AsDocument for RbqExpr {
 
 impl AsDocument for RbqPipelineStep {
     fn as_document(&self) -> Document<'_> {
-        if self.args.is_empty() {
-            self.name.as_str().into()
-        } else {
-            doc!(self.name.as_str(), soft_space, Document::join(self.args.iter().map(|a| a.as_document()), doc!(",", soft_space)))
-        }
+        if self.args.is_empty() { self.name.as_str().into() } else { doc!(self.name.as_str(), soft_space, Document::join(self.args.iter().map(|a| a.as_document()), doc!(",", soft_space))) }
     }
 }

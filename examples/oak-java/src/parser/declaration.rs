@@ -3,7 +3,11 @@ use crate::{
     lexer::token_type::JavaTokenType,
     parser::{State, element_type::JavaElementType},
 };
-use oak_core::{OakError, parser::pratt::{Pratt, PrattParser}, source::Source};
+use oak_core::{
+    OakError,
+    parser::pratt::{Pratt, PrattParser},
+    source::Source,
+};
 
 /// Declaration parsing implementation for Java
 ///
@@ -21,12 +25,18 @@ pub trait DeclarationParser: Pratt<JavaLanguage> {
     }
 
     /// Parse a block statement
-    fn parse_block_statement<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
+    fn parse_block_statement<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError>
+    where
+        Self: Sized,
+    {
         super::statement::parse_block_statement(self, state)
     }
 
     /// Parse a declaration (class, interface, enum, method, field, etc.)
-    fn parse_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
+    fn parse_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError>
+    where
+        Self: Sized,
+    {
         use JavaTokenType::*;
         let cp = state.checkpoint();
         self.skip_trivia(state);
@@ -222,7 +232,10 @@ pub trait DeclarationParser: Pratt<JavaLanguage> {
     }
 
     /// Parse an annotation
-    fn parse_annotation<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
+    fn parse_annotation<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError>
+    where
+        Self: Sized,
+    {
         use JavaTokenType::*;
         let cp = state.checkpoint();
         state.expect(At).ok();
@@ -315,7 +328,10 @@ pub trait DeclarationParser: Pratt<JavaLanguage> {
     }
 
     /// Parse a variable declaration
-    fn parse_variable_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError> where Self: Sized {
+    fn parse_variable_declaration<'a, S: Source + ?Sized>(&self, state: &mut State<'a, S>) -> Result<(), OakError>
+    where
+        Self: Sized,
+    {
         use JavaTokenType::*;
         self.parse_type(state)?;
         self.skip_trivia(state);

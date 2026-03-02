@@ -1,8 +1,8 @@
 use crate::{
     ValkyrieLanguage,
-    ast::{Class, Enums, EnumsKind, Flags, Identifier, Item, Parent, Singleton, StructureKind, Trait, Variant, VariantCase, Widget, EnumVariant, Field},
+    ast::{Class, EnumVariant, Enums, EnumsKind, Field, Flags, Identifier, Item, Parent, Singleton, StructureKind, Trait, Variant, VariantCase, Widget},
     builder::{ValkyrieBuilder, text},
-    lexer::{token_type::ValkyrieTokenType, ValkyrieKeywords},
+    lexer::{ValkyrieKeywords, token_type::ValkyrieTokenType},
     parser::element_type::ValkyrieElementType,
 };
 use oak_core::{OakError, RedNode, RedTree, Source};
@@ -62,22 +62,14 @@ impl<'config> ValkyrieBuilder<'config> {
                         generics = self.build_generic_params(n, source)?;
                     }
                     ValkyrieElementType::NamePath => {
-                        let parent = Parent {
-                            alias: None,
-                            name: self.build_name_path(n, source)?,
-                            span: n.span(),
-                        };
+                        let parent = Parent { alias: None, name: self.build_name_path(n, source)?, span: n.span() };
                         parents.push(parent);
                     }
                     ValkyrieElementType::Type => {
                         for child in n.children() {
                             if let RedTree::Node(inner) = child {
                                 if inner.green.kind == ValkyrieElementType::NamePath {
-                                    let parent = Parent {
-                                        alias: None,
-                                        name: self.build_name_path(inner, source)?,
-                                        span: inner.span(),
-                                    };
+                                    let parent = Parent { alias: None, name: self.build_name_path(inner, source)?, span: inner.span() };
                                     parents.push(parent);
                                 }
                             }
@@ -395,8 +387,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieElementType::GenericParameterList => {
                         generics = self.build_generic_params(n, source)?;
                     }
-                    ValkyrieElementType::NamePath => {},
-                    ValkyrieElementType::Type => {},
+                    ValkyrieElementType::NamePath => {}
+                    ValkyrieElementType::Type => {}
                     ValkyrieElementType::Micro => {
                         if let Ok(func) = self.build_function(n, source) {
                             methods.push(func);
@@ -507,22 +499,14 @@ impl<'config> ValkyrieBuilder<'config> {
                         generics = self.build_generic_params(n, source)?;
                     }
                     ValkyrieElementType::NamePath => {
-                        let parent = Parent {
-                            alias: None,
-                            name: self.build_name_path(n, source)?,
-                            span: n.span(),
-                        };
+                        let parent = Parent { alias: None, name: self.build_name_path(n, source)?, span: n.span() };
                         parents.push(parent);
                     }
                     ValkyrieElementType::Type => {
                         for child in n.children() {
                             if let RedTree::Node(inner) = child {
                                 if inner.green.kind == ValkyrieElementType::NamePath {
-                                    let parent = Parent {
-                                        alias: None,
-                                        name: self.build_name_path(inner, source)?,
-                                        span: inner.span(),
-                                    };
+                                    let parent = Parent { alias: None, name: self.build_name_path(inner, source)?, span: inner.span() };
                                     parents.push(parent);
                                 }
                             }

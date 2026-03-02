@@ -1,9 +1,9 @@
 use crate::{
     ValkyrieLanguage,
     ast::{Item, NamePath, Namespace},
+    builder::ValkyrieBuilder,
     lexer::token_type::ValkyrieTokenType,
     parser::element_type::ValkyrieElementType,
-    builder::ValkyrieBuilder,
 };
 use oak_core::{OakError, RedNode, RedTree, Source};
 
