@@ -8,7 +8,7 @@ fn test_syntax_unification() {
     let builder = ValkyrieBuilder::new(&language);
 
     // 1. Object initialization style
-    let source_str1 = "Point { x = 1.0, y = 2.0 }";
+    let source_str1 = "Point { x: 1.0, y: 2.0 }";
     println!("Source 1: {:?}, len={}", source_str1, source_str1.len());
     let source1 = SourceText::new(source_str1);
     let mut cache1 = oak_core::parser::ParseSession::default();
