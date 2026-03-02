@@ -72,6 +72,8 @@ pub enum ValkyrieElementType {
     ParenthesizedExpression,
     /// Index expression node.
     IndexExpression,
+    /// Offset expression node (cardinal indexing, 0-based).
+    OffsetExpression,
     /// Field expression node.
     FieldExpression,
     /// If expression node.

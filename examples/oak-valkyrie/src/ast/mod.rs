@@ -11,6 +11,7 @@ pub type Span = oak_core::Range<usize>;
 
 /// Loop keyword kind for deprecation warnings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum LoopKind {
     /// Using `loop` keyword (preferred).
     #[default]
@@ -21,6 +22,7 @@ pub enum LoopKind {
 
 /// Structure keyword kind for class-like definitions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum StructureKind {
     /// Using `class` keyword.
     #[default]
@@ -37,6 +39,7 @@ pub enum StructureKind {
 
 /// Enums keyword kind for deprecation warnings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum EnumsKind {
     /// Using `enums` keyword (preferred).
     #[default]
@@ -49,10 +52,12 @@ pub enum EnumsKind {
 
 /// An identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Identifier {
     /// The identifier name as a string.
     pub name: String,
     /// The source code span where this identifier appears.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
@@ -64,15 +69,18 @@ impl Default for Identifier {
 
 /// A name path (e.g., `std::collections::HashMap`)
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NamePath {
     /// The individual identifier parts of the path.
     pub parts: Vec<Identifier>,
     /// The source code span covering the entire name path.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// An item in a Valkyrie module
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Item {
     /// A namespace declaration.
     Namespace(Namespace),
@@ -109,6 +117,7 @@ pub enum Item {
         /// The text content.
         content: String,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// Template control structure.
@@ -116,6 +125,7 @@ pub enum Item {
         /// The items within the control structure.
         items: Vec<Item>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// Template interpolation expression.
@@ -123,12 +133,14 @@ pub enum Item {
         /// The interpolated expression.
         expr: Expr,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
 }
 
 /// A namespace declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Namespace {
     /// The name path of the namespace.
     pub name: NamePath,
@@ -137,22 +149,26 @@ pub struct Namespace {
     /// Items declared within the namespace.
     pub items: Vec<Item>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A parent class with optional alias for renamed inheritance.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Parent {
     /// Optional alias for disambiguation (e.g., "primary" in "primary: Parent1").
     pub alias: Option<Identifier>,
     /// Parent class name path.
     pub name: NamePath,
     /// Source span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A class declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Class {
     /// The keyword kind used for this class (class, struct, structure, widget, trait).
     pub kind: StructureKind,
@@ -167,6 +183,7 @@ pub struct Class {
     /// Annotations applied to the class.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
     /// Whether this class is abstract (cannot be instantiated directly).
     pub is_abstract: bool,
@@ -178,6 +195,7 @@ pub struct Class {
 
 /// A flags (bitflags) declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Flags {
     /// The flags name.
     pub name: Identifier,
@@ -186,11 +204,13 @@ pub struct Flags {
     /// Annotations applied to the flags.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// An enum declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Enums {
     /// The keyword kind used for this enum (enums, enum, unity).
     pub kind: EnumsKind,
@@ -203,11 +223,13 @@ pub struct Enums {
     /// Annotations applied to the enum.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A trait declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Trait {
     /// The trait name.
     pub name: Identifier,
@@ -220,11 +242,13 @@ pub struct Trait {
     /// Annotations applied to the trait.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// An associated type declaration in a trait.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AssociatedType {
     /// The associated type name.
     pub name: Identifier,
@@ -235,11 +259,13 @@ pub struct AssociatedType {
     /// Annotations applied to the associated type.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A widget declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Widget {
     /// The widget name.
     pub name: Identifier,
@@ -250,6 +276,7 @@ pub struct Widget {
     /// Annotations applied to the widget.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
@@ -278,6 +305,7 @@ pub struct Widget {
 /// - Singleton members are accessed through the singleton name directly
 /// - Singletons cannot be instantiated with constructors
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Singleton {
     /// The singleton name.
     pub name: Identifier,
@@ -290,22 +318,26 @@ pub struct Singleton {
     /// Annotations applied to the singleton.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A using (import) statement
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Using {
     /// The path to import.
     pub path: NamePath,
     /// Optional alias for the import.
     pub alias: Option<Identifier>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A micro (small function) declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MicroDefinition {
     /// The micro name.
     pub name: Identifier,
@@ -320,6 +352,7 @@ pub struct MicroDefinition {
     /// Annotations applied to the micro.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
     /// Whether this function is abstract (has no body implementation).
     pub is_abstract: bool,
@@ -329,6 +362,7 @@ pub struct MicroDefinition {
 
 /// A type function declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeFunction {
     /// The type function name.
     pub name: Identifier,
@@ -343,11 +377,13 @@ pub struct TypeFunction {
     /// Annotations applied to the type function.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A variant declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Variant {
     /// The variant name.
     pub name: Identifier,
@@ -358,11 +394,13 @@ pub struct Variant {
     /// Annotations applied to the variant.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// An effect declaration
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Effect {
     /// The effect name.
     pub name: Identifier,
@@ -371,11 +409,13 @@ pub struct Effect {
     /// Annotations applied to the effect.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// The kind of a property (getter or setter).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PropertyKind {
     /// A getter property.
     Getter,
@@ -385,6 +425,7 @@ pub enum PropertyKind {
 
 /// A property declaration (getter or setter).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Property {
     /// The name of the property.
     pub name: Identifier,
@@ -401,6 +442,7 @@ pub struct Property {
     /// The body of the property.
     pub body: Block,
     /// Source span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
     /// Whether this property is abstract (has no body implementation).
     ///
@@ -413,6 +455,7 @@ pub struct Property {
 
 /// A statement
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Statement {
     /// A let binding statement.
     Let {
@@ -427,6 +470,7 @@ pub enum Statement {
         /// Annotations applied to the statement.
         annotations: Vec<Attribute>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// An expression statement.
@@ -438,12 +482,14 @@ pub enum Statement {
         /// Annotations applied to the statement.
         annotations: Vec<Attribute>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
 }
 
 /// An expression
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Expr {
     /// An identifier expression.
     Ident(Identifier),
@@ -456,6 +502,7 @@ pub enum Expr {
         /// The boolean value.
         value: bool,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A binary operation expression.
@@ -467,6 +514,7 @@ pub enum Expr {
         /// The right operand.
         right: Box<Expr>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A unary operation expression.
@@ -476,6 +524,7 @@ pub enum Expr {
         /// The operand expression.
         expr: Box<Expr>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A function call expression.
@@ -485,6 +534,7 @@ pub enum Expr {
         /// The call arguments.
         args: Vec<Expr>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A field access expression.
@@ -494,6 +544,7 @@ pub enum Expr {
         /// The field name.
         field: Identifier,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// An index expression.
@@ -503,6 +554,17 @@ pub enum Expr {
         /// The index expression.
         index: Box<Expr>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+        span: Span,
+    },
+    /// An offset expression (pointer arithmetic).
+    Offset {
+        /// The receiver expression.
+        receiver: Box<Expr>,
+        /// The offset expression.
+        offset: Box<Expr>,
+        /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A parenthesized expression.
@@ -510,6 +572,7 @@ pub enum Expr {
         /// The inner expression.
         expr: Box<Expr>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A block expression.
@@ -523,6 +586,7 @@ pub enum Expr {
         /// The object body block.
         block: Block,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// Anonymous class expression.
@@ -539,6 +603,7 @@ pub enum Expr {
         /// Variables captured from the enclosing scope.
         captures: Vec<Identifier>,
         /// Source span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// An if expression.
@@ -552,6 +617,7 @@ pub enum Expr {
         /// The optional else branch block.
         else_branch: Option<Block>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A match expression.
@@ -561,6 +627,7 @@ pub enum Expr {
         /// The match arms.
         arms: Vec<MatchArm>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A loop expression.
@@ -576,6 +643,7 @@ pub enum Expr {
         /// The loop body.
         body: Block,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A return expression.
@@ -583,6 +651,7 @@ pub enum Expr {
         /// The optional return value expression.
         expr: Option<Box<Expr>>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A break expression.
@@ -592,6 +661,7 @@ pub enum Expr {
         /// Optional value to break with.
         expr: Option<Box<Expr>>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A continue expression.
@@ -599,6 +669,7 @@ pub enum Expr {
         /// Optional label of the loop to continue.
         label: Option<String>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A yield expression.
@@ -608,6 +679,7 @@ pub enum Expr {
         /// Whether this is a yield from expression.
         yield_from: bool,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A raise (throw) expression.
@@ -615,6 +687,7 @@ pub enum Expr {
         /// The expression to raise.
         expr: Box<Expr>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A catch (try-catch) expression.
@@ -624,6 +697,7 @@ pub enum Expr {
         /// The catch arms.
         arms: Vec<MatchArm>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// With expression for functional record updates.
@@ -640,21 +714,25 @@ pub enum Expr {
         /// Field updates to apply.
         updates: Vec<(Identifier, Expr)>,
         /// Source span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
 }
 
 /// A block of statements
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Block {
     /// The statements in the block.
     pub statements: Vec<Statement>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A lambda expression
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LambdaExpr {
     /// The lambda parameters.
     pub params: Vec<Param>,
@@ -663,11 +741,13 @@ pub struct LambdaExpr {
     /// The lambda body.
     pub body: Block,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A match arm
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MatchArm {
     /// The pattern to match against.
     pub pattern: Pattern,
@@ -676,15 +756,18 @@ pub struct MatchArm {
     /// The body expression of the arm.
     pub body: Expr,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A pattern for matching
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Pattern {
     /// A wildcard pattern that matches anything.
     Wildcard {
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A variable pattern that binds the matched value.
@@ -692,6 +775,7 @@ pub enum Pattern {
         /// The variable name.
         name: Identifier,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A literal pattern.
@@ -699,6 +783,7 @@ pub enum Pattern {
         /// The literal value as a string.
         value: String,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A type pattern for matching types.
@@ -706,6 +791,7 @@ pub enum Pattern {
         /// The type name path.
         name: NamePath,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A class pattern for destructuring.
@@ -715,23 +801,27 @@ pub enum Pattern {
         /// The field patterns.
         fields: Vec<(Identifier, Pattern)>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// An else pattern (catch-all).
     Else {
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
 }
 
 /// A type expression
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Type {
     /// A named type (e.g., `String`, `i32`).
     Named {
         /// The type name path.
         path: NamePath,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A generic type parameter.
@@ -739,6 +829,7 @@ pub enum Type {
         /// The generic parameter name.
         name: Identifier,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A tuple type.
@@ -746,6 +837,7 @@ pub enum Type {
         /// The element types.
         elements: Vec<Type>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A function type.
@@ -755,6 +847,7 @@ pub enum Type {
         /// The return type.
         return_type: Box<Type>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// An optional type.
@@ -762,6 +855,7 @@ pub enum Type {
         /// The inner type.
         inner: Box<Type>,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// An associated type projection (e.g., `Self::Item`, `T::Output`).
@@ -771,6 +865,7 @@ pub enum Type {
         /// The associated type name.
         name: Identifier,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// A qualified associated type (e.g., `<T as Trait>::Item`).
@@ -782,12 +877,14 @@ pub enum Type {
         /// The associated type name.
         name: Identifier,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
 }
 
 /// A generic parameter
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct GenericParam {
     /// The generic parameter name.
     pub name: Identifier,
@@ -796,11 +893,13 @@ pub struct GenericParam {
     /// Default type for the generic parameter.
     pub default: Option<Type>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A function parameter
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Param {
     /// The parameter name.
     pub name: Identifier,
@@ -809,11 +908,13 @@ pub struct Param {
     /// Optional default value expression.
     pub default: Option<Expr>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A field in a class or struct
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Field {
     /// The field name.
     pub name: Identifier,
@@ -824,11 +925,13 @@ pub struct Field {
     /// Annotations applied to the field.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A function definition
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Function {
     /// The function name.
     pub name: Identifier,
@@ -843,6 +946,7 @@ pub struct Function {
     /// Annotations applied to the function.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
     /// Whether this function is abstract (has no body implementation).
     pub is_abstract: bool,
@@ -852,6 +956,7 @@ pub struct Function {
 
 /// An enum variant
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EnumVariant {
     /// The variant name.
     pub name: Identifier,
@@ -860,6 +965,7 @@ pub struct EnumVariant {
     /// Annotations applied to the variant.
     pub annotations: Vec<Attribute>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
     /// Optional value expression for flags (e.g., `READ = 1` or `ALL = READ | WRITE`).
     pub value: Option<Expr>,
@@ -867,28 +973,33 @@ pub struct EnumVariant {
 
 /// A variant case
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VariantCase {
     /// The pattern for this case.
     pub pattern: Pattern,
     /// The body expression for this case.
     pub body: Expr,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// An attribute
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Attribute {
     /// The attribute name.
     pub name: Identifier,
     /// The attribute arguments.
     pub args: Vec<Expr>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A string literal node.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StringLiteral {
     /// DSL prefix (e.g., `s`, `f`, `r`, `sql`).
     pub prefix: Option<Identifier>,
@@ -897,17 +1008,20 @@ pub struct StringLiteral {
     /// String segments.
     pub segments: Vec<StringSegment>,
     /// The source code span.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,
 }
 
 /// A string segment.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum StringSegment {
     /// Text content.
     Text {
         /// The text content.
         content: String,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
     /// Interpolation expression.
@@ -917,6 +1031,7 @@ pub enum StringSegment {
         /// Whether this is a Fluent variable (with the ߷ marker).
         is_fluent: bool,
         /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
 }

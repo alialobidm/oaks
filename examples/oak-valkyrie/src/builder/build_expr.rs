@@ -41,6 +41,7 @@ impl<'config> ValkyrieBuilder<'config> {
             ValkyrieElementType::CallExpression => self.build_call(node, source),
             ValkyrieElementType::FieldExpression => self.build_field_expr(node, source),
             ValkyrieElementType::IndexExpression => self.build_index(node, source),
+            ValkyrieElementType::OffsetExpression => self.build_offset(node, source),
             ValkyrieElementType::ParenthesizedExpression => self.build_paren(node, source),
             ValkyrieElementType::BlockExpression => Ok(Expr::Block(self.build_block(node, source)?)),
             ValkyrieElementType::LambdaExpression => Ok(Expr::Lambda(self.build_lambda_expr(node, source)?)),
@@ -291,6 +292,40 @@ impl<'config> ValkyrieBuilder<'config> {
         let index = index.ok_or_else(|| source.syntax_error("Missing index".to_string(), span.start))?;
 
         Ok(Expr::Index { receiver, index, span })
+    }
+
+    /// 构建基数索引表达式。
+    ///
+    /// 基数索引使用 `⁅ ⁆` 括号，表示从 0 开始的偏移量访问。
+    /// 与普通索引 `[ ]`（从 1 开始）不同，基数索引更接近底层指针算术风格。
+    pub(crate) fn build_offset<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut receiver = None;
+        let mut offset = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if receiver.is_none() {
+                            receiver = Some(Box::new(self.build_expr(n, source)?));
+                        } else if offset.is_none() {
+                            offset = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let receiver = receiver.ok_or_else(|| source.syntax_error("Missing receiver".to_string(), span.start))?;
+        let offset = offset.ok_or_else(|| source.syntax_error("Missing offset".to_string(), span.start))?;
+
+        Ok(Expr::Offset { receiver, offset, span })
     }
 
     pub(crate) fn build_paren<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
