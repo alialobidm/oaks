@@ -16,7 +16,7 @@ pub mod parser;
 pub use crate::{ast::PurescriptRoot, builder::PurescriptBuilder, language::PurescriptLanguage, lexer::PurescriptLexer, parser::PurescriptParser};
 
 #[cfg(feature = "oak-highlight")]
-pub use crate::lsp::highlighter::{HighlightKind, Highlighter, PurescriptHighlighter};
+pub use crate::lsp::highlighter::PurescriptHighlighter;
 
 /// MCP service implementation.
 // #[cfg(feature = "mcp")]

@@ -29,13 +29,7 @@ pub use oak_core::{ElementType, TokenType};
 
 /// Highlighter implementation.
 #[cfg(feature = "oak-highlight")]
-pub use crate::lsp::highlighter::CobolHighlighter;
-
-#[cfg(feature = "lsp")]
 pub use crate::lsp::CobolLanguageService;
-/// LSP implementation.
-#[cfg(feature = "lsp")]
-pub use crate::lsp::formatter::CobolFormatter;
 
 /// MCP service implementation.
 #[cfg(feature = "mcp")]

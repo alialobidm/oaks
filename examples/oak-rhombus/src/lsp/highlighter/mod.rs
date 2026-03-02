@@ -1,7 +1,12 @@
 #![doc = include_str!("readme.md")]
-pub struct SchemeHighlighter;
 
-impl SchemeHighlighter {
+/// Rhombus syntax highlighter
+pub struct RhombusHighlighter;
+
+/// Alias for backwards compatibility
+pub type SchemeHighlighter = RhombusHighlighter;
+
+impl RhombusHighlighter {
     pub fn new() -> Self {
         Self
     }

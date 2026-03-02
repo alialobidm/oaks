@@ -61,7 +61,3 @@ pub fn parse_with_cache(source: &str, cache: &mut oak_core::parser::CachingParse
     // Return the result
     output.result
 }
-
-/// LSP implementation.
-#[cfg(feature = "lsp")]
-pub use crate::lsp::VbNetLanguageService;

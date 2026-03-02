@@ -1,44 +1,30 @@
-use crate::{language::JinjaLanguage, lexer::token_type::JinjaTokenType};
+use crate::language::JinjaLanguage;
 /// Highlighter module for Jinja
 ///
 /// This module provides syntax highlighting support for Jinja templates.
-use oak_core::{Language, TokenType};
-use oak_highlight::{HighlightTheme, Highlighter};
+use oak_highlight::{HighlightResult, Highlighter, themes::Theme};
 
 /// Highlighter for Jinja templates
 #[derive(Debug, Clone)]
 pub struct JinjaHighlighter {
-    theme: HighlightTheme,
+    theme: Theme,
 }
 
 impl JinjaHighlighter {
     /// Creates a new Jinja highlighter with the given theme
-    pub fn new(theme: HighlightTheme) -> Self {
+    pub fn new(theme: Theme) -> Self {
         Self { theme }
     }
 }
 
 impl Highlighter for JinjaHighlighter {
-    type Lang = JinjaLanguage;
-
-    fn highlight_token(&self, token: &oak_core::Token<Self::Lang>) -> oak_highlight::HighlightResult {
-        use JinjaTokenType::*;
-
-        let token_type = token.kind;
-        let highlight = match token_type {
-            DoubleLeftBrace | DoubleRightBrace | LeftBracePercent | PercentRightBrace => oak_highlight::HighlightGroup::Punctuation,
-            Identifier => oak_highlight::HighlightGroup::Identifier,
-            String => oak_highlight::HighlightGroup::String,
-            Number => oak_highlight::HighlightGroup::Number,
-            Boolean => oak_highlight::HighlightGroup::Keyword,
-            Comment => oak_highlight::HighlightGroup::Comment,
-            _ => oak_highlight::HighlightGroup::Text,
-        };
-
-        Ok((highlight, None))
-    }
-
-    fn theme(&self) -> &HighlightTheme {
-        &self.theme
+    fn highlight<'a>(&self, source: &'a str, _language: &str, theme: Theme) -> Result<HighlightResult<'a>, oak_core::errors::OakError> {
+        let theme_config = theme.get_theme();
+        let segments = vec![oak_highlight::HighlightSegment {
+            span: oak_highlight::HighlightSpan { start: 0, end: source.len() },
+            style: theme_config.resolve_style("none"),
+            text: std::borrow::Cow::Borrowed(source),
+        }];
+        Ok(HighlightResult { segments, source: std::borrow::Cow::Borrowed(source) })
     }
 }

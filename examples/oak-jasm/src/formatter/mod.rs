@@ -26,9 +26,9 @@ impl JasmFormatter {
     /// Formats a JASM root node using pretty-printing.
     #[cfg(feature = "oak-pretty-print")]
     pub fn format_pretty(&self, root: &JasmRoot) -> String {
-        use oak_pretty_print::{AsDocument, Document};
+        use oak_pretty_print::{AsDocument, Document, FormatConfig};
         let doc = root.as_document();
-        doc.to_string()
+        doc.render(FormatConfig::default())
     }
 
     /// Formats a JASM root node using pretty-printing (fallback for no oak-pretty-print).

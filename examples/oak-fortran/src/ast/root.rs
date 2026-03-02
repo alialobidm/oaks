@@ -1,33 +1,12 @@
-use crate::{FortranLanguage, parser::element_type::FortranElementType};
 use core::range::Range;
-use oak_core::RedNode;
 use std::{string::String, vec::Vec};
 
 use super::{ExecutableStmt, SpecificationStmt, TypeSpec};
-
-type SyntaxKind = FortranElementType;
-type SyntaxNode<'a> = RedNode<'a, FortranLanguage>;
-type FortranKind = FortranElementType;
 
 /// A placeholder statement node in the Fortran AST.
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Statement {}
-
-impl Statement {
-    /// Attempts to cast a syntax node to a `Statement`.
-    ///
-    /// # Arguments
-    ///
-    /// * `_node` - The syntax node to cast.
-    ///
-    /// # Returns
-    ///
-    /// `Some(Statement)` if the cast succeeds, `None` otherwise.
-    pub fn cast<'a>(_node: SyntaxNode<'a>) -> Option<Self> {
-        Some(Statement {})
-    }
-}
 
 /// The root node of the Fortran AST.
 #[derive(Debug, PartialEq, Clone)]
@@ -40,25 +19,6 @@ pub struct FortranRoot {
     /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
-}
-
-impl FortranRoot {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == FortranKind::Program
-    }
-
-    fn cast(syntax: SyntaxNode<'_>) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { name: None, units: Vec::new(), span: syntax.span() })
-        }
-        else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode<'_> {
-        unimplemented!("FortranRoot::syntax")
-    }
 }
 
 /// Fortran program unit kinds.
@@ -135,4 +95,50 @@ pub struct FunctionNode {
     pub internal_subprograms: Vec<ProgramUnitKind>,
     /// The byte range of this node in the source text.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
-    pub span: Range<usize
+    pub span: Range<usize>,
+}
+
+/// Module node.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ModuleNode {
+    /// The name of the module.
+    pub name: String,
+    /// The specification statements in the module.
+    pub specification_part: Vec<SpecificationStmt>,
+    /// Subprograms defined within the module.
+    pub module_subprograms: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    pub span: Range<usize>,
+}
+
+/// Submodule node.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct SubmoduleNode {
+    /// The name of the parent module.
+    pub parent_name: String,
+    /// The name of the submodule.
+    pub name: String,
+    /// The specification statements in the submodule.
+    pub specification_part: Vec<SpecificationStmt>,
+    /// Subprograms defined within the submodule.
+    pub module_subprograms: Vec<ProgramUnitKind>,
+    /// The byte range of this node in the source text.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    pub span: Range<usize>,
+}
+
+/// Block data node.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct BlockDataNode {
+    /// The optional name of the block data.
+    pub name: Option<String>,
+    /// The specification statements in the block data.
+    pub specification_part: Vec<SpecificationStmt>,
+    /// The byte range of this node in the source text.
+    #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+    pub span: Range<usize>,
+}

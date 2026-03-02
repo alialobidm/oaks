@@ -29,13 +29,7 @@ pub use oak_core::{ElementType, TokenType};
 
 /// Highlighter implementation.
 #[cfg(feature = "oak-highlight")]
-pub use crate::lsp::highlighter::VocHighlighter;
-
-#[cfg(feature = "lsp")]
 pub use crate::lsp::VocLanguageService;
-/// LSP implementation.
-#[cfg(feature = "lsp")]
-pub use crate::lsp::formatter::VocFormatter;
 
 /// MCP service implementation.
 #[cfg(feature = "mcp")]
