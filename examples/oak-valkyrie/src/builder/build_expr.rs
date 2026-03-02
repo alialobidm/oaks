@@ -404,7 +404,7 @@ impl<'config> ValkyrieBuilder<'config> {
                                                 match expr_n.green.kind {
                                                     ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
                                                     ValkyrieElementType::BinaryExpression => {
-                                                        if let Some((name, value)) = self.extract_field_from_binary(&expr_n, source)? {
+                                                        if let Some((name, value)) = self.extract_object_field(&expr_n, source)? {
                                                             fields.push((name, Some(value)));
                                                         }
                                                     }
@@ -437,15 +437,31 @@ impl<'config> ValkyrieBuilder<'config> {
         Ok(Expr::Object { callee, fields, span })
     }
 
-    fn extract_field_from_binary<S: Source + ?Sized>(&self, node: &RedNode<ValkyrieLanguage>, source: &S) -> Result<Option<(Identifier, Expr)>, OakError> {
+    /// Extracts a field name and value from an object field expression.
+    ///
+    /// Supports both new syntax (`:` separator) and deprecated syntax (`=` separator).
+    /// When the deprecated `=` syntax is detected, a warning is logged.
+    fn extract_object_field<S: Source + ?Sized>(&self, node: &RedNode<ValkyrieLanguage>, source: &S) -> Result<Option<(Identifier, Expr)>, OakError> {
         let mut field_name = None;
         let mut value = None;
+        let mut separator_found = false;
+        let mut uses_deprecated_syntax = false;
 
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
                     ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
-                    ValkyrieTokenType::Eq => continue,
+                    ValkyrieTokenType::Eq => {
+                        if !separator_found {
+                            separator_found = true;
+                            uses_deprecated_syntax = true;
+                        }
+                    }
+                    ValkyrieTokenType::Colon => {
+                        if !separator_found {
+                            separator_found = true;
+                        }
+                    }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
@@ -463,6 +479,15 @@ impl<'config> ValkyrieBuilder<'config> {
                         }
                     }
                 },
+            }
+        }
+
+        if uses_deprecated_syntax {
+            if let Some(ref name) = field_name {
+                eprintln!(
+                    "Warning: Use of deprecated '=' syntax in object field at offset {}. Use ':' instead. Field: '{}'",
+                    name.span.start, name.name
+                );
             }
         }
 
@@ -598,32 +623,146 @@ impl<'config> ValkyrieBuilder<'config> {
 
     pub(crate) fn build_pattern<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Pattern, OakError> {
         let span = node.span();
+        let mut name_path: Option<NamePath> = None;
+        let mut fields: Option<Vec<(Identifier, Option<Pattern>)>> = None;
+
         for child in node.children() {
             match child {
                 RedTree::Leaf(t) => match t.kind {
                     ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
-                    ValkyrieTokenType::Underscore => return Ok(Pattern::Wildcard { span: t.span }),
+                    ValkyrieTokenType::Underscore => {
+                        if name_path.is_none() && fields.is_none() {
+                            return Ok(Pattern::Wildcard { span: t.span });
+                        }
+                    }
                     ValkyrieTokenType::Identifier => {
-                        let name = text(source, t.span);
-                        return Ok(Pattern::Variable { name: Identifier { name, span: t.span }, span: t.span });
+                        if name_path.is_none() && fields.is_none() {
+                            let name = text(source, t.span);
+                            return Ok(Pattern::Variable { name: Identifier { name, span: t.span }, span: t.span });
+                        }
                     }
                     ValkyrieTokenType::IntegerLiteral | ValkyrieTokenType::FloatLiteral | ValkyrieTokenType::StringLiteral => {
-                        let value = text(source, t.span);
-                        return Ok(Pattern::Literal { value, span: t.span });
+                        if name_path.is_none() && fields.is_none() {
+                            let value = text(source, t.span);
+                            return Ok(Pattern::Literal { value, span: t.span });
+                        }
                     }
                     _ => {}
                 },
                 RedTree::Node(n) => match n.green.kind {
                     ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
                     ValkyrieElementType::NamePath => {
-                        let name = self.build_name_path(n, source)?;
-                        return Ok(Pattern::Type { name, span: n.span() });
+                        if name_path.is_none() {
+                            name_path = Some(self.build_name_path(n, source)?);
+                        }
+                    }
+                    ValkyrieElementType::BlockExpression => {
+                        if name_path.is_some() && fields.is_none() {
+                            fields = Some(self.build_pattern_fields(&n, source)?);
+                        }
                     }
                     _ => {}
                 },
             }
         }
-        Ok(Pattern::Wildcard { span })
+
+        match (name_path, fields) {
+            (Some(name), Some(fields)) => Ok(Pattern::Class { name, fields, span }),
+            (Some(name), None) => Ok(Pattern::Type { name, span }),
+            _ => Ok(Pattern::Wildcard { span }),
+        }
+    }
+
+    /// Builds pattern fields from a block expression.
+    ///
+    /// Supports both new syntax (`:` separator) and deprecated syntax (`=` separator).
+    /// When the deprecated `=` syntax is detected, a warning is logged.
+    fn build_pattern_fields<S: Source + ?Sized>(&self, node: &RedNode<ValkyrieLanguage>, source: &S) -> Result<Vec<(Identifier, Option<Pattern>)>, OakError> {
+        let mut fields = Vec::new();
+
+        for child in node.children() {
+            if let RedTree::Node(stmt_n) = child {
+                match stmt_n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::ExprStatement | ValkyrieElementType::BinaryExpression => {
+                        if let Some(field) = self.extract_pattern_field(&stmt_n, source)? {
+                            fields.push(field);
+                        }
+                    }
+                    ValkyrieElementType::IdentifierExpression => {
+                        if let Ok(Expr::Ident(ident)) = self.build_identifier_expr(stmt_n.clone(), source) {
+                            fields.push((ident, None));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        Ok(fields)
+    }
+
+    /// Extracts a pattern field from a binary expression or statement.
+    ///
+    /// Supports both new syntax (`:` separator) and deprecated syntax (`=` separator).
+    fn extract_pattern_field<S: Source + ?Sized>(&self, node: &RedNode<ValkyrieLanguage>, source: &S) -> Result<Option<(Identifier, Option<Pattern>)>, OakError> {
+        let mut field_name = None;
+        let mut field_pattern = None;
+        let mut separator_found = false;
+        let mut uses_deprecated_syntax = false;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    ValkyrieTokenType::Eq => {
+                        if !separator_found {
+                            separator_found = true;
+                            uses_deprecated_syntax = true;
+                        }
+                    }
+                    ValkyrieTokenType::Colon => {
+                        if !separator_found {
+                            separator_found = true;
+                        }
+                    }
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    ValkyrieElementType::IdentifierExpression => {
+                        if field_name.is_none() {
+                            if let Ok(Expr::Ident(ident)) = self.build_identifier_expr(n.clone(), source) {
+                                field_name = Some(ident);
+                            }
+                        }
+                    }
+                    ValkyrieElementType::Pattern => {
+                        if field_name.is_some() && field_pattern.is_none() {
+                            field_pattern = Some(self.build_pattern(n, source)?);
+                        }
+                    }
+                    _ => {
+                        if field_name.is_some() && field_pattern.is_none() {
+                            if let Ok(pattern) = self.build_pattern(n, source) {
+                                field_pattern = Some(pattern);
+                            }
+                        }
+                    }
+                },
+            }
+        }
+
+        if uses_deprecated_syntax {
+            if let Some(ref name) = field_name {
+                eprintln!(
+                    "Warning: Use of deprecated '=' syntax in pattern field at offset {}. Use ':' instead. Field: '{}'",
+                    name.span.start, name.name
+                );
+            }
+        }
+
+        if let Some(name) = field_name { Ok(Some((name, field_pattern))) } else { Ok(None) }
     }
 
     pub(crate) fn build_loop<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
