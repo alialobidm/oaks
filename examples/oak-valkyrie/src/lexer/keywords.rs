@@ -317,4 +317,49 @@ pub enum ValkyrieKeywords {
     /// micro foo<T>(x: T) where T: Clone { ... }
     /// ```
     Where,
+    /// Super reference for parent class constructor calls.
+    ///
+    /// ```v
+    /// class Derived(Base) {
+    ///     initiate(mut self, x: i32) {
+    ///         super.initiate(x)  // Call parent constructor
+    ///     }
+    /// }
+    /// ```
+    Super,
+    /// Override modifier for method overriding.
+    ///
+    /// ```v
+    /// class Derived: Base {
+    ///     override micro method(self) { ... }
+    /// }
+    /// ```
+    Override,
+    /// Virtual method declaration.
+    ///
+    /// ```v
+    /// class Base {
+    ///     virtual micro method(self) { ... }
+    /// }
+    /// ```
+    Virtual,
+    /// Readonly field modifier.
+    ///
+    /// ```v
+    /// class Point {
+    ///     readonly x: f64
+    /// }
+    /// ```
+    Readonly,
+    /// Initiate constructor method.
+    ///
+    /// ```v
+    /// class Point {
+    ///     initiate(mut self, x: f64, y: f64) {
+    ///         self.x = x
+    ///         self.y = y
+    ///     }
+    /// }
+    /// ```
+    Initiate,
 }

@@ -237,6 +237,38 @@ pub enum Expr {
         #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
+    /// Super call expression for constructor chaining.
+    ///
+    /// Represents a call to a parent class constructor within a subclass constructor.
+    ///
+    /// ```v
+    /// class Derived(Base) {
+    ///     initiate(mut self, x: i32, y: i32) {
+    ///         super.initiate(x)  // Call parent constructor
+    ///         self.y = y
+    ///     }
+    /// }
+    /// ```
+    SuperCall {
+        /// Optional parent alias for renamed inheritance.
+        ///
+        /// In renamed inheritance, specifies which parent to call:
+        /// ```v
+        /// class Child(primary: ParentA, secondary: ParentB) {
+        ///     initiate(mut self) {
+        ///         super.primary.initiate()  // alias: "primary"
+        ///     }
+        /// }
+        /// ```
+        parent_alias: Option<Identifier>,
+        /// The method name to call (usually "initiate").
+        method: Identifier,
+        /// Arguments passed to the parent constructor.
+        args: Vec<Expr>,
+        /// Source span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+        span: Span,
+    },
 }
 
 /// A block of statements
