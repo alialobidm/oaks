@@ -75,6 +75,7 @@ oak-semantic-search = { version = "0.0.5", path = "projects/oak-semantic-search"
 oak-visualize = { version = "0.0.5", path = "projects/oak-visualize" }
 oak-testing = { version = "0.0.5", path = "projects/oak-testing" }
 oak-mcp = { version = "0.0.5", path = "projects/oak-mcp" }
+oak-source-map = { version = "0.0.5", path = "projects/oak-source-map" }
 oaks = { version = "0.0.3", path = "projects/oaks" }
 
 # Language examples

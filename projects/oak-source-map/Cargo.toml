@@ -12,10 +12,7 @@ categories = ["development-tools", "parser-implementations"]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+base64 = "0.22"
 
 [dev-dependencies]
 criterion = { workspace = true }
-
-[[bench]]
-name = "sourcemap_bench"
-harness = false
