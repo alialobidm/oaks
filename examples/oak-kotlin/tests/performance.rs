@@ -1,4 +1,4 @@
-use oak_core::{Parser, parser::ParseSession};
+use oak_core::{parser::ParseSession, Parser};
 use oak_kotlin::{KotlinLanguage, KotlinParser};
 use std::time::Instant;
 

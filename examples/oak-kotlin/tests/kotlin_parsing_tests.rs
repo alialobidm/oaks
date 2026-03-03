@@ -1,4 +1,4 @@
-use oak_core::{Lexer, NoLexerCache, Parser, SourceText, parser::ParseSession};
+use oak_core::{SourceText, parser::ParseSession, NoLexerCache, Lexer, Parser};
 use oak_kotlin::{KotlinLanguage, KotlinLexer, KotlinParser};
 
 #[test]
