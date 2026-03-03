@@ -4,7 +4,6 @@ use std::{
     alloc::{Layout, alloc, dealloc},
     cell::{RefCell, UnsafeCell},
     ptr::{NonNull, copy_nonoverlapping},
-    simd::{Simd, SimdElement, SupportedLaneCount},
 };
 
 /// Default chunk size: 64KB.
@@ -198,25 +197,7 @@ impl SyntaxArena {
         }
     }
 
-    /// Allocates a SIMD-aligned block of memory for SIMD operations.
-    ///
-    /// # Safety
-    ///
-    /// `size` must be a multiple of the SIMD lane count size.
-    #[inline(always)]
-    pub unsafe fn alloc_simd<T>(&self, count: usize) -> &mut [T]
-    where
-        T: SimdElement,
-        Simd<T, 16>: SupportedLaneCount,
-    {
-        let layout = Layout::array::<T>(count).unwrap();
-        let simd_align = std::mem::size_of::<Simd<T, 16>>();
-        let aligned_layout = Layout::from_size_align(layout.size(), simd_align).unwrap();
 
-        let ptr = self.alloc_raw_aligned(aligned_layout.size(), simd_align);
-        let ptr = ptr.as_ptr() as *mut T;
-        std::slice::from_raw_parts_mut(ptr, count)
-    }
 
     /// Internal raw allocation logic for aligned memory.
     #[inline(always)]

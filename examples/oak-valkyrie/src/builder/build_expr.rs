@@ -55,6 +55,7 @@ impl<'config> ValkyrieBuilder<'config> {
             ValkyrieElementType::ContinueExpression => self.build_continue(node, source),
             ValkyrieElementType::YieldExpression => self.build_yield(node, source),
             ValkyrieElementType::RaiseExpression => self.build_raise(node, source),
+            ValkyrieElementType::ResumeExpression => self.build_resume(node, source),
             ValkyrieElementType::CatchExpression => self.build_catch(node, source),
             ValkyrieElementType::IdentifierExpression => self.build_identifier_expr(node, source),
             ValkyrieElementType::PathExpression => self.build_path_expr(node, source),
@@ -931,6 +932,32 @@ impl<'config> ValkyrieBuilder<'config> {
         let expr = expr.ok_or_else(|| source.syntax_error("Missing raise expression".to_string(), span.start))?;
 
         Ok(Expr::Raise { expr, span })
+    }
+
+    pub(crate) fn build_resume<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {
+        let span = node.span();
+        let mut expr = None;
+
+        for child in node.children() {
+            match child {
+                RedTree::Leaf(t) => match t.kind {
+                    ValkyrieTokenType::Whitespace | ValkyrieTokenType::Newline | ValkyrieTokenType::LineComment | ValkyrieTokenType::BlockComment => continue,
+                    _ => {}
+                },
+                RedTree::Node(n) => match n.green.kind {
+                    ValkyrieElementType::Whitespace | ValkyrieElementType::Newline | ValkyrieElementType::LineComment | ValkyrieElementType::BlockComment => continue,
+                    _ => {
+                        if expr.is_none() {
+                            expr = Some(Box::new(self.build_expr(n, source)?));
+                        }
+                    }
+                },
+            }
+        }
+
+        let expr = expr.ok_or_else(|| source.syntax_error("Missing resume expression".to_string(), span.start))?;
+
+        Ok(Expr::Resume { expr, span })
     }
 
     pub(crate) fn build_catch<S: Source + ?Sized>(&self, node: RedNode<ValkyrieLanguage>, source: &S) -> Result<Expr, OakError> {

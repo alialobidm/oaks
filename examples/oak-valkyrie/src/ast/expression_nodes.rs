@@ -210,6 +210,23 @@ pub enum Expr {
         #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
         span: Span,
     },
+    /// A resume expression.
+    ///
+    /// Resumes execution from an effect handler with a value.
+    /// Only valid inside a catch block.
+    ///
+    /// ```v
+    /// catch process() {
+    ///     case Read { prompt }: resume "input data"
+    /// }
+    /// ```
+    Resume {
+        /// The value to resume with.
+        expr: Box<Expr>,
+        /// The source code span.
+        #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
+        span: Span,
+    },
     /// A catch (try-catch) expression.
     Catch {
         /// The expression to try.
