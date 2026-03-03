@@ -23,7 +23,7 @@ pub enum Expr {
         /// The left operand.
         left: Box<Expr>,
         /// The binary operator.
-        op: crate::kind::ValkyrieSyntaxKind,
+        op: crate::lexer::token_type::ValkyrieTokenType,
         /// The right operand.
         right: Box<Expr>,
         /// The source code span.
@@ -33,7 +33,7 @@ pub enum Expr {
     /// A unary operation expression.
     Unary {
         /// The unary operator.
-        op: crate::kind::ValkyrieSyntaxKind,
+        op: crate::lexer::token_type::ValkyrieTokenType,
         /// The operand expression.
         expr: Box<Expr>,
         /// The source code span.
