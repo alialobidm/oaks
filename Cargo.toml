@@ -31,29 +31,29 @@ triomphe = { version = "0.1.15", default-features = false, features = ["serde"] 
 smallvec = { version = "1.15", features = ["union", "const_generics", "const_new"] }
 proc-macro2 = { version = "1.0.106" }
 quote = { version = "1.0.44" }
-syn = { version = "2.0.116", features = ["full"] }
+syn = { version = "2.0.117", features = ["full"] }
 tokio = { version = "1.49.0", default-features = false }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 futures = { version = "0.3.32" }
 dashmap = { version = "6.1.0" }
 lazy_static = "1.5.0"
-anyhow = "1.0.101"
+anyhow = "1.0.102"
 thiserror = "2.0.18"
 itertools = "0.14.0"
-chrono = "0.4.43"
+chrono = "0.4.44"
 ntest = "0.9.5"
 notify = "8.2.0"
 crossterm = "0.29.0"
 unicode-width = "0.2.2"
-clap = { version = "4.5.59", features = ["derive"] }
+clap = { version = "4.5.60", features = ["derive"] }
 axum = "0.8.8"
 arcstr = { version = "1.2.0", features = ["serde"] }
-indexmap = { version = "2.7.0", features = ["serde"] }
+indexmap = { version = "2.13.0", features = ["serde"] }
 im-rc = "15.1.0"
-num = "0.4.0"
-bigdecimal = "0.4.0"
-ordered-float = "4.0.0"
-twox-hash = "1.6.0"
+num = "0.4.3"
+bigdecimal = "0.4.10"
+ordered-float = "5.1.0"
+twox-hash = "2.1.2"
 
 # Internal project dependencies
 oak-core = { version = "0.0.4", path = "projects/oak-core" }
@@ -204,15 +204,15 @@ oak-zig = { version = "0.0.4", path = "examples/oak-zig" }
 toml = "1.0.3"
 toml_edit = "0.25.3"
 markdown = "1.0.0"
-pulldown-cmark = "0.13.0"
+pulldown-cmark = "0.13.1"
 simd-json = "0.17.0"
 json = "0.12.4"
 html5ever = "0.38.0"
 cssparser = "0.36.0"
 serde_yaml = "0.9.34"
 rustpython-parser = "0.4.0"
-swc_ecma_parser = "34.0.0"
-swc_common = "18.0.1"
-oxc_parser = "0.114.0"
-oxc_allocator = "0.114.0"
-oxc_span = "0.114.0"
+swc_ecma_parser = "35.0.0"
+swc_common = "19.0.0"
+oxc_parser = "0.116.0"
+oxc_allocator = "0.116.0"
+oxc_span = "0.116.0"
