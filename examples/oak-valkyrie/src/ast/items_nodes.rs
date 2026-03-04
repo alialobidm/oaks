@@ -252,6 +252,8 @@ pub struct Using {
     pub path: NamePath,
     /// Optional alias for the import.
     pub alias: Option<Identifier>,
+    /// Selective import list (e.g., `{Never, Unit}` in `using core::primitive.{Never, Unit}`)
+    pub imports: Vec<Identifier>,
     /// The source code span.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Span,

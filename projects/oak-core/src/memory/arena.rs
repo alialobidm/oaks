@@ -369,14 +369,18 @@ impl SyntaxArena {
                     }
                     else {
                         // If pool is full, deallocate the chunk
-                        let layout = Layout::from_size_align(size, ALIGN).unwrap();
-                        dealloc(ptr.as_ptr(), layout);
+                        unsafe {
+                            let layout = Layout::from_size_align(size, ALIGN).unwrap();
+                            dealloc(ptr.as_ptr(), layout);
+                        }
                     }
                 })
                 .unwrap_or_else(|_| {
                     // If try_with fails (e.g. during thread destruction), deallocate the chunk
-                    let layout = Layout::from_size_align(size, ALIGN).unwrap();
-                    dealloc(ptr.as_ptr(), layout);
+                    unsafe {
+                        let layout = Layout::from_size_align(size, ALIGN).unwrap();
+                        dealloc(ptr.as_ptr(), layout);
+                    }
                 });
             return;
         }
