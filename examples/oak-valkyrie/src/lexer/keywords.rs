@@ -91,10 +91,10 @@ pub enum ValkyrieKeywords {
     /// enum Priority { High, Normal, Low }
     /// ```
     Enum,
-    /// Declare a unity (preferred alternative to enum).
+    /// Declare a unite (preferred alternative to enum).
     ///
     /// ```v
-    /// unity Option<T> { Some(T), None }
+    /// unite Option<T> { Some(T), None }
     /// ```
     Unity,
     /// Declare a union.
