@@ -109,7 +109,8 @@ impl<'config> ValkyrieBuilder<'config> {
                     ValkyrieTokenType::Identifier => {
                         if in_import_list {
                             imports.push(Identifier { name: text(source, t.span), span: t.span });
-                        } else if !path.parts.is_empty() && alias.is_none() {
+                        }
+                        else if !path.parts.is_empty() && alias.is_none() {
                             alias = Some(Identifier { name: text(source, t.span), span: t.span });
                         }
                     }

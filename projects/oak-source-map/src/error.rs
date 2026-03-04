@@ -69,19 +69,12 @@ pub enum SourceMapError {
 impl SourceMapError {
     /// Creates a new invalid VLQ error.
     pub fn invalid_vlq(position: usize, message: impl Into<String>) -> Self {
-        SourceMapError::InvalidVlq {
-            position,
-            message: message.into(),
-        }
+        SourceMapError::InvalidVlq { position, message: message.into() }
     }
 
     /// Creates a new invalid mapping error.
     pub fn invalid_mapping(line: u32, column: u32, message: impl Into<String>) -> Self {
-        SourceMapError::InvalidMapping {
-            line,
-            column,
-            message: message.into(),
-        }
+        SourceMapError::InvalidMapping { line, column, message: message.into() }
     }
 
     /// Creates a new index out of bounds error.

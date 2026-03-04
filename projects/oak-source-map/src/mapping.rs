@@ -25,33 +25,12 @@ pub struct Mapping {
 impl Mapping {
     /// Creates a new mapping with only generated position.
     pub fn generated_only(line: u32, column: u32) -> Self {
-        Self {
-            generated_line: line,
-            generated_column: column,
-            source_index: None,
-            original_line: None,
-            original_column: None,
-            name_index: None,
-        }
+        Self { generated_line: line, generated_column: column, source_index: None, original_line: None, original_column: None, name_index: None }
     }
 
     /// Creates a new mapping with full information.
-    pub fn full(
-        generated_line: u32,
-        generated_column: u32,
-        source_index: u32,
-        original_line: u32,
-        original_column: u32,
-        name_index: Option<u32>,
-    ) -> Self {
-        Self {
-            generated_line,
-            generated_column,
-            source_index: Some(source_index),
-            original_line: Some(original_line),
-            original_column: Some(original_column),
-            name_index,
-        }
+    pub fn full(generated_line: u32, generated_column: u32, source_index: u32, original_line: u32, original_column: u32, name_index: Option<u32>) -> Self {
+        Self { generated_line, generated_column, source_index: Some(source_index), original_line: Some(original_line), original_column: Some(original_column), name_index }
     }
 
     /// Checks if this mapping has source information.
@@ -93,9 +72,7 @@ impl PartialOrd for Mapping {
 
 impl Ord for Mapping {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.generated_line
-            .cmp(&other.generated_line)
-            .then_with(|| self.generated_column.cmp(&other.generated_column))
+        self.generated_line.cmp(&other.generated_line).then_with(|| self.generated_column.cmp(&other.generated_column))
     }
 }
 
@@ -119,30 +96,12 @@ pub struct Segment {
 impl Segment {
     /// Creates a new segment with only generated column.
     pub fn generated_only(column: i32) -> Self {
-        Self {
-            generated_column: column,
-            source_index: None,
-            original_line: None,
-            original_column: None,
-            name_index: None,
-        }
+        Self { generated_column: column, source_index: None, original_line: None, original_column: None, name_index: None }
     }
 
     /// Creates a new full segment.
-    pub fn full(
-        generated_column: i32,
-        source_index: i32,
-        original_line: i32,
-        original_column: i32,
-        name_index: Option<i32>,
-    ) -> Self {
-        Self {
-            generated_column,
-            source_index: Some(source_index),
-            original_line: Some(original_line),
-            original_column: Some(original_column),
-            name_index,
-        }
+    pub fn full(generated_column: i32, source_index: i32, original_line: i32, original_column: i32, name_index: Option<i32>) -> Self {
+        Self { generated_column, source_index: Some(source_index), original_line: Some(original_line), original_column: Some(original_column), name_index }
     }
 
     /// Checks if this segment has source information.
@@ -170,11 +129,7 @@ pub struct BoundedMapping {
 impl BoundedMapping {
     /// Creates a new bounded mapping.
     pub fn new(mapping: Mapping, start_column: u32, end_column: u32) -> Self {
-        Self {
-            mapping,
-            start_column,
-            end_column,
-        }
+        Self { mapping, start_column, end_column }
     }
 
     /// Checks if a column is within this mapping's range.

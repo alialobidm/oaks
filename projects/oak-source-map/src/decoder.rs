@@ -34,12 +34,7 @@ impl SourceMapDecoder {
             line_mappings.push(BoundedMapping::new(mapping, col, u32::MAX));
         }
 
-        Ok(Self {
-            source_map,
-            lines,
-            sources: Vec::new(),
-            names: Vec::new(),
-        })
+        Ok(Self { source_map, lines, sources: Vec::new(), names: Vec::new() })
     }
 
     /// Looks up the original position for a generated position.
@@ -50,9 +45,11 @@ impl SourceMapDecoder {
             .binary_search_by(|m| {
                 if m.end_column <= generated_column {
                     std::cmp::Ordering::Less
-                } else if m.start_column > generated_column {
+                }
+                else if m.start_column > generated_column {
                     std::cmp::Ordering::Greater
-                } else {
+                }
+                else {
                     std::cmp::Ordering::Equal
                 }
             })
@@ -62,25 +59,14 @@ impl SourceMapDecoder {
     }
 
     /// Looks up the original position and returns full information.
-    pub fn lookup_full(
-        &self,
-        generated_line: u32,
-        generated_column: u32,
-    ) -> Option<OriginalPosition> {
+    pub fn lookup_full(&self, generated_line: u32, generated_column: u32) -> Option<OriginalPosition> {
         let mapping = self.lookup(generated_line, generated_column)?;
 
-        let source = mapping.source_index
-            .and_then(|idx| self.source_map.get_source(idx as usize));
+        let source = mapping.source_index.and_then(|idx| self.source_map.get_source(idx as usize));
 
-        let name = mapping.name_index
-            .and_then(|idx| self.source_map.get_name(idx as usize));
+        let name = mapping.name_index.and_then(|idx| self.source_map.get_name(idx as usize));
 
-        Some(OriginalPosition {
-            source: source.map(String::from),
-            original_line: mapping.original_line,
-            original_column: mapping.original_column,
-            name: name.map(String::from),
-        })
+        Some(OriginalPosition { source: source.map(String::from), original_line: mapping.original_line, original_column: mapping.original_column, name: name.map(String::from) })
     }
 
     /// Returns all mappings for a generated line.
@@ -119,18 +105,8 @@ pub struct OriginalPosition {
 
 impl OriginalPosition {
     /// Creates a new original position.
-    pub fn new(
-        source: Option<String>,
-        original_line: Option<u32>,
-        original_column: Option<u32>,
-        name: Option<String>,
-    ) -> Self {
-        Self {
-            source,
-            original_line,
-            original_column,
-            name,
-        }
+    pub fn new(source: Option<String>, original_line: Option<u32>, original_column: Option<u32>, name: Option<String>) -> Self {
+        Self { source, original_line, original_column, name }
     }
 
     /// Checks if this position has source information.

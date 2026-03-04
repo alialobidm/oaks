@@ -31,21 +31,21 @@
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
 
-mod error;
-mod source_map;
 mod builder;
-mod vlq;
-mod mapping;
-mod decoder;
 mod composer;
+mod decoder;
+mod error;
+mod mapping;
+mod source_map;
+mod vlq;
 
-pub use error::{SourceMapError, Result};
-pub use source_map::{SourceMap, SourceMapMetadata};
 pub use builder::SourceMapBuilder;
-pub use vlq::{vlq_encode, vlq_decode};
-pub use mapping::{Mapping, Segment, BoundedMapping};
-pub use decoder::SourceMapDecoder;
 pub use composer::SourceMapComposer;
+pub use decoder::SourceMapDecoder;
+pub use error::{Result, SourceMapError};
+pub use mapping::{BoundedMapping, Mapping, Segment};
+pub use source_map::{SourceMap, SourceMapMetadata};
+pub use vlq::{vlq_decode, vlq_encode};
 
 pub use source_map::SourceMapInput;
 

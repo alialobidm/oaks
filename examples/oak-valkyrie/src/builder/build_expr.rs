@@ -486,10 +486,7 @@ impl<'config> ValkyrieBuilder<'config> {
 
         if uses_deprecated_syntax {
             if let Some(ref name) = field_name {
-                eprintln!(
-                    "Warning: Use of deprecated '=' syntax in object field at offset {}. Use ':' instead. Field: '{}'",
-                    name.span.start, name.name
-                );
+                eprintln!("Warning: Use of deprecated '=' syntax in object field at offset {}. Use ':' instead. Field: '{}'", name.span.start, name.name);
             }
         }
 
@@ -757,10 +754,7 @@ impl<'config> ValkyrieBuilder<'config> {
 
         if uses_deprecated_syntax {
             if let Some(ref name) = field_name {
-                eprintln!(
-                    "Warning: Use of deprecated '=' syntax in pattern field at offset {}. Use ':' instead. Field: '{}'",
-                    name.span.start, name.name
-                );
+                eprintln!("Warning: Use of deprecated '=' syntax in pattern field at offset {}. Use ':' instead. Field: '{}'", name.span.start, name.name);
             }
         }
 

@@ -63,52 +63,26 @@ pub fn compose_two(map1: &SourceMap, map2: &SourceMap) -> Result<SourceMap> {
     let mappings1 = map1.parse_mappings()?;
 
     for mapping in mappings1 {
-        if let (Some(source_idx), Some(orig_line), Some(orig_col)) = (
-            mapping.source_index,
-            mapping.original_line,
-            mapping.original_column,
-        ) {
-            let intermediate_source = map1.get_source(source_idx as usize)
-                .ok_or_else(|| SourceMapError::InvalidSourceIndex(source_idx as usize))?;
+        if let (Some(source_idx), Some(orig_line), Some(orig_col)) = (mapping.source_index, mapping.original_line, mapping.original_column) {
+            let intermediate_source = map1.get_source(source_idx as usize).ok_or_else(|| SourceMapError::InvalidSourceIndex(source_idx as usize))?;
 
-            let intermediate_idx = map2.sources.iter()
-                .position(|s| s == intermediate_source);
+            let intermediate_idx = map2.sources.iter().position(|s| s == intermediate_source);
 
             if let Some(idx) = intermediate_idx {
                 let decoder = crate::SourceMapDecoder::new(map2.clone())?;
 
                 if let Some(intermediate_mapping) = decoder.lookup(orig_line, orig_col) {
-                    if let (Some(final_source_idx), Some(final_line), Some(final_col)) = (
-                        intermediate_mapping.source_index,
-                        intermediate_mapping.original_line,
-                        intermediate_mapping.original_column,
-                    ) {
-                        let new_source_idx = builder.add_source(
-                            map2.get_source(final_source_idx as usize).unwrap_or("")
-                        );
+                    if let (Some(final_source_idx), Some(final_line), Some(final_col)) = (intermediate_mapping.source_index, intermediate_mapping.original_line, intermediate_mapping.original_column) {
+                        let new_source_idx = builder.add_source(map2.get_source(final_source_idx as usize).unwrap_or(""));
 
-                        builder.add_mapping(
-                            mapping.generated_line,
-                            mapping.generated_column,
-                            Some(new_source_idx),
-                            Some(final_line),
-                            Some(final_col),
-                            intermediate_mapping.name_index.or(mapping.name_index),
-                        );
+                        builder.add_mapping(mapping.generated_line, mapping.generated_column, Some(new_source_idx), Some(final_line), Some(final_col), intermediate_mapping.name_index.or(mapping.name_index));
                         continue;
                     }
                 }
             }
         }
 
-        builder.add_mapping(
-            mapping.generated_line,
-            mapping.generated_column,
-            None,
-            None,
-            None,
-            None,
-        );
+        builder.add_mapping(mapping.generated_line, mapping.generated_column, None, None, None, None);
     }
 
     Ok(builder.build())

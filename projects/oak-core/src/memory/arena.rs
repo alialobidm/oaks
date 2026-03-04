@@ -197,8 +197,6 @@ impl SyntaxArena {
         }
     }
 
-
-
     /// Internal raw allocation logic for aligned memory.
     #[inline(always)]
     unsafe fn alloc_raw_aligned(&self, size: usize, align: usize) -> NonNull<u8> {

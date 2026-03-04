@@ -2,8 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Mapping, Result, SourceMapError, SOURCE_MAP_VERSION};
-use crate::vlq::vlq_decode_many;
+use crate::{Mapping, Result, SOURCE_MAP_VERSION, SourceMapError, vlq::vlq_decode_many};
 
 /// Input source for source map parsing.
 #[derive(Debug, Clone)]
@@ -103,10 +102,7 @@ pub struct SourceMapMetadata {
 impl SourceMap {
     /// Creates a new empty source map.
     pub fn new() -> Self {
-        Self {
-            version: SOURCE_MAP_VERSION,
-            ..Default::default()
-        }
+        Self { version: SOURCE_MAP_VERSION, ..Default::default() }
     }
 
     /// Parses a source map from JSON.
@@ -114,8 +110,7 @@ impl SourceMap {
         let input = json.into();
         let json_str = match input {
             SourceMapInput::Json(s) => s,
-            SourceMapInput::Bytes(b) => String::from_utf8(b)
-                .map_err(|e| SourceMapError::JsonError(serde_json::from_str::<serde_json::Value>(&e.to_string()).unwrap_err()))?,
+            SourceMapInput::Bytes(b) => String::from_utf8(b).map_err(|e| SourceMapError::JsonError(serde_json::from_str::<serde_json::Value>(&e.to_string()).unwrap_err()))?,
             SourceMapInput::File(path) => {
                 let content = std::fs::read_to_string(&path)?;
                 content
@@ -146,7 +141,8 @@ impl SourceMap {
         let source_str = source.into();
         if let Some(idx) = self.sources.iter().position(|s| s == &source_str) {
             idx
-        } else {
+        }
+        else {
             self.sources.push(source_str);
             self.sources_content.push(None);
             self.sources.len() - 1
@@ -158,7 +154,8 @@ impl SourceMap {
         let name_str = name.into();
         if let Some(idx) = self.names.iter().position(|n| n == &name_str) {
             idx
-        } else {
+        }
+        else {
             self.names.push(name_str);
             self.names.len() - 1
         }
@@ -279,26 +276,13 @@ impl SourceMap {
 
     /// Returns the full source path for a source index.
     pub fn get_full_source_path(&self, index: usize) -> Option<String> {
-        self.sources.get(index).map(|source| {
-            if let Some(ref root) = self.source_root {
-                format!("{}{}", root, source)
-            } else {
-                source.clone()
-            }
-        })
+        self.sources.get(index).map(|source| if let Some(ref root) = self.source_root { format!("{}{}", root, source) } else { source.clone() })
     }
 }
 
 impl Default for SourceMapMetadata {
     fn default() -> Self {
-        Self {
-            sources_count: 0,
-            names_count: 0,
-            mappings_count: 0,
-            lines_count: 0,
-            has_sources_content: false,
-            is_indexed: false,
-        }
+        Self { sources_count: 0, names_count: 0, mappings_count: 0, lines_count: 0, has_sources_content: false, is_indexed: false }
     }
 }
 

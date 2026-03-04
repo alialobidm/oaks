@@ -82,10 +82,7 @@ pub fn vlq_decode_from_slice(bytes: &[u8]) -> Result<(i32, usize)> {
 
         let decoded = BASE64_DECODE[byte as usize];
         if decoded < 0 {
-            return Err(SourceMapError::invalid_vlq(
-                count - 1,
-                format!("Invalid Base64 character: '{}'", byte as char),
-            ));
+            return Err(SourceMapError::invalid_vlq(count - 1, format!("Invalid Base64 character: '{}'", byte as char)));
         }
 
         let decoded = decoded as u8;
