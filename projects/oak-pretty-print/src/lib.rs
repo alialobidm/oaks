@@ -36,10 +36,10 @@ pub mod to_doc;
 // Re-export commonly used types
 pub use crate::{
     comment::{Comment, CommentCollector, CommentKind, CommentProcessor},
-    config::{FormatterConfig, IndentStyle, LineEnding, FormatConfig},
+    config::{IndentStyle, LineEnding, FormatConfig},
     errors::FormatResult,
-    formatter::{FormatContext, FormatOutput, Formatter},
-    state::FormatState,
+    formatter::{FormatContext, FormatOutput, Formatter, GenericFormatter},
+    state::DefaultFormatState,
     whitespace::WhitespaceProcessor,
     to_doc::{AsDocument, ToDocument},
 };

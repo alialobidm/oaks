@@ -26,5 +26,5 @@ pub use crate::{
     annotation::{AnnotationParser, AnnotationProcessor, FormatAnnotation, RustAnnotationParser, TypeScriptAnnotationParser},
 };
 
-pub use oak_pretty_print::{FormatterConfig, IndentStyle, LineEnding, FormatState, WhitespaceProcessor, Document};
+pub use oak_pretty_print::{FormatterConfig, IndentStyle, LineEnding, WhitespaceProcessor, Document};
 pub use oak_core::language::Language;

@@ -1,4 +1,4 @@
-use crate::{config::{FormatConfig, FormatterConfig}, document::Document};
+use crate::{config::FormatConfig, document::Document};
 use alloc::string::String;
 
 /// Responsible for rendering a Document into a string

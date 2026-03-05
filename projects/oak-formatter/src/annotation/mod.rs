@@ -1,6 +1,9 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
+#[cfg(feature = "serde")]
+use serde_json;
+
 /// Format annotation
 /// 
 /// This struct represents a formatting annotation extracted from the code.
@@ -68,26 +71,29 @@ impl AnnotationParser for RustAnnotationParser {
         use core::ops::Range;
         let mut annotations = Vec::new();
         
-        // Regular expression to match Rust annotations like `#[rustfmt::xxx]` or `#[rustfmt(xxx)]`
-        let regex = regex::Regex::new(r"#\[rustfmt(?::([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(([^\)]*)\))?\]").unwrap();
-        
-        for capture in regex.captures_iter(source) {
-            let full_match = capture.get(0).unwrap();
-            let span = Range {
-                start: full_match.start(),
-                end: full_match.end(),
-            };
+        #[cfg(feature = "regex")]
+        {
+            // Regular expression to match Rust annotations like `#[rustfmt::xxx]` or `#[rustfmt(xxx)]`
+            let regex = regex::Regex::new(r"#\[rustfmt(?::([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(([^\)]*)\))?\]").unwrap();
             
-            let name = capture.get(1).map(|m| m.as_str().to_string()).unwrap_or_else(|| "default".to_string());
-            let params_str = capture.get(2).map(|m| m.as_str()).unwrap_or("");
-            
-            let params = self.parse_params(params_str);
-            
-            annotations.push(FormatAnnotation {
-                name,
-                params,
-                span,
-            });
+            for capture in regex.captures_iter(source) {
+                let full_match = capture.get(0).unwrap();
+                let span = Range {
+                    start: full_match.start(),
+                    end: full_match.end(),
+                };
+                
+                let name = capture.get(1).map(|m| m.as_str().to_string()).unwrap_or_else(|| "default".to_string());
+                let params_str = capture.get(2).map(|m| m.as_str()).unwrap_or("");
+                
+                let params = self.parse_params(params_str);
+                
+                annotations.push(FormatAnnotation {
+                    name,
+                    params,
+                    span,
+                });
+            }
         }
         
         annotations
@@ -146,26 +152,29 @@ impl AnnotationParser for TypeScriptAnnotationParser {
         use core::ops::Range;
         let mut annotations = Vec::new();
         
-        // Regular expression to match TypeScript annotations like `// @format:xxx` or `// @format(xxx)`
-        let regex = regex::Regex::new(r"//\s*@format(?::([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(([^\)]*)\))?\s*(?:$|\n)").unwrap();
-        
-        for capture in regex.captures_iter(source) {
-            let full_match = capture.get(0).unwrap();
-            let span = Range {
-                start: full_match.start(),
-                end: full_match.end(),
-            };
+        #[cfg(feature = "regex")]
+        {
+            // Regular expression to match TypeScript annotations like `// @format:xxx` or `// @format(xxx)`
+            let regex = regex::Regex::new(r"//\s*@format(?::([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(([^\)]*)\))?\s*(?:$|\n)").unwrap();
             
-            let name = capture.get(1).map(|m| m.as_str().to_string()).unwrap_or_else(|| "default".to_string());
-            let params_str = capture.get(2).map(|m| m.as_str()).unwrap_or("");
-            
-            let params = self.parse_params(params_str);
-            
-            annotations.push(FormatAnnotation {
-                name,
-                params,
-                span,
-            });
+            for capture in regex.captures_iter(source) {
+                let full_match = capture.get(0).unwrap();
+                let span = Range {
+                    start: full_match.start(),
+                    end: full_match.end(),
+                };
+                
+                let name = capture.get(1).map(|m| m.as_str().to_string()).unwrap_or_else(|| "default".to_string());
+                let params_str = capture.get(2).map(|m| m.as_str()).unwrap_or("");
+                
+                let params = self.parse_params(params_str);
+                
+                annotations.push(FormatAnnotation {
+                    name,
+                    params,
+                    span,
+                });
+            }
         }
         
         annotations
@@ -241,74 +250,10 @@ impl AnnotationProcessor {
     pub fn process(&self, source: &str) -> Vec<FormatAnnotation> {
         self.parser.parse(source)
     }
-
-    /// Applies annotations to the formatting state
-    /// 
-    /// # Parameters
-    /// - `annotations`: The annotations to apply
-    /// - `state`: The formatting state to update
-    pub fn apply_annotations<S>(&self, annotations: &[FormatAnnotation], state: &mut S)
-    where
-        S: crate::FormatState,
-    {
-        for annotation in annotations {
-            self.apply_annotation(annotation, state);
-        }
-    }
-
-    /// Applies a single annotation to the formatting state
-    /// 
-    /// # Parameters
-    /// - `annotation`: The annotation to apply
-    /// - `state`: The formatting state to update
-    fn apply_annotation<S>(&self, annotation: &FormatAnnotation, state: &mut S)
-    where
-        S: crate::FormatState,
-    {
-        for param in &annotation.params {
-            self.apply_param(param, state);
-        }
-    }
-
-    /// Applies a single parameter to the formatting state
-    /// 
-    /// # Parameters
-    /// - `param`: The parameter to apply
-    /// - `state`: The formatting state to update
-    fn apply_param<S>(&self, param: &AnnotationParam, state: &mut S)
-    where
-        S: crate::FormatState,
-    {
-        match &param.value {
-            AnnotationValue::Bool(value) => {
-                state.set_local_config(&param.name, serde_json::Value::Bool(*value));
-            }
-            AnnotationValue::Int(value) => {
-                state.set_local_config(&param.name, serde_json::Value::Number(serde_json::Number::from(*value)));
-            }
-            AnnotationValue::Float(value) => {
-                // Convert f64 to serde_json::Value
-                if value.is_finite() {
-                    state.set_local_config(&param.name, serde_json::Value::Number(serde_json::Number::from_f64(*value).unwrap_or(serde_json::Number::from(0))));
-                }
-            }
-            AnnotationValue::String(value) => {
-                state.set_local_config(&param.name, serde_json::Value::String(value.clone()));
-            }
-            AnnotationValue::List(values) => {
-                let json_values: Vec<serde_json::Value> = values.iter().map(|v| self.value_to_json(v)).collect();
-                state.set_local_config(&param.name, serde_json::Value::Array(json_values));
-            }
-            AnnotationValue::Map(pairs) => {
-                let json_map: serde_json::Map<String, serde_json::Value> = pairs.iter()
-                    .map(|(k, v)| (k.clone(), self.value_to_json(v)))
-                    .collect();
-                state.set_local_config(&param.name, serde_json::Value::Object(json_map));
-            }
-        }
-    }
+}
 
     /// Converts an AnnotationValue to a serde_json::Value
+    #[cfg(feature = "serde")]
     fn value_to_json(&self, value: &AnnotationValue) -> serde_json::Value {
         match value {
             AnnotationValue::Bool(v) => serde_json::Value::Bool(*v),
@@ -331,5 +276,11 @@ impl AnnotationProcessor {
                 serde_json::Value::Object(json_map)
             }
         }
+    }
+    
+    /// Converts an AnnotationValue to a serde_json::Value (dummy implementation for no serde)
+    #[cfg(not(feature = "serde"))]
+    fn value_to_json(&self, _value: &AnnotationValue) -> () {
+        ()
     }
 }

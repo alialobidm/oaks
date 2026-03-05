@@ -1,4 +1,4 @@
-use crate::{CommentProcessor, Document, FormatResult, FormatState, FormatterConfig};
+use crate::{CommentProcessor, Document, FormatResult};
 use alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
 use oak_core::{
     language::Language,
@@ -33,18 +33,10 @@ pub struct PathNode<L: Language> {
 }
 
 /// Formatting context for managing state during the formatting process
-/// 
-/// This struct holds the state used during the formatting process, including
-/// configuration, comment processing, and formatting state.
-/// 
-/// The `C` type parameter represents the type of language-specific configuration
-/// used throughout the formatting process, which must implement `FormatterConfig`.
-/// The `S` type parameter represents the type of formatting state
-/// used throughout the formatting process.
 #[derive(Debug, Clone)]
-pub struct FormatContext<L: Language, C, S> {
+pub struct FormatContext<L: Language, Config, State> {
     /// Language-specific configuration
-    pub config: Arc<C>,
+    pub config: Arc<Config>,
     /// Comment processor for handling comments during formatting
     pub comment_processor: Arc<CommentProcessor>,
     /// Source code content
@@ -54,27 +46,19 @@ pub struct FormatContext<L: Language, C, S> {
     /// Path of parent node types
     pub path: Option<Arc<PathNode<L>>>,
     /// Formatting state
-    pub state: S,
+    pub state: State,
 }
 
-impl<L: Language, C: FormatterConfig> FormatContext<L, C, <C as FormatterConfig>::State> {
+impl<L: Language, Config, State> FormatContext<L, Config, State> {
     /// Creates a new formatting context
-    pub fn new(config: C) -> Self {
+    pub fn new(config: Config, state: State) -> Self {
         let config = Arc::new(config);
         let comment_processor = Arc::new(CommentProcessor::new());
-        let state = config.state();
         Self { config, comment_processor, source: None, depth: 0, path: None, state }
     }
 }
 
-impl<L: Language, C: FormatterConfig, S: Clone> FormatContext<L, C, S> {
-    /// Creates a new formatting context with custom state
-    pub fn new_with_state(config: C, state: S) -> Self {
-        let config = Arc::new(config);
-        let comment_processor = Arc::new(CommentProcessor::new());
-        Self { config, comment_processor, source: None, depth: 0, path: None, state }
-    }
-
+impl<L: Language, Config, State: Clone> FormatContext<L, Config, State> {
     /// Enters a child node, increasing depth and recording the path
     pub fn enter(&self, kind: L::ElementType) -> Self {
         let path = Some(Arc::new(PathNode { kind, parent: self.path.clone() }));
@@ -89,7 +73,7 @@ impl<L: Language, C: FormatterConfig, S: Clone> FormatContext<L, C, S> {
     }
 
     /// Enters a child node with custom state
-    pub fn enter_with_state(&self, kind: L::ElementType, state: S) -> Self {
+    pub fn enter_with_state(&self, kind: L::ElementType, state: State) -> Self {
         let path = Some(Arc::new(PathNode { kind, parent: self.path.clone() }));
         Self { 
             config: self.config.clone(), 
@@ -119,50 +103,83 @@ impl<L: Language, C: FormatterConfig, S: Clone> FormatContext<L, C, S> {
     }
 }
 
-/// A generic formatter
-/// 
-/// This struct is used to format AST nodes using formatting functions.
-/// It supports language-specific configuration and custom formatting state.
-/// 
-/// The `C` type parameter represents the language-specific configuration, which must implement `FormatterConfig`.
-/// The `S` type parameter represents the formatting state.
-pub struct Formatter<L: Language + 'static, C: FormatterConfig, S = <C as FormatterConfig>::State> {
-    /// Node formatting functions
-    node_formatters: Vec<Box<dyn for<'a> Fn(&RedNode<L>, &FormatContext<L, C, S>, &'a str, &dyn Fn(&RedNode<L>) -> FormatResult<Document<'a>>) -> FormatResult<Option<Document<'a>>>>>,
-    /// Token formatting functions
-    token_formatters: Vec<Box<dyn for<'a> Fn(&RedLeaf<L>, &FormatContext<L, C, S>, &'a str) -> FormatResult<Option<Document<'a>>>>>,
-    /// Initial formatting context
-    pub context: FormatContext<L, C, S>,
+/// Formatter trait for language-specific formatting
+pub trait Formatter<L: Language + 'static> {
+    /// The type of configuration used by this formatter
+    type Config;
+    /// The type of state used by this formatter
+    type State;
+
+    /// Formats an AST node
+    fn format(&mut self, root: &RedNode<L>, source: &str) -> FormatResult<FormatOutput>;
+
+    /// Gets the formatter configuration
+    fn config(&self) -> &Self::Config;
+
+    /// Gets the formatter configuration mutably
+    fn config_mut(&mut self) -> &mut Self::Config;
+
+    /// Gets the formatting state
+    fn state(&self) -> &Self::State;
+
+    /// Gets the formatting state mutably
+    fn state_mut(&mut self) -> &mut Self::State;
 }
 
-impl<L: Language + 'static, C: FormatterConfig> Formatter<L, C, <C as FormatterConfig>::State> {
-    /// Creates a new formatter
-    pub fn new(config: C) -> Self {
-        Self { 
-            node_formatters: Vec::new(), 
-            token_formatters: Vec::new(), 
-            context: FormatContext::new(config) 
-        }
+/// A generic formatter implementation
+pub struct GenericFormatter<L: Language + 'static, Config, State> {
+    /// Node formatting functions
+    node_formatters: Vec<Box<dyn for<'a> Fn(&RedNode<L>, &FormatContext<L, Config, State>, &'a str, &dyn Fn(&RedNode<L>) -> FormatResult<Document<'a>>) -> FormatResult<Option<Document<'a>>>>>,
+    /// Token formatting functions
+    token_formatters: Vec<Box<dyn for<'a> Fn(&RedLeaf<L>, &FormatContext<L, Config, State>, &'a str) -> FormatResult<Option<Document<'a>>>>>,
+    /// Initial formatting context
+    pub context: FormatContext<L, Config, State>,
+}
+
+impl<L: Language + 'static, Config: Clone, State: Clone> Formatter<L> for GenericFormatter<L, Config, State> {
+    type Config = Config;
+    type State = State;
+
+    fn format(&mut self, root: &RedNode<L>, source: &str) -> FormatResult<FormatOutput> {
+        self.context.source = Some(Arc::from(source));
+        let doc = self.format_node(root, &self.context, source)?;
+        let content = doc.render();
+        let changed = content != source;
+        Ok(FormatOutput::new(content, changed))
+    }
+
+    fn config(&self) -> &Self::Config {
+        &self.context.config
+    }
+
+    fn config_mut(&mut self) -> &mut Self::Config {
+        Arc::make_mut(&mut self.context.config)
+    }
+
+    fn state(&self) -> &Self::State {
+        &self.context.state
+    }
+
+    fn state_mut(&mut self) -> &mut Self::State {
+        &mut self.context.state
     }
 }
 
-impl<L: Language + 'static, C: FormatterConfig, S: Clone + 'static> Formatter<L, C, S> {
+impl<L: Language + 'static, Config, State: Clone> GenericFormatter<L, Config, State> {
     /// Creates a new formatter with custom state
-    pub fn new_with_state(config: C, state: S) -> Self {
+    pub fn new_with_state(config: Config, state: State) -> Self {
         let mut formatter = Self { 
             node_formatters: Vec::new(), 
             token_formatters: Vec::new(), 
-            context: FormatContext::new_with_state(config, state) 
+            context: FormatContext::new(config, state) 
         };
 
-        // Add built-in formatters
         formatter.with_builtin_formatters()
     }
 
     /// Adds built-in formatting functions
     fn with_builtin_formatters(mut self) -> Self {
-        // Add basic indentation formatter
-        self.add_node_formatter(Box::new(|node, _ctx, source, format_children| {
+        self.add_node_formatter(Box::new(|node, _ctx, _source, format_children| {
             use oak_core::language::{ElementType, UniversalElementRole};
             if ElementType::is_universal(&node.green.kind, UniversalElementRole::Container) {
                 let children_doc = format_children(node)?;
@@ -175,8 +192,7 @@ impl<L: Language + 'static, C: FormatterConfig, S: Clone + 'static> Formatter<L,
             }
         }));
 
-        // Add statement newline formatter
-        self.add_node_formatter(Box::new(|node, _ctx, source, format_children| {
+        self.add_node_formatter(Box::new(|node, _ctx, _source, format_children| {
             use oak_core::language::{ElementType, UniversalElementRole};
             if ElementType::is_universal(&node.green.kind, UniversalElementRole::Statement) {
                 let children_doc = format_children(node)?;
@@ -186,7 +202,6 @@ impl<L: Language + 'static, C: FormatterConfig, S: Clone + 'static> Formatter<L,
             }
         }));
 
-        // Add comma spacing formatter
         self.add_token_formatter(Box::new(|token, _ctx, source| {
             use oak_core::language::{TokenType, UniversalTokenRole};
             if TokenType::is_universal(&token.kind, UniversalTokenRole::Punctuation) {
@@ -203,30 +218,19 @@ impl<L: Language + 'static, C: FormatterConfig, S: Clone + 'static> Formatter<L,
     }
 
     /// Adds a node formatting function
-    pub fn add_node_formatter(&mut self, formatter: Box<dyn for<'a> Fn(&RedNode<L>, &FormatContext<L, C, S>, &'a str, &dyn Fn(&RedNode<L>) -> FormatResult<Document<'a>>) -> FormatResult<Option<Document<'a>>>>) {
+    pub fn add_node_formatter(&mut self, formatter: Box<dyn for<'a> Fn(&RedNode<L>, &FormatContext<L, Config, State>, &'a str, &dyn Fn(&RedNode<L>) -> FormatResult<Document<'a>>) -> FormatResult<Option<Document<'a>>>>) {
         self.node_formatters.push(formatter);
     }
 
     /// Adds a token formatting function
-    pub fn add_token_formatter(&mut self, formatter: Box<dyn for<'a> Fn(&RedLeaf<L>, &FormatContext<L, C, S>, &'a str) -> FormatResult<Option<Document<'a>>>>) {
+    pub fn add_token_formatter(&mut self, formatter: Box<dyn for<'a> Fn(&RedLeaf<L>, &FormatContext<L, Config, State>, &'a str) -> FormatResult<Option<Document<'a>>>>) {
         self.token_formatters.push(formatter);
     }
 
-    /// Formats an AST node
-    pub fn format<'a>(&mut self, root: &RedNode<L>, source: &'a str) -> FormatResult<FormatOutput> {
-        self.context.source = Some(Arc::from(source));
-        let doc = self.format_node(root, &self.context, source)?;
-        let content = doc.render();
-        let changed = content != source;
-        Ok(FormatOutput::new(content, changed))
-    }
-
     /// Recursively formats a node and generates a Document
-    fn format_node<'a>(&self, node: &RedNode<L>, context: &FormatContext<L, C, S>, source: &'a str) -> FormatResult<Document<'a>> {
-        // Create a new context, recording current path and depth
+    fn format_node<'a>(&self, node: &RedNode<L>, context: &FormatContext<L, Config, State>, source: &'a str) -> FormatResult<Document<'a>> {
         let new_context = context.enter(node.green.kind.clone());
 
-        // Create a closure for formatting child nodes
         let format_children = |n: &RedNode<L>| {
             let mut children_docs = Vec::new();
             for child in n.children() {
@@ -238,27 +242,23 @@ impl<L: Language + 'static, C: FormatterConfig, S: Clone + 'static> Formatter<L,
             Ok(Document::Concat(children_docs))
         };
 
-        // Apply node formatters
         for formatter in &self.node_formatters {
             if let Some(doc) = formatter(node, &new_context, source, &format_children)? {
                 return Ok(doc);
             }
         }
 
-        // Default logic: format all child nodes and concatenate
         format_children(node)
     }
 
     /// Recursively formats a Token and generates a Document
-    fn format_token<'a>(&self, token: &RedLeaf<L>, context: &FormatContext<L, C, S>, source: &'a str) -> FormatResult<Document<'a>> {
-        // Apply token formatters
+    fn format_token<'a>(&self, token: &RedLeaf<L>, context: &FormatContext<L, Config, State>, source: &'a str) -> FormatResult<Document<'a>> {
         for formatter in &self.token_formatters {
             if let Some(doc) = formatter(token, context, source)? {
                 return Ok(doc);
             }
         }
 
-        // Default logic: output as is
         let text = &source[token.span.start..token.span.end];
         Ok(Document::Text(text.into()))
     }

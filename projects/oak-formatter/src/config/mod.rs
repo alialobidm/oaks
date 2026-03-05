@@ -122,6 +122,54 @@ pub struct RustFormatterState {
     pub indent_level: usize,
     /// Whether to format comments
     pub format_comments: bool,
+    /// Local configuration overrides
+    pub local_config: std::collections::HashMap<String, serde_json::Value>,
+    /// Custom state values
+    pub custom_state: std::collections::HashMap<String, serde_json::Value>,
+    /// Whether to align elements
+    pub align_elements: bool,
+}
+
+impl oak_pretty_print::FormatState for RustFormatterState {
+    fn set_local_config(&mut self, key: &str, value: serde_json::Value) {
+        self.local_config.insert(key.to_string(), value);
+    }
+    
+    fn get_local_config(&self, key: &str) -> Option<&serde_json::Value> {
+        self.local_config.get(key)
+    }
+    
+    fn set_custom_state(&mut self, key: &str, value: serde_json::Value) {
+        self.custom_state.insert(key.to_string(), value);
+    }
+    
+    fn get_custom_state(&self, key: &str) -> Option<&serde_json::Value> {
+        self.custom_state.get(key)
+    }
+    
+    fn set_indent_level(&mut self, level: usize) {
+        self.indent_level = level;
+    }
+    
+    fn get_indent_level(&self) -> usize {
+        self.indent_level
+    }
+    
+    fn set_force_single_line(&mut self, force: bool) {
+        self.force_single_line = force;
+    }
+    
+    fn get_force_single_line(&self) -> bool {
+        self.force_single_line
+    }
+    
+    fn set_align_elements(&mut self, align: bool) {
+        self.align_elements = align;
+    }
+    
+    fn get_align_elements(&self) -> bool {
+        self.align_elements
+    }
 }
 
 /// TypeScript formatter configuration
@@ -253,4 +301,52 @@ pub struct TypeScriptFormatterState {
     pub format_comments: bool,
     /// Whether to format strings
     pub format_strings: bool,
+    /// Local configuration overrides
+    pub local_config: std::collections::HashMap<String, serde_json::Value>,
+    /// Custom state values
+    pub custom_state: std::collections::HashMap<String, serde_json::Value>,
+    /// Whether to align elements
+    pub align_elements: bool,
+}
+
+impl oak_pretty_print::FormatState for TypeScriptFormatterState {
+    fn set_local_config(&mut self, key: &str, value: serde_json::Value) {
+        self.local_config.insert(key.to_string(), value);
+    }
+    
+    fn get_local_config(&self, key: &str) -> Option<&serde_json::Value> {
+        self.local_config.get(key)
+    }
+    
+    fn set_custom_state(&mut self, key: &str, value: serde_json::Value) {
+        self.custom_state.insert(key.to_string(), value);
+    }
+    
+    fn get_custom_state(&self, key: &str) -> Option<&serde_json::Value> {
+        self.custom_state.get(key)
+    }
+    
+    fn set_indent_level(&mut self, level: usize) {
+        self.indent_level = level;
+    }
+    
+    fn get_indent_level(&self) -> usize {
+        self.indent_level
+    }
+    
+    fn set_force_single_line(&mut self, force: bool) {
+        self.force_single_line = force;
+    }
+    
+    fn get_force_single_line(&self) -> bool {
+        self.force_single_line
+    }
+    
+    fn set_align_elements(&mut self, align: bool) {
+        self.align_elements = align;
+    }
+    
+    fn get_align_elements(&self) -> bool {
+        self.align_elements
+    }
 }

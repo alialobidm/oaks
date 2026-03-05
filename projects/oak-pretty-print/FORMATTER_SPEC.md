@@ -158,8 +158,8 @@ pub trait WhitespaceProcessor {
 ## 5. 依赖关系
 
 ### 5.1 项目依赖
-- `oak-pretty-print` 依赖 `oak-formatter` 的配置模块，用于获取语言特定的格式化配置。
 - `oak-formatter` 依赖 `oak-pretty-print` 的底层格式化功能，用于在红绿树层面进行格式化。
+- `oak-pretty-print` 不依赖 `oak-formatter`，而是提供独立的格式化基础功能。
 
 ### 5.2 外部依赖
 - `oak-core`：提供核心数据结构和工具。

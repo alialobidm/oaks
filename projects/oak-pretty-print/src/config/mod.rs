@@ -36,32 +36,6 @@ impl Default for LineEnding {
     }
 }
 
-/// Formatter configuration trait
-/// 
-/// Each language should implement this trait for its specific configuration structure.
-pub trait FormatterConfig {
-    /// The type of state used during formatting
-    type State: Default + Clone;
-    
-    /// Creates a new default configuration
-    fn new() -> Self;
-    
-    /// Creates a default state from this configuration
-    fn state(&self) -> Self::State;
-    
-    /// Gets the indent style
-    fn indent_style(&self) -> IndentStyle;
-    
-    /// Gets the line ending
-    fn line_ending(&self) -> LineEnding;
-    
-    /// Gets the maximum line length
-    fn max_width(&self) -> usize;
-    
-    /// Gets the line ending string
-    fn line_ending_string(&self) -> &'static str;
-}
-
 /// Default formatter configuration
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -114,7 +88,7 @@ impl Default for FormatConfig {
         let indent_style = IndentStyle::default();
         let (indent_text, indent_size) = match indent_style {
             IndentStyle::Spaces(count) => (" ".repeat(count as usize).into(), count as usize),
-            IndentStyle::Tabs => ("\t".into(), 4), // Default tab size for column calculation
+            IndentStyle::Tabs => ("\t".into(), 4),
         };
 
         Self {
@@ -142,35 +116,18 @@ impl Default for FormatConfig {
     }
 }
 
-impl FormatterConfig for FormatConfig {
-    type State = crate::state::FormatState;
-    
-    fn new() -> Self {
+impl FormatConfig {
+    /// Creates a new default configuration
+    pub fn new() -> Self {
         Self::default()
     }
-    
-    fn state(&self) -> Self::State {
-        crate::state::FormatState::default()
-    }
-    
-    fn indent_style(&self) -> IndentStyle {
-        self.indent_style
-    }
-    
-    fn line_ending(&self) -> LineEnding {
-        self.line_ending
-    }
-    
-    fn max_width(&self) -> usize {
-        self.max_width
-    }
-    
-    fn line_ending_string(&self) -> &'static str {
+
+    /// Gets the line ending string
+    pub fn line_ending_string(&self) -> &'static str {
         match self.line_ending {
             LineEnding::Unix => "\n",
             LineEnding::Windows => "\r\n",
             LineEnding::Auto => {
-                // In actual use, it should be detected based on the input file
                 #[cfg(windows)]
                 return "\r\n";
                 #[cfg(not(windows))]
@@ -178,9 +135,7 @@ impl FormatterConfig for FormatConfig {
             }
         }
     }
-}
 
-impl FormatConfig {
     /// Sets the indent style
     pub fn with_indent_style(mut self, style: IndentStyle) -> Self {
         self.indent_style = style;
