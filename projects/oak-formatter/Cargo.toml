@@ -12,11 +12,10 @@ crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
-oak-pretty-print = { path = "../oak-pretty-print" }
-oak-core = { path = "../oak-core" }
+oak-core = { workspace = true  }
 serde = { version = "1.0", optional = true, features = ["derive"] }
 serde_json = { version = "1.0", optional = true }
-regex = { version = "1.10", optional = true }
+regex = { version = "1.12", optional = true }
 
 [features]
 default = ["serde"]

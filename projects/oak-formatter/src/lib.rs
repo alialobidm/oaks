@@ -21,11 +21,10 @@ pub mod errors;
 
 // Re-export commonly used types
 pub use crate::{
-    config::CommonFormatterConfig,
+    config::{CommonFormatterConfig, IndentStyle, LineEnding},
     errors::FormatResult,
     annotation::{AnnotationParser, AnnotationProcessor, FormatAnnotation, AnnotationParam, AnnotationValue},
 };
 
-pub use oak_pretty_print::{IndentStyle, LineEnding, WhitespaceProcessor, Document};
 pub use oak_core::language::Language;
 pub use crate::formatters::{Formatter, GenericFormatter};

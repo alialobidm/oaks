@@ -30,9 +30,9 @@ url = { version = "2.5.8", features = ["serde"] }
 triomphe = { version = "0.1.15", default-features = false, features = ["serde"] }
 smallvec = { version = "1.15", features = ["union", "const_generics", "const_new"] }
 proc-macro2 = { version = "1.0.106" }
-quote = { version = "1.0.44" }
+quote = { version = "1.0.45" }
 syn = { version = "2.0.117", features = ["full"] }
-tokio = { version = "1.49.0", default-features = false }
+tokio = { version = "1.50.0", default-features = false }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 futures = { version = "0.3.32" }
 dashmap = { version = "6.1.0" }
@@ -202,8 +202,8 @@ oak-yaml = { version = "0.0.6", path = "examples/oak-yaml" }
 oak-zig = { version = "0.0.6", path = "examples/oak-zig" }
 
 # Benchmark comparison crates
-toml = "1.0.3"
-toml_edit = "0.25.3"
+toml = "1.0.4"
+toml_edit = "0.25.4"
 markdown = "1.0.0"
 pulldown-cmark = "0.13.1"
 simd-json = "0.17.0"

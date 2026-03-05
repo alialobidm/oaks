@@ -1,35 +1,37 @@
 use alloc::string::String;
-use oak_pretty_print::{Document, WhitespaceProcessor};
+use oak_core::{language::Language, tree::RedTree};
 
 /// Generic formatter trait for language-specific formatters
 /// 
 /// This trait defines the interface that language-specific formatters must implement.
-pub trait Formatter {
+pub trait Formatter<L: Language> {
     /// The state type used by this formatter
     type State;
 
-    /// Formats source code into a Document
+    /// The output type produced by this formatter
+    type Output;
+
+    /// Formats a red-green tree
     /// 
     /// # Parameters
-    /// - `source`: The source code to format
+    /// - `tree`: The red-green tree to format
     /// - `state`: The current formatter state
     /// 
     /// # Returns
-    /// The formatted Document
-    fn format(&self, source: &str, state: &mut Self::State) -> Document<'_>;
+    /// The formatted output
+    fn format<'a>(&self, tree: &RedTree<'a, L>, state: &mut Self::State) -> Self::Output;
 }
 
 /// A generic formatter that can be used for any language
 /// 
 /// This struct provides a common interface for formatting code in any language.
-pub struct GenericFormatter<F: Formatter> {
+pub struct GenericFormatter<L: Language, F: Formatter<L>> {
     /// The language-specific formatter implementation
     formatter: F,
-    /// The whitespace processor
-    whitespace_processor: WhitespaceProcessor,
+    _marker: core::marker::PhantomData<L>,
 }
 
-impl<F: Formatter> GenericFormatter<F> {
+impl<L: Language, F: Formatter<L>> GenericFormatter<L, F> {
     /// Creates a new GenericFormatter
     /// 
     /// # Parameters
@@ -37,7 +39,7 @@ impl<F: Formatter> GenericFormatter<F> {
     pub fn new(formatter: F) -> Self {
         Self {
             formatter,
-            whitespace_processor: WhitespaceProcessor::default(),
+            _marker: core::marker::PhantomData,
         }
     }
 

@@ -1,5 +1,40 @@
 use alloc::borrow::Cow;
-use oak_pretty_print::{IndentStyle, LineEnding};
+
+/// Indent style
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type", content = "value"))]
+pub enum IndentStyle {
+    /// Use spaces
+    Spaces(u8),
+    /// Use tabs
+    Tabs,
+}
+
+impl Default for IndentStyle {
+    fn default() -> Self {
+        IndentStyle::Spaces(4)
+    }
+}
+
+/// Line ending
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+pub enum LineEnding {
+    /// Unix style (\n)
+    Unix,
+    /// Windows style (\r\n)
+    Windows,
+    /// Auto detect
+    Auto,
+}
+
+impl Default for LineEnding {
+    fn default() -> Self {
+        LineEnding::Auto
+    }
+}
 
 /// Common formatting configuration that can be shared across languages
 /// 
@@ -26,47 +61,19 @@ pub struct CommonFormatterConfig {
     pub preserve_blank_lines: bool,
     /// Maximum consecutive blank lines
     pub max_blank_lines: usize,
-    /// Whether to format comments
-    pub format_comments: bool,
-    /// Indent size (used for column calculation)
-    pub indent_size: usize,
 }
 
 impl Default for CommonFormatterConfig {
     fn default() -> Self {
-        let indent_style = IndentStyle::default();
-        let (indent_text, indent_size) = match indent_style {
-            IndentStyle::Spaces(count) => (" ".repeat(count as usize).into(), count as usize),
-            IndentStyle::Tabs => ("\t".into(), 4),
-        };
-
         Self {
-            indent_style,
-            indent_text,
+            indent_style: IndentStyle::default(),
+            indent_text: Cow::Borrowed("    "),
             line_ending: LineEnding::default(),
-            max_width: 100,
+            max_width: 80,
             insert_final_newline: true,
             trim_trailing_whitespace: true,
             preserve_blank_lines: true,
             max_blank_lines: 2,
-            format_comments: true,
-            indent_size,
-        }
-    }
-}
-
-impl CommonFormatterConfig {
-    /// Returns the appropriate line ending string based on the configuration
-    pub fn line_ending_string(&self) -> &'static str {
-        match self.line_ending {
-            LineEnding::Unix => "\n",
-            LineEnding::Windows => "\r\n",
-            LineEnding::Auto => {
-                #[cfg(windows)]
-                return "\r\n";
-                #[cfg(not(windows))]
-                return "\n";
-            }
         }
     }
 }
