@@ -3,7 +3,7 @@ use alloc::{boxed::Box, vec::Vec};
 use oak_core::language::{ElementType, Language, TokenType, UniversalElementRole, UniversalTokenRole};
 
 /// Creates a collection of built-in formatting rules
-pub fn create_builtin_rules<L: Language + 'static, P: 'static>() -> Vec<Box<dyn FormatRule<L, P>>> {
+pub fn create_builtin_rules<L: Language + 'static, C: 'static, S: 'static>() -> Vec<Box<dyn FormatRule<L, C, S>>> {
     define_rules! {
         // Basic indentation rule
         indent {

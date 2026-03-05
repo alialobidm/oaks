@@ -64,19 +64,36 @@ impl<'a> fmt::Debug for Document<'a> {
 }
 
 impl<'a> Document<'a> {
+    /// Renders the document into a string using default configuration
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use oak_pretty_print::Document;
+    /// let doc =
+    ///     Document::concat(vec![Document::text("hello"), Document::HardLine, Document::text("world")]);
+    /// let output = doc.render();
+    /// assert_eq!(output, "hello\nworld");
+    /// ```
+    pub fn render(&self) -> String {
+        use crate::config::FormatConfig;
+        let config = FormatConfig::default();
+        Printer::new(config).print(self)
+    }
+
     /// Renders the document into a string using the provided configuration
     ///
     /// # Examples
     ///
     /// ```rust
-    /// # use oak_pretty_print::{Document, FormatConfig};
+    /// # use oak_pretty_print::{Document, config::FormatConfig};
     /// let doc =
     ///     Document::concat(vec![Document::text("hello"), Document::HardLine, Document::text("world")]);
-    /// let config = FormatConfig::default().with_line_ending(oak_pretty_print::LineEnding::Unix);
-    /// let output = doc.render(config);
+    /// let config = FormatConfig::default();
+    /// let output = doc.render_with_config(config);
     /// assert_eq!(output, "hello\nworld");
     /// ```
-    pub fn render(&self, config: FormatConfig) -> String {
+    pub fn render_with_config(&self, config: crate::config::FormatConfig) -> String {
         Printer::new(config).print(self)
     }
 

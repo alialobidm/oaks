@@ -66,6 +66,24 @@ pub struct FormatConfig {
     pub format_strings: bool,
     /// Indent size (used for column calculation)
     pub indent_size: usize,
+    /// Whether to align arguments in function calls
+    pub align_function_args: bool,
+    /// Whether to align fields in struct definitions
+    pub align_struct_fields: bool,
+    /// Whether to use spaces around operators
+    pub spaces_around_operators: bool,
+    /// Whether to use spaces inside parentheses
+    pub spaces_inside_parentheses: bool,
+    /// Whether to use spaces inside brackets
+    pub spaces_inside_brackets: bool,
+    /// Whether to use spaces inside braces
+    pub spaces_inside_braces: bool,
+    /// Whether to prefer single quotes for strings
+    pub prefer_single_quotes: bool,
+    /// Whether to sort imports
+    pub sort_imports: bool,
+    /// Whether to remove unused imports
+    pub remove_unused_imports: bool,
     /// Inline configuration overrides
     #[cfg(feature = "serde")]
     pub inline_config: Option<serde_json::Value>,
@@ -91,6 +109,15 @@ impl Default for FormatConfig {
             format_comments: true,
             format_strings: false,
             indent_size,
+            align_function_args: false,
+            align_struct_fields: false,
+            spaces_around_operators: true,
+            spaces_inside_parentheses: false,
+            spaces_inside_brackets: false,
+            spaces_inside_braces: false,
+            prefer_single_quotes: false,
+            sort_imports: false,
+            remove_unused_imports: false,
             #[cfg(feature = "serde")]
             inline_config: None,
         }

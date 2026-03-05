@@ -30,6 +30,10 @@ pub mod errors;
 pub mod formatter;
 /// Formatting rule traits and sets
 pub mod rules;
+/// Formatting state
+pub mod state;
+/// Annotation handling and processing
+pub mod annotation;
 /// Traits for converting types to documents
 pub mod to_doc;
 
@@ -37,10 +41,12 @@ pub mod to_doc;
 pub use crate::{
     builtin_rules::create_builtin_rules,
     comment::{Comment, CommentCollector, CommentKind, CommentProcessor},
-    config::{FormatConfig, IndentStyle, LineEnding},
+    config::{IndentStyle, LineEnding},
     errors::FormatResult,
     formatter::{FormatContext, FormatOutput, Formatter},
     rules::{FormatRule, RuleSet},
+    state::FormatState,
+    annotation::{AnnotationParser, AnnotationProcessor, FormatAnnotation, RustAnnotationParser, TypeScriptAnnotationParser},
     to_doc::{AsDocument, ToDocument},
 };
 pub use oak_core::language::Language;
