@@ -1,6 +1,7 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/ygg-lang/oaks/refs/heads/dev/documents/logo.svg")]
 #![feature(new_range_api)]
+#![feature(associated_type_defaults)]
 #![warn(missing_docs)]
 //! Pretty-printing framework for the Oak language framework.
 //!

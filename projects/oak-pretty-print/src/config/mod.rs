@@ -1,5 +1,8 @@
 use alloc::borrow::Cow;
 
+#[cfg(feature = "serde")]
+use serde_json;
+
 /// Indent style
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -63,6 +66,9 @@ pub struct FormatConfig {
     pub format_strings: bool,
     /// Indent size (used for column calculation)
     pub indent_size: usize,
+    /// Inline configuration overrides
+    #[cfg(feature = "serde")]
+    pub inline_config: Option<serde_json::Value>,
 }
 
 impl Default for FormatConfig {
@@ -85,6 +91,8 @@ impl Default for FormatConfig {
             format_comments: true,
             format_strings: false,
             indent_size,
+            #[cfg(feature = "serde")]
+            inline_config: None,
         }
     }
 }
@@ -116,6 +124,13 @@ impl FormatConfig {
     /// Sets the maximum line length
     pub fn with_max_width(mut self, length: usize) -> Self {
         self.max_width = length;
+        self
+    }
+
+    /// Sets the inline configuration
+    #[cfg(feature = "serde")]
+    pub fn with_inline_config(mut self, inline_config: Option<serde_json::Value>) -> Self {
+        self.inline_config = inline_config;
         self
     }
 

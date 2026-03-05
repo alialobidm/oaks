@@ -71,8 +71,8 @@ impl<'a> Document<'a> {
     /// ```rust
     /// # use oak_pretty_print::{Document, FormatConfig};
     /// let doc =
-    ///     Document::concat(vec![Document::text("hello"), Document::Line, Document::text("world")]);
-    /// let config = FormatConfig::default();
+    ///     Document::concat(vec![Document::text("hello"), Document::HardLine, Document::text("world")]);
+    /// let config = FormatConfig::default().with_line_ending(oak_pretty_print::LineEnding::Unix);
     /// let output = doc.render(config);
     /// assert_eq!(output, "hello\nworld");
     /// ```

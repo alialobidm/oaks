@@ -33,8 +33,14 @@ pub struct PathNode<L: Language> {
 }
 
 /// Formatting context for managing state during the formatting process
+/// 
+/// This struct holds the state used during the formatting process, including
+/// configuration, comment processing, and formatting parameters.
+/// 
+/// The `P` type parameter represents the type of formatting parameters used
+/// throughout the formatting process.
 #[derive(Debug, Clone)]
-pub struct FormatContext<L: Language> {
+pub struct FormatContext<L: Language, P = ()> {
     /// Formatting configuration
     pub config: Arc<FormatConfig>,
     /// Comment processor for handling comments during formatting
@@ -45,20 +51,51 @@ pub struct FormatContext<L: Language> {
     pub depth: usize,
     /// Path of parent node types
     pub path: Option<Arc<PathNode<L>>>,
+    /// Formatting parameters
+    pub params: P,
 }
 
-impl<L: Language> FormatContext<L> {
+impl<L: Language, P: Default> FormatContext<L, P> {
     /// Creates a new formatting context
     pub fn new(config: FormatConfig) -> Self {
         let config = Arc::new(config);
         let comment_processor = Arc::new(CommentProcessor::new().with_preserve_comments(config.format_comments).with_format_comments(config.format_comments));
-        Self { config, comment_processor, source: None, depth: 0, path: None }
+        Self { config, comment_processor, source: None, depth: 0, path: None, params: P::default() }
+    }
+}
+
+impl<L: Language, P: Clone> FormatContext<L, P> {
+    /// Creates a new formatting context with custom parameters
+    pub fn new_with_params(config: FormatConfig, params: P) -> Self {
+        let config = Arc::new(config);
+        let comment_processor = Arc::new(CommentProcessor::new().with_preserve_comments(config.format_comments).with_format_comments(config.format_comments));
+        Self { config, comment_processor, source: None, depth: 0, path: None, params }
     }
 
     /// Enters a child node, increasing depth and recording the path
     pub fn enter(&self, kind: L::ElementType) -> Self {
         let path = Some(Arc::new(PathNode { kind, parent: self.path.clone() }));
-        Self { config: self.config.clone(), comment_processor: self.comment_processor.clone(), source: self.source.clone(), depth: self.depth + 1, path }
+        Self { 
+            config: self.config.clone(), 
+            comment_processor: self.comment_processor.clone(), 
+            source: self.source.clone(), 
+            depth: self.depth + 1, 
+            path,
+            params: self.params.clone(),
+        }
+    }
+
+    /// Enters a child node with custom parameters
+    pub fn enter_with_params(&self, kind: L::ElementType, params: P) -> Self {
+        let path = Some(Arc::new(PathNode { kind, parent: self.path.clone() }));
+        Self { 
+            config: self.config.clone(), 
+            comment_processor: self.comment_processor.clone(), 
+            source: self.source.clone(), 
+            depth: self.depth + 1, 
+            path,
+            params,
+        }
     }
 
     /// Checks if the formatter is currently inside a node of a specific type
@@ -80,20 +117,37 @@ impl<L: Language> FormatContext<L> {
 }
 
 /// A generic formatter
-pub struct Formatter<L: Language + 'static> {
+/// 
+/// This struct is used to format AST nodes according to a set of rules.
+/// It supports custom formatting parameters through the `P` type parameter.
+pub struct Formatter<L: Language + 'static, P = ()> {
     /// Set of formatting rules
-    rules: RuleSet<L>,
+    rules: RuleSet<L, P>,
     /// Initial formatting context
-    pub context: FormatContext<L>,
+    pub context: FormatContext<L, P>,
 }
 
-impl<L: Language + 'static> Formatter<L> {
+impl<L: Language + 'static, P: Default + Clone + 'static> Formatter<L, P> {
     /// Creates a new formatter
     pub fn new(config: FormatConfig) -> Self {
         let mut formatter = Self { rules: RuleSet::new(), context: FormatContext::new(config) };
 
         // Add built-in rules
-        for rule in create_builtin_rules::<L>() {
+        for rule in create_builtin_rules::<L, P>() {
+            let _ = formatter.rules.add_rule(rule);
+        }
+
+        formatter
+    }
+}
+
+impl<L: Language + 'static, P: Clone + 'static> Formatter<L, P> {
+    /// Creates a new formatter with custom parameters
+    pub fn new_with_params(config: FormatConfig, params: P) -> Self {
+        let mut formatter = Self { rules: RuleSet::new(), context: FormatContext::new_with_params(config, params) };
+
+        // Add built-in rules
+        for rule in create_builtin_rules::<L, P>() {
             let _ = formatter.rules.add_rule(rule);
         }
 
@@ -101,7 +155,7 @@ impl<L: Language + 'static> Formatter<L> {
     }
 
     /// Adds a formatting rule
-    pub fn add_rule(&mut self, rule: Box<dyn crate::FormatRule<L>>) -> FormatResult<()> {
+    pub fn add_rule(&mut self, rule: Box<dyn crate::FormatRule<L, P>>) -> FormatResult<()> {
         self.rules.add_rule(rule)
     }
 
@@ -115,7 +169,7 @@ impl<L: Language + 'static> Formatter<L> {
     }
 
     /// Recursively formats a node and generates a Document
-    fn format_node<'a>(&self, node: &RedNode<L>, context: &FormatContext<L>, source: &'a str) -> FormatResult<Document<'a>> {
+    fn format_node<'a>(&self, node: &RedNode<L>, context: &FormatContext<L, P>, source: &'a str) -> FormatResult<Document<'a>> {
         // Create a new context, recording current path and depth
         let new_context = context.enter(node.green.kind.clone());
 
@@ -141,7 +195,7 @@ impl<L: Language + 'static> Formatter<L> {
     }
 
     /// Recursively formats a Token and generates a Document
-    fn format_token<'a>(&self, token: &RedLeaf<L>, context: &FormatContext<L>, source: &'a str) -> FormatResult<Document<'a>> {
+    fn format_token<'a>(&self, token: &RedLeaf<L>, context: &FormatContext<L, P>, source: &'a str) -> FormatResult<Document<'a>> {
         // Apply Token rules
         if let Some(doc) = self.rules.apply_token_rules(token, context, source)? {
             return Ok(doc);
