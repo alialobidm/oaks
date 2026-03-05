@@ -21,10 +21,11 @@ pub mod errors;
 
 // Re-export commonly used types
 pub use crate::{
-    config::{RustFormatterConfig, RustFormatterState, TypeScriptFormatterConfig, TypeScriptFormatterState},
+    config::CommonFormatterConfig,
     errors::FormatResult,
-    annotation::{AnnotationParser, AnnotationProcessor, FormatAnnotation, RustAnnotationParser, TypeScriptAnnotationParser},
+    annotation::{AnnotationParser, AnnotationProcessor, FormatAnnotation, AnnotationParam, AnnotationValue},
 };
 
-pub use oak_pretty_print::{FormatterConfig, IndentStyle, LineEnding, WhitespaceProcessor, Document};
+pub use oak_pretty_print::{IndentStyle, LineEnding, WhitespaceProcessor, Document};
 pub use oak_core::language::Language;
+pub use crate::formatters::{Formatter, GenericFormatter};

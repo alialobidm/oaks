@@ -1,9 +1,10 @@
-use crate::{config::FormatConfig, document::printer::Printer};
 use alloc::{borrow::Cow, boxed::Box, string::String, vec::Vec};
 use core::fmt;
 
 /// Document printer implementation
 pub mod printer;
+
+pub use self::printer::{IndentStyle, LineEnding, Printer, PrinterConfig};
 
 /// Document abstraction for describing layout logic
 #[derive(Clone)]
@@ -76,9 +77,8 @@ impl<'a> Document<'a> {
     /// assert_eq!(output, "hello\nworld");
     /// ```
     pub fn render(&self) -> String {
-        use crate::config::FormatConfig;
-        let config = FormatConfig::default();
-        Printer::new(config).print(self)
+        let config = self::printer::PrinterConfig::default();
+        self::printer::Printer::new(config).print(self)
     }
 
     /// Renders the document into a string using the provided configuration
@@ -86,15 +86,15 @@ impl<'a> Document<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # use oak_pretty_print::{Document, config::FormatConfig};
+    /// # use oak_pretty_print::{Document, document::printer::PrinterConfig};
     /// let doc =
     ///     Document::concat(vec![Document::text("hello"), Document::HardLine, Document::text("world")]);
-    /// let config = FormatConfig::default();
+    /// let config = PrinterConfig::default();
     /// let output = doc.render_with_config(config);
     /// assert_eq!(output, "hello\nworld");
     /// ```
-    pub fn render_with_config(&self, config: crate::config::FormatConfig) -> String {
-        Printer::new(config).print(self)
+    pub fn render_with_config(&self, config: self::printer::PrinterConfig) -> String {
+        self::printer::Printer::new(config).print(self)
     }
 
     /// Creates a text document

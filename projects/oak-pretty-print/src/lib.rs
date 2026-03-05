@@ -18,14 +18,10 @@ pub mod __private {
 // Public modules
 /// Comment handling and processing
 pub mod comment;
-/// Formatting configuration
-pub mod config;
 /// Document abstraction and printer
 pub mod document;
 /// Error types for formatting
 pub mod errors;
-/// Generic formatter implementation
-pub mod formatter;
 /// Formatting state
 pub mod state;
 /// Whitespace handling and processing
@@ -36,16 +32,14 @@ pub mod to_doc;
 // Re-export commonly used types
 pub use crate::{
     comment::{Comment, CommentCollector, CommentKind, CommentProcessor},
-    config::{IndentStyle, LineEnding, FormatConfig},
+    document::{Document, IndentStyle, LineEnding, Printer, PrinterConfig},
     errors::FormatResult,
-    formatter::{FormatContext, FormatOutput, Formatter, GenericFormatter},
     state::DefaultFormatState,
     whitespace::WhitespaceProcessor,
     to_doc::{AsDocument, ToDocument},
 };
 pub use oak_core::language::Language;
 
-pub use crate::document::Document;
 /// Type alias for Document
 pub type Doc<'a> = Document<'a>;
 
