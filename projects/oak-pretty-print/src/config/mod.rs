@@ -1,8 +1,5 @@
 use alloc::borrow::Cow;
 
-#[cfg(feature = "serde")]
-use serde_json;
-
 /// Indent style
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -39,7 +36,33 @@ impl Default for LineEnding {
     }
 }
 
-/// Formatting configuration
+/// Formatter configuration trait
+/// 
+/// Each language should implement this trait for its specific configuration structure.
+pub trait FormatterConfig {
+    /// The type of state used during formatting
+    type State: Default + Clone;
+    
+    /// Creates a new default configuration
+    fn new() -> Self;
+    
+    /// Creates a default state from this configuration
+    fn state(&self) -> Self::State;
+    
+    /// Gets the indent style
+    fn indent_style(&self) -> IndentStyle;
+    
+    /// Gets the line ending
+    fn line_ending(&self) -> LineEnding;
+    
+    /// Gets the maximum line length
+    fn max_width(&self) -> usize;
+    
+    /// Gets the line ending string
+    fn line_ending_string(&self) -> &'static str;
+}
+
+/// Default formatter configuration
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -84,9 +107,6 @@ pub struct FormatConfig {
     pub sort_imports: bool,
     /// Whether to remove unused imports
     pub remove_unused_imports: bool,
-    /// Inline configuration overrides
-    #[cfg(feature = "serde")]
-    pub inline_config: Option<serde_json::Value>,
 }
 
 impl Default for FormatConfig {
@@ -118,18 +138,49 @@ impl Default for FormatConfig {
             prefer_single_quotes: false,
             sort_imports: false,
             remove_unused_imports: false,
-            #[cfg(feature = "serde")]
-            inline_config: None,
+        }
+    }
+}
+
+impl FormatterConfig for FormatConfig {
+    type State = crate::state::FormatState;
+    
+    fn new() -> Self {
+        Self::default()
+    }
+    
+    fn state(&self) -> Self::State {
+        crate::state::FormatState::default()
+    }
+    
+    fn indent_style(&self) -> IndentStyle {
+        self.indent_style
+    }
+    
+    fn line_ending(&self) -> LineEnding {
+        self.line_ending
+    }
+    
+    fn max_width(&self) -> usize {
+        self.max_width
+    }
+    
+    fn line_ending_string(&self) -> &'static str {
+        match self.line_ending {
+            LineEnding::Unix => "\n",
+            LineEnding::Windows => "\r\n",
+            LineEnding::Auto => {
+                // In actual use, it should be detected based on the input file
+                #[cfg(windows)]
+                return "\r\n";
+                #[cfg(not(windows))]
+                return "\n";
+            }
         }
     }
 }
 
 impl FormatConfig {
-    /// Creates a new configuration
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Sets the indent style
     pub fn with_indent_style(mut self, style: IndentStyle) -> Self {
         self.indent_style = style;
@@ -152,27 +203,5 @@ impl FormatConfig {
     pub fn with_max_width(mut self, length: usize) -> Self {
         self.max_width = length;
         self
-    }
-
-    /// Sets the inline configuration
-    #[cfg(feature = "serde")]
-    pub fn with_inline_config(mut self, inline_config: Option<serde_json::Value>) -> Self {
-        self.inline_config = inline_config;
-        self
-    }
-
-    /// Gets the line ending string
-    pub fn line_ending_string(&self) -> &'static str {
-        match self.line_ending {
-            LineEnding::Unix => "\n",
-            LineEnding::Windows => "\r\n",
-            LineEnding::Auto => {
-                // In actual use, it should be detected based on the input file
-                #[cfg(windows)]
-                return "\r\n";
-                #[cfg(not(windows))]
-                return "\n";
-            }
-        }
     }
 }

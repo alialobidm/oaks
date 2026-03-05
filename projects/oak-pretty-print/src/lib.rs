@@ -16,8 +16,6 @@ pub mod __private {
 }
 
 // Public modules
-/// Built-in formatting rules
-pub mod builtin_rules;
 /// Comment handling and processing
 pub mod comment;
 /// Formatting configuration
@@ -28,25 +26,21 @@ pub mod document;
 pub mod errors;
 /// Generic formatter implementation
 pub mod formatter;
-/// Formatting rule traits and sets
-pub mod rules;
 /// Formatting state
 pub mod state;
-/// Annotation handling and processing
-pub mod annotation;
+/// Whitespace handling and processing
+pub mod whitespace;
 /// Traits for converting types to documents
 pub mod to_doc;
 
 // Re-export commonly used types
 pub use crate::{
-    builtin_rules::create_builtin_rules,
     comment::{Comment, CommentCollector, CommentKind, CommentProcessor},
-    config::{IndentStyle, LineEnding},
+    config::{FormatterConfig, IndentStyle, LineEnding, FormatConfig},
     errors::FormatResult,
     formatter::{FormatContext, FormatOutput, Formatter},
-    rules::{FormatRule, RuleSet},
     state::FormatState,
-    annotation::{AnnotationParser, AnnotationProcessor, FormatAnnotation, RustAnnotationParser, TypeScriptAnnotationParser},
+    whitespace::WhitespaceProcessor,
     to_doc::{AsDocument, ToDocument},
 };
 pub use oak_core::language::Language;

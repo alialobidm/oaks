@@ -1,180 +1,189 @@
-# Oak Formatter 设计规格
+# Oak 格式化系统设计规范
 
-## 1. 问题分析
+## 1. 简介
 
-### 1.1 当前问题
+### 1.1 文档目的
+本文档定义了 Oak 格式化系统的设计规范，包括架构设计、核心组件、接口定义和实现要求。该系统由两个主要部分组成：`oak-formatter`（高层格式化库）和 `oak-pretty-print`（底层格式化库）。
 
-1. **格式化参数问题**：当前的格式化系统无法灵活传递和使用参数，限制了格式化的定制能力。
+### 1.2 术语定义
+- **AST (Abstract Syntax Tree)**：抽象语法树，是源代码的抽象表示，不包含注释和空白等信息。
+- **CST (Concrete Syntax Tree)**：具体语法树，也称为红绿树（Red-Green Tree），包含源代码的完整结构，包括注释和空白。
+- **注解 (Annotation)**：代码中的特殊标记，用于控制格式化行为，如 Rust 中的 `#[rustfmt]`。
+- **FormatState**：格式化状态，用于在格式化过程中传递动态配置和状态。
 
-2. **Inline 配置支持**：缺少对类似 `#[rustfmt]` 这种内联配置的支持，无法在代码中直接指定格式化规则。
-
-3. **红绿树层面格式化**：为了保持空格和注释的完整性，需要在红绿树（Red-Green Tree）层面进行格式化，而不是在 AST 层面。
-
-4. **职责划分**：`oak-pretty-print` 和 `oak-formatter` 的职责不够明确，需要清晰划分。
-
-### 1.2 需求分析
-
-1. **结构化配置**：需要一个结构化的配置系统，支持全局配置和局部配置。
-
-2. **Annotation 支持**：支持在代码中使用注解来标记和调整格式化行为。
-
-3. **红绿树层面处理**：在红绿树层面处理格式化，确保空格、注释等的正确保留。
-
-4. **职责明确**：明确 `oak-pretty-print` 和 `oak-formatter` 的职责边界。
-
-## 2. 设计方案
+## 2. 系统架构
 
 ### 2.1 整体架构
 
 ```
-┌───────────────────┐      ┌───────────────────┐      ┌───────────────────┐
-│                   │      │                   │      │                   │
-│  语言特定 Formatter │─────>│  oak-pretty-print │─────>│  格式化输出        │
-│  (AST 层面)        │      │  (CST/红绿树层面) │      │                   │
-│                   │      │                   │      │                   │
-└───────────────────┘      └───────────────────┘      └───────────────────┘
-        │                          │
-        └───────────┐        ┌─────┘
-                    │        │
-             ┌───────▼────────▼───────┐
-             │                        │
-             │     配置共享            │
-             │                        │
-             └────────────────────────┘
+oak-formatter (高层格式化库)
+├── 语言特定的格式化器 (AST 层面)
+├── 配置管理 (每个语言定义自己的 Config)
+├── 注解处理系统
+└── 依赖 oak-pretty-print
+
+oak-pretty-print (底层格式化库)
+├── 文档构建和渲染
+├── 红绿树层面的格式化
+├── 注释和空白处理
+└── 依赖 oak-formatter 的配置
 ```
 
 ### 2.2 核心组件
 
-#### 2.2.1 配置系统
+#### 2.2.1 oak-formatter
+- **语言特定格式化器**：为每种语言实现的格式化逻辑，工作在 AST 层面。
+- **配置管理**：每种语言定义自己的配置结构，管理语言特定的格式化选项。
+- **注解处理系统**：解析和处理代码中的格式化注解，如 `#[rustfmt]`。
 
-1. **语言特定 Config**：每个语言创建自己的配置结构，管理语言特定的格式化选项。
+#### 2.2.2 oak-pretty-print
+- **文档构建**：构建格式化文档的工具。
+- **红绿树处理**：在红绿树层面进行格式化，保留原始的空格和注释。
+- **注释处理**：智能处理和重定位注释。
+- **空白处理**：处理空格和空白行的规范化。
 
-2. **`FormatState`**：格式化状态，支持在格式化过程中传递的动态状态，包括从内联注解中解析的局部配置。
+## 3. 接口定义
 
-#### 2.2.2 注解系统
+### 3.1 oak-formatter 接口
 
-1. **`FormatAnnotation`**：表示格式化注解的结构体，用于从代码中提取格式化指令。
+#### 3.1.1 配置接口
+```rust
+// 语言特定的配置结构示例
+pub struct RustFormatterConfig {
+    pub indent_style: IndentStyle,
+    pub max_width: u32,
+    pub newline_style: NewlineStyle,
+    // 其他语言特定选项
+}
 
-2. **`AnnotationParser`**：解析代码中的格式化注解，如 TypeScript 中的注释控制或 Rust 中的 `rustfmt::xxx` 属性。
+// 所有配置结构应实现的 trait
+pub trait FormatterConfig {
+    type State: Default + Clone;
+    
+    fn default() -> Self;
+    fn state(&self) -> Self::State;
+}
+```
 
-3. **`AnnotationProcessor`**：处理格式化注解，将其转换为 FormatState 中的局部配置。
+#### 3.1.2 格式化器接口
+```rust
+pub trait LanguageFormatter {
+    type Config: FormatterConfig;
+    type Error: std::error::Error;
+    
+    fn new(config: Self::Config) -> Self;
+    fn format(&mut self, ast: &AstNode, source: &str) -> Result<FormatOutput, Self::Error>;
+}
+```
 
-#### 2.2.3 格式化系统
+#### 3.1.3 注解接口
+```rust
+pub trait AnnotationParser {
+    type Annotation;
+    
+    fn parse(&self, node: &AstNode) -> Vec<Self::Annotation>;
+}
 
-1. **`Formatter`**：高层格式化器，协调配置、注解和格式化函数的应用。
+pub trait AnnotationProcessor {
+    type Annotation;
+    type State;
+    
+    fn process(&self, annotation: &Self::Annotation, state: &mut Self::State);
+}
+```
 
-2. **`DocumentBuilder`**：构建格式化文档的工具。
+### 3.2 oak-pretty-print 接口
 
-3. **`FormatState`**：格式化状态，支持在格式化过程中传递的动态状态。
+#### 3.2.1 文档构建接口
+```rust
+pub trait DocumentBuilder {
+    fn text(&mut self, text: &str);
+    fn line_break(&mut self);
+    fn indent(&mut self);
+    fn dedent(&mut self);
+    fn group(&mut self, content: impl FnOnce(&mut Self));
+}
+```
 
-4. **`FormatFn`**：格式化函数类型，用于处理不同类型的节点。
+#### 3.2.2 格式化接口
+```rust
+pub trait TreeFormatter {
+    type State;
+    
+    fn format_node(&mut self, node: &GreenNode, state: &mut Self::State) -> Result<(), Self::Error>;
+    fn format_comment(&mut self, comment: &Comment, state: &mut Self::State) -> Result<(), Self::Error>;
+}
+```
 
-### 2.3 关键特性
+#### 3.2.3 空白处理接口
+```rust
+pub trait WhitespaceProcessor {
+    fn process(&self, whitespace: &str, state: &mut impl FormatState) -> String;
+    fn process_blank_lines(&self, lines: usize, state: &mut impl FormatState) -> String;
+}
+```
 
-#### 2.3.1 状态化格式化
+## 4. 实现要求
 
-- 支持在格式化过程中传递自定义状态
-- 支持状态的继承和覆盖
-- 提供状态的类型安全访问
+### 4.1 配置系统
+- 每种语言必须定义自己的配置结构，不使用通用的 BaseFormatConfig。
+- 配置结构应使用组合而非继承的方式组织。
+- 配置应支持序列化和反序列化（可选）。
 
-#### 2.3.2 Inline 配置支持
+### 4.2 状态管理
+- 使用 FormatState 管理格式化过程中的动态状态。
+- FormatState 应支持状态的继承和覆盖。
+- 从注解中解析的局部配置应存储在 FormatState 中。
 
-- 支持类似 `#[rustfmt]` 的注解语法
-- 支持在注解中指定局部格式化规则
-- 支持注解的作用域管理
+### 4.3 注解系统
+- 支持类似 `#[rustfmt]` 的注解语法。
+- 支持在注解中指定局部格式化规则。
+- 支持注解的作用域管理。
 
-#### 2.3.3 红绿树层面处理
+### 4.4 红绿树处理
+- 在红绿树层面进行格式化，保留原始的空格和注释。
+- 支持注释的智能处理和重定位。
+- 支持空白行的保留和规范化。
 
-- 在红绿树层面进行格式化，保留原始的空格和注释
-- 支持注释的智能处理和重定位
-- 支持空白行的保留和规范化
+### 4.5 性能优化
+- 缓存格式化结果，避免重复计算。
+- 使用高效的文档构建算法。
+- 优化注解解析和处理的性能。
 
-#### 2.3.4 职责划分
+### 4.6 扩展性
+- 支持自定义格式化规则。
+- 支持自定义注解类型。
+- 支持插件系统，允许扩展格式化功能。
 
-- **oak-pretty-print**：提供底层的文档构建、渲染和基本的格式化功能
-- **oak-formatter**：提供高层的格式化逻辑、注解处理和配置管理
+## 5. 依赖关系
 
-## 3. 实现计划
+### 5.1 项目依赖
+- `oak-pretty-print` 依赖 `oak-formatter` 的配置模块，用于获取语言特定的格式化配置。
+- `oak-formatter` 依赖 `oak-pretty-print` 的底层格式化功能，用于在红绿树层面进行格式化。
 
-### 3.1 第一阶段：增强配置系统
+### 5.2 外部依赖
+- `oak-core`：提供核心数据结构和工具。
+- `serde`（可选）：用于配置的序列化和反序列化。
+- `regex`（可选）：用于注解解析。
 
-1. 实现 `FormatState` 结构，支持动态状态和局部配置
-2. 为每种语言设计语言特定的配置结构
+## 6. 示例用法
 
-### 3.2 第二阶段：实现注解系统
-
-1. 设计注解语法和解析规则
-2. 实现 `AnnotationParser` 来解析注解
-3. 实现 `AnnotationProcessor` 来处理注解
-
-### 3.3 第三阶段：优化红绿树层面格式化
-
-1. 增强 `Formatter` 类，支持在红绿树层面的精细处理
-2. 实现注释的智能处理
-3. 优化空格和空白行的处理
-4. 采用函数复用方式替代规则引擎，提高性能和可维护性
-
-### 3.4 第四阶段：明确职责划分
-
-1. 重构 `oak-pretty-print`，专注于底层功能
-2. 创建 `oak-formatter` 包，实现高层格式化逻辑
-3. 定义两个包之间的清晰接口
-
-## 4. 技术要点
-
-### 4.1 类型系统设计
-
-- 使用泛型参数实现灵活的状态传递
-- 使用函数类型定义格式化函数，提高性能和可维护性
-- 使用枚举表示不同类型的注解和配置
-
-### 4.2 性能优化
-
-- 缓存格式化结果，避免重复计算
-- 使用高效的文档构建算法
-- 优化注解解析和处理的性能
-
-### 4.3 扩展性考虑
-
-- 支持自定义格式化规则
-- 支持自定义注解类型
-- 支持插件系统，允许扩展格式化功能
-
-## 5. 示例用法
-
-### 5.1 基本用法
+### 6.1 基本用法
 
 ```rust
-// 语言特定的配置结构
-use my_language_formatter::{MyLanguageFormatter, MyLanguageConfig};
+// 使用语言特定的格式化器
+use oak_formatter::rust::RustFormatter;
 
-let config = MyLanguageConfig::new()
+let config = RustFormatterConfig::new()
     .with_indent_style(IndentStyle::Spaces(4))
     .with_max_width(100);
 
-let mut formatter = MyLanguageFormatter::new(config);
+let mut formatter = RustFormatter::new(config);
 let output = formatter.format(&ast, source)?;
 println!("{}", output.content);
 ```
 
-### 5.2 使用状态
-
-```rust
-use oak_formatter::{Formatter, FormatConfig, FormatState};
-
-#[derive(Default, Clone)]
-pub struct MyState {
-    pub force_single_line: bool,
-}
-
-let config = FormatConfig::new();
-let state = MyState { force_single_line: true };
-
-let mut formatter = Formatter::new_with_state(config, state);
-let output = formatter.format(&ast, source)?;
-```
-
-### 5.3 使用 Inline 配置
+### 6.2 使用注解
 
 ```rust
 // 代码中的注解
@@ -187,34 +196,43 @@ fn foo() {
 let output = formatter.format(&ast, source)?;
 ```
 
-## 6. 预期成果
-
-1. 一个功能完整、灵活的格式化系统
-2. 支持参数化格式化和 inline 配置
-3. 在红绿树层面进行格式化，保留原始代码的结构和注释
-4. 清晰的职责划分，便于维护和扩展
-
 ## 7. 测试计划
 
-1. 单元测试：测试各个组件的功能
-2. 集成测试：测试整个格式化流程
-3. 性能测试：测试格式化的性能
-4. 回归测试：确保修改不会破坏现有功能
+### 7.1 单元测试
+- 测试配置系统的功能。
+- 测试注解解析和处理。
+- 测试红绿树层面的格式化。
+
+### 7.2 集成测试
+- 测试整个格式化流程。
+- 测试不同语言的格式化结果。
+
+### 7.3 性能测试
+- 测试格式化的性能。
+- 测试大型文件的处理能力。
+
+### 7.4 回归测试
+- 确保修改不会破坏现有功能。
+- 确保格式化结果的一致性。
 
 ## 8. 风险评估
 
-1. **复杂性风险**：系统变得过于复杂，难以理解和维护
-   - 缓解措施：模块化设计，清晰的职责划分
+### 8.1 复杂性风险
+- **风险**：系统变得过于复杂，难以理解和维护。
+- **缓解措施**：模块化设计，清晰的职责划分，详细的文档。
 
-2. **性能风险**：格式化过程变得缓慢
-   - 缓解措施：性能优化，缓存机制
+### 8.2 性能风险
+- **风险**：格式化过程变得缓慢。
+- **缓解措施**：性能优化，缓存机制，高效的算法。
 
-3. **兼容性风险**：修改现有 API，破坏向后兼容性
-   - 缓解措施：保持 API 兼容性，提供迁移指南
+### 8.3 兼容性风险
+- **风险**：修改现有 API，破坏向后兼容性。
+- **缓解措施**：保持 API 兼容性，提供迁移指南。
 
-4. **正确性风险**：格式化结果不正确
-   - 缓解措施：全面的测试，代码审查
+### 8.4 正确性风险
+- **风险**：格式化结果不正确。
+- **缓解措施**：全面的测试，代码审查，用户反馈。
 
 ## 9. 结论
 
-通过本设计方案，我们将创建一个功能强大、灵活且高效的格式化系统，满足现代编程语言对格式化工具的需求。该系统将支持参数化格式化、inline 配置，并在红绿树层面进行处理，确保格式化结果的正确性和一致性。同时，清晰的职责划分将使系统易于维护和扩展，为未来的功能增强做好准备。
+通过本设计规范，我们将创建一个功能强大、灵活且高效的格式化系统，满足现代编程语言对格式化工具的需求。该系统将支持参数化格式化、inline 配置，并在红绿树层面进行处理，确保格式化结果的正确性和一致性。同时，清晰的职责划分将使系统易于维护和扩展，为未来的功能增强做好准备。

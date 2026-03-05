@@ -1,4 +1,4 @@
-use alloc::collections::HashMap;
+use std::collections::HashMap;
 use alloc::string::String;
 
 /// Formatting state
