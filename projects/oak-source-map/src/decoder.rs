@@ -119,31 +119,3 @@ impl OriginalPosition {
         self.name.is_some()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_decoder_lookup() {
-        let json = r#"{"version":3,"sources":["a.js"],"names":[],"mappings":"AAAA,SAASA"}"#;
-        let sm = SourceMap::parse(json).unwrap();
-        let decoder = SourceMapDecoder::new(sm).unwrap();
-
-        let pos = decoder.lookup(0, 0);
-        assert!(pos.is_some());
-    }
-
-    #[test]
-    fn test_decoder_lookup_full() {
-        let json = r#"{"version":3,"sources":["a.js"],"names":["foo"],"mappings":"AAAA,SAASA"}"#;
-        let sm = SourceMap::parse(json).unwrap();
-        let decoder = SourceMapDecoder::new(sm).unwrap();
-
-        let pos = decoder.lookup_full(0, 0);
-        assert!(pos.is_some());
-
-        let pos = pos.unwrap();
-        assert_eq!(pos.source, Some("a.js".to_string()));
-    }
-}

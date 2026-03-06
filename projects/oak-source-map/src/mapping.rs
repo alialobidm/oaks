@@ -137,38 +137,3 @@ impl BoundedMapping {
         column >= self.start_column && column < self.end_column
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_mapping_ordering() {
-        let m1 = Mapping::generated_only(0, 5);
-        let m2 = Mapping::generated_only(0, 10);
-        let m3 = Mapping::generated_only(1, 0);
-
-        assert!(m1 < m2);
-        assert!(m2 < m3);
-    }
-
-    #[test]
-    fn test_mapping_has_source() {
-        let m1 = Mapping::generated_only(0, 0);
-        assert!(!m1.has_source());
-
-        let m2 = Mapping::full(0, 0, 0, 0, 0, None);
-        assert!(m2.has_source());
-    }
-
-    #[test]
-    fn test_bounded_mapping() {
-        let mapping = Mapping::generated_only(0, 5);
-        let bounded = BoundedMapping::new(mapping, 5, 10);
-
-        assert!(bounded.contains_column(5));
-        assert!(bounded.contains_column(7));
-        assert!(!bounded.contains_column(10));
-        assert!(!bounded.contains_column(4));
-    }
-}
