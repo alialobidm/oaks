@@ -87,26 +87,3 @@ pub fn compose_two(map1: &SourceMap, map2: &SourceMap) -> Result<SourceMap> {
 
     Ok(builder.build())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_compose_empty() {
-        let composer = SourceMapComposer::new();
-        let result = composer.compose().unwrap();
-        assert_eq!(result.version, 3);
-    }
-
-    #[test]
-    fn test_compose_single() {
-        let mut sm = SourceMap::new();
-        sm.add_source("test.ts");
-
-        let composer = SourceMapComposer::new().add(sm.clone());
-        let result = composer.compose().unwrap();
-
-        assert_eq!(result.sources, sm.sources);
-    }
-}

@@ -1,23 +1,18 @@
 //! Error types for source map operations.
 
-use thiserror::Error;
-
 /// Result type alias for source map operations.
 pub type Result<T> = std::result::Result<T, SourceMapError>;
 
 /// Error type for source map operations.
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum SourceMapError {
     /// Invalid source map version.
-    #[error("Invalid source map version: expected 3, got {0}")]
     InvalidVersion(u8),
 
     /// Missing required field.
-    #[error("Missing required field: {0}")]
     MissingField(&'static str),
 
     /// Invalid VLQ encoding.
-    #[error("Invalid VLQ encoding at position {position}: {message}")]
     InvalidVlq {
         /// Position in the mappings string.
         position: usize,
@@ -26,7 +21,6 @@ pub enum SourceMapError {
     },
 
     /// Invalid mapping.
-    #[error("Invalid mapping at line {line}, column {column}: {message}")]
     InvalidMapping {
         /// Line number.
         line: u32,
@@ -37,15 +31,12 @@ pub enum SourceMapError {
     },
 
     /// JSON parsing error.
-    #[error("JSON parsing error: {0}")]
-    JsonError(#[from] serde_json::Error),
+    JsonError(serde_json::Error),
 
     /// IO error.
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
+    IoError(std::io::Error),
 
     /// Index out of bounds.
-    #[error("Index out of bounds: {index} >= {length}")]
     IndexOutOfBounds {
         /// The index that was out of bounds.
         index: usize,
@@ -54,16 +45,72 @@ pub enum SourceMapError {
     },
 
     /// Invalid source index.
-    #[error("Invalid source index: {0}")]
     InvalidSourceIndex(usize),
 
     /// Invalid name index.
-    #[error("Invalid name index: {0}")]
     InvalidNameIndex(usize),
 
     /// Source map composition error.
-    #[error("Source map composition error: {0}")]
     CompositionError(String),
+}
+
+impl std::fmt::Display for SourceMapError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SourceMapError::InvalidVersion(version) => {
+                write!(f, "Invalid source map version: expected 3, got {}", version)
+            }
+            SourceMapError::MissingField(field) => {
+                write!(f, "Missing required field: {}", field)
+            }
+            SourceMapError::InvalidVlq { position, message } => {
+                write!(f, "Invalid VLQ encoding at position {}: {}", position, message)
+            }
+            SourceMapError::InvalidMapping { line, column, message } => {
+                write!(f, "Invalid mapping at line {}, column {}: {}", line, column, message)
+            }
+            SourceMapError::JsonError(err) => {
+                write!(f, "JSON parsing error: {}", err)
+            }
+            SourceMapError::IoError(err) => {
+                write!(f, "IO error: {}", err)
+            }
+            SourceMapError::IndexOutOfBounds { index, length } => {
+                write!(f, "Index out of bounds: {} >= {}", index, length)
+            }
+            SourceMapError::InvalidSourceIndex(index) => {
+                write!(f, "Invalid source index: {}", index)
+            }
+            SourceMapError::InvalidNameIndex(index) => {
+                write!(f, "Invalid name index: {}", index)
+            }
+            SourceMapError::CompositionError(message) => {
+                write!(f, "Source map composition error: {}", message)
+            }
+        }
+    }
+}
+
+impl std::error::Error for SourceMapError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            SourceMapError::JsonError(err) => Some(err),
+            SourceMapError::IoError(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for SourceMapError {
+    fn from(err: serde_json::Error) -> Self {
+        SourceMapError::JsonError(err)
+    }
+}
+
+impl From<std::io::Error> for SourceMapError {
+    fn from(err: std::io::Error) -> Self {
+        SourceMapError::IoError(err)
+    }
 }
 
 impl SourceMapError {

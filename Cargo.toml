@@ -54,6 +54,8 @@ num = "0.4.3"
 bigdecimal = "0.4.10"
 ordered-float = "5.1.0"
 twox-hash = "2.1.2"
+regex = "1.12"
+base64 = "0.22"
 
 # Internal project dependencies
 oak-core = { version = "0.0.6", path = "projects/oak-core" }
