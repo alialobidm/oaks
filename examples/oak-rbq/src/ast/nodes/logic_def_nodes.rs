@@ -1,6 +1,6 @@
 use super::{
     common_nodes::RbqAnnotation,
-    data_def_nodes::RbqField,
+    data_def_nodes::{RbqField, RbqStruct, RbqEnum, RbqUnion},
     expression_nodes::{RbqExpr, RbqExprKind},
     type_nodes::RbqType,
 };
@@ -24,7 +24,7 @@ pub struct RbqNamespace {
 
 impl RbqNamespace {
     /// Lowers a red node into an `RbqNamespace` AST node.
-    pub fn lower(red: RedNode<RbqLanguage>, source: &str) -> Self {
+    pub fn lower(red: oak_core::tree::RedNode<RbqLanguage>, source: &str) -> Self {
         let span = red.span();
         let mut annotations = Vec::new();
         let mut path = String::new();

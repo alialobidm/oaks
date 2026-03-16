@@ -41,7 +41,7 @@ pub enum RbqItem {
 
 impl RbqRoot {
     /// Lowers a red node into an `RbqRoot` AST node.
-    pub fn lower(red: RedNode<RbqLanguage>, source: &str) -> Self {
+    pub fn lower(red: oak_core::tree::RedNode<RbqLanguage>, source: &str) -> Self {
         let span = red.span();
         let mut items = Vec::new();
         let mut pending_annotations = Vec::new();

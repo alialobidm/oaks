@@ -19,7 +19,7 @@ pub struct RbqStruct {
 
 impl RbqStruct {
     /// Lowers a red node into an `RbqStruct` AST node.
-    pub fn lower(red: RedNode<RbqLanguage>, source: &str) -> Self {
+    pub fn lower(red: oak_core::tree::RedNode<RbqLanguage>, source: &str) -> Self {
         let span = red.span();
         let mut annotations = Vec::new();
         let mut name = String::new();
