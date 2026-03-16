@@ -15,6 +15,8 @@ pub struct RbqNamespace {
     pub annotations: Vec<RbqAnnotation>,
     /// The path of the namespace.
     pub path: String,
+    /// Items contained within the namespace.
+    pub items: Vec<super::super::RbqItem>,
     /// The source range of the namespace definition.
     #[cfg_attr(feature = "serde", serde(with = "oak_core::serde_range"))]
     pub span: Range<usize>,
@@ -26,22 +28,73 @@ impl RbqNamespace {
         let span = red.span();
         let mut annotations = Vec::new();
         let mut path = String::new();
+        let mut items = Vec::new();
+        let mut pending_annotations = Vec::new();
 
         for child in red.children() {
             match child.kind::<RbqElementType>() {
                 RbqElementType::Annotation => {
                     if let Some(node) = child.as_node() {
-                        annotations.push(RbqAnnotation::lower(node, source))
+                        pending_annotations.push(RbqAnnotation::lower(node, source))
                     }
                 }
                 RbqElementType::Ident | RbqElementType::Dot => {
                     path.push_str(source[child.span()].trim());
                 }
+                RbqElementType::StructDef | RbqElementType::ClassDef => {
+                    if let Some(node) = child.as_node() {
+                        let mut s = RbqStruct::lower(node, source);
+                        s.annotations.extend(pending_annotations.drain(..));
+                        items.push(super::super::RbqItem::Struct(s))
+                    }
+                }
+                RbqElementType::EnumDef => {
+                    if let Some(node) = child.as_node() {
+                        let mut e = RbqEnum::lower(node, source);
+                        e.annotations.extend(pending_annotations.drain(..));
+                        items.push(super::super::RbqItem::Enum(e))
+                    }
+                }
+                RbqElementType::UnionDef => {
+                    if let Some(node) = child.as_node() {
+                        let mut u = RbqUnion::lower(node, source);
+                        u.annotations.extend(pending_annotations.drain(..));
+                        items.push(super::super::RbqItem::Union(u))
+                    }
+                }
+                RbqElementType::TraitDef => {
+                    if let Some(node) = child.as_node() {
+                        let mut t = RbqTrait::lower(node, source);
+                        t.annotations.extend(pending_annotations.drain(..));
+                        items.push(super::super::RbqItem::Trait(t))
+                    }
+                }
+                RbqElementType::MicroDef => {
+                    if let Some(node) = child.as_node() {
+                        let mut m = RbqMicro::lower(node, source);
+                        m.annotations.extend(pending_annotations.drain(..));
+                        items.push(super::super::RbqItem::Micro(m))
+                    }
+                }
+                RbqElementType::ImportDef => {
+                    if let Some(node) = child.as_node() {
+                        let mut i = RbqImport::lower(node, source);
+                        i.annotations.extend(pending_annotations.drain(..));
+                        items.push(super::super::RbqItem::Import(i))
+                    }
+                }
+                RbqElementType::TypeDef => {
+                    if let Some(node) = child.as_node() {
+                        let mut t = RbqTypeAlias::lower(node, source);
+                        t.annotations.extend(pending_annotations.drain(..));
+                        items.push(super::super::RbqItem::TypeAlias(t))
+                    }
+                }
                 _ => {}
             }
         }
 
-        Self { annotations, path, span }
+        Self { annotations, path, items, span }
     }
 }
 

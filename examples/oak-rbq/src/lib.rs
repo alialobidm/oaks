@@ -52,10 +52,26 @@ pub use crate::mcp::serve_rbq_mcp;
 
 /// Parses a string into an RBQ AST.
 pub fn parse(input: &str) -> Result<RbqRoot, oak_core::OakError> {
-    // This is a placeholder implementation
-    // TODO: Implement actual parsing
-    Ok(RbqRoot {
-        items: Vec::new(),
-        span: (0..input.len()).into(),
-    })
+    use oak_core::{ParseCache, SourceFile, TextEdit};
+    
+    // Create language configuration
+    let language = RbqLanguage::new();
+    
+    // Create parser
+    let parser = RbqParser::new(&language);
+    
+    // Create source file
+    let source = SourceFile::new("", input);
+    
+    // Create empty parse cache
+    let mut cache = oak_core::NoParseCache::default();
+    
+    // Parse the input
+    let output = parser.parse(&source, &[], &mut cache);
+    
+    // Convert the parse tree to an AST
+    let root_node = output.tree.root();
+    let ast = RbqRoot::lower(root_node, input);
+    
+    Ok(ast)
 }
