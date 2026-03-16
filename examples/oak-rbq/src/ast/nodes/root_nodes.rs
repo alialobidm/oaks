@@ -60,7 +60,7 @@ impl RbqRoot {
                         items.push(RbqItem::Namespace(ns))
                     }
                 }
-                RbqElementType::StructDef => {
+                RbqElementType::StructDef | RbqElementType::ClassDef => {
                     if let Some(node) = child.as_node() {
                         let mut s = RbqStruct::lower(node, source);
                         s.annotations.extend(pending_annotations.drain(..));

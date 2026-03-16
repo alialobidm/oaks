@@ -14,7 +14,7 @@ pub mod language;
 /// Lexer implementation for RBQ.
 pub mod lexer;
 /// LSP-related functionality (hover, completion, highlighting).
-#[cfg(any(feature = "lsp", feature = "oak-highlight", feature = "oak-pretty-print"))]
+#[cfg(feature = "lsp")]
 pub mod lsp;
 /// MCP (Model Context Protocol) integration for RBQ.
 #[cfg(feature = "mcp")]
@@ -39,7 +39,7 @@ pub type RbqSyntaxKind = RbqTokenType;
 pub use crate::lsp::highlighter::RbqHighlighter;
 
 /// Formatter implementation.
-#[cfg(feature = "oak-pretty-print")]
+#[cfg(feature = "lsp")]
 pub use crate::lsp::formatter::RbqFormatter;
 
 /// LSP implementation.
@@ -49,3 +49,13 @@ pub use crate::lsp::RbqLanguageService;
 /// MCP implementation.
 #[cfg(feature = "mcp")]
 pub use crate::mcp::serve_rbq_mcp;
+
+/// Parses a string into an RBQ AST.
+pub fn parse(input: &str) -> Result<RbqRoot, oak_core::OakError> {
+    // This is a placeholder implementation
+    // TODO: Implement actual parsing
+    Ok(RbqRoot {
+        items: Vec::new(),
+        span: (0..input.len()).into(),
+    })
+}
